@@ -3,6 +3,7 @@
 
 // to get some definitions such as SPECULATOR
 #include "Macros.h"
+#include "ValueTrackerDouble.h"
 
 ////////////////////////// Boot Tests ////////////////////////////////
 #define TEST_SOLENOIDS           false
@@ -24,13 +25,13 @@
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
-#define HV_MAJOR       2
-#define HV_MINOR       1
+#define HV_MAJOR                  2
+#define HV_MINOR                  1
 
 //////////////////// Software Revision ////////////////////////////////
-#define SV_MAJOR       0
-#define SV_MINOR       1
-#define SV_REVISION    2
+#define SV_MAJOR                  0
+#define SV_MINOR                  1
+#define SV_REVISION               3
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -57,7 +58,7 @@
 #endif
 
 //////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////// 
 // Including the Appropiate configuration files depending on
 // the artefact type, no user adjustments are needed from this point onwards in the file
 #if ARTEFACT_TYPE == SPECULATOR
@@ -83,8 +84,10 @@
 uint32_t  BOOT_DELAY      =           (1000 * 60 * 2);
 #elif ARTEFACT_TYPE == EXPLORATOR
 uint32_t  BOOT_DELAY      =           (1000);
+#else
+uint32_t  BOOT_DELAY      =           (1000);
 #endif
-bool BOOT_DELAY_ACTIVE    =           false;
+int BOOT_DELAY_ACTIVE    =           false;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Audio System ///////////////////////////////////////////
@@ -132,7 +135,17 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 #define MID_LUX_THRESHOLD               350.0
 #define HIGH_LUX_THRESHOLD              1200.0
 #define EXTREME_LUX_THRESHOLD           5000.0
-#endif // HV_MAJOR == 2
+
+#elif ARTEFACT_TYPE == LEGATUS
+#define NIGHT_LUX_THRESHOLD             1.0
+// this is the threshold in which anything below will just be treated as the lowest reading
+#define LOW_LUX_THRESHOLD               10.0
+// when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
+#define MID_LUX_THRESHOLD               350.0
+#define HIGH_LUX_THRESHOLD              1200.0
+#define EXTREME_LUX_THRESHOLD           5000.0
+
+#endif // ARTEFACT_TYPE for Lux thresholds
 
 /////////////////////////////// Lighting Conditions ///////////////////////////////////
 // TODO this should be triggered by the light sensor and then determine the mapping
@@ -162,15 +175,32 @@ uint16_t  MAX_BRIGHTNESS =              765;
 // on scale of 0-1.0 what is the min multiplier for the user defined brightness scaler
 // 0.05 was too low, did not provide good enough feedback for the night time
 #if (ARTEFACT_TYPE == SPECULATOR) || (ARTEFACT_TYPE == LEGATUS)
-#define LUX_BS_MIN           0.1
-#define LUX_BS_MAX           2.50
+#define LUX_BS_MIN                      0.1
+#define LUX_BS_MAX                      2.50
 #else
-#define LUX_BS_MIN           0.75
-#define LUX_BS_MAX           1.50
+#define LUX_BS_MIN                      0.75
+#define LUX_BS_MAX                      1.50
 #endif
 /////////////////////////////// Update Regularity //////////////////////////
 uint32_t lux_max_reading_delay =        1000 * 60 * 1;   // every minute
 uint32_t lux_min_reading_delay =        1000 * 10;       // ten seconds
+
+#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR > 2
+#define USER_BRIGHT_THRESH_OVERRIDE            true
+#else
+#define USER_BRIGHT_THRESH_OVERRIDE            false
+#endif//HV_MAJOR
+
+#if FIRMWARE_MODE == CICADA_MODE
+float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.15;
+#elif FIRMWARE_MODE == PITCH_MODE
+float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.01;
+#elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 3
+float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
+#else 
+float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
+#endif//FIRMWARE_MODE
+
 ///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// Neopixel LEDs /////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -182,10 +212,20 @@ uint32_t lux_min_reading_delay =        1000 * 10;       // ten seconds
 #define ONSET_GREEN                     200
 #define ONSET_BLUE                      255
 
+////////////////////////// LED MAPPING MODES ////////////////
+#define LED_MAPPING_STANDARD      0
+#define LED_MAPPING_CENTER_OUT    1
+#define LED_MAPPING_ROUND         2
+#define LED_MAPPING_BOTTOM_UP     3
+#define LED_MAPPING_CLOCK_HAND    4
+#define LED_MAPPING_OUTSIDE_IN    5
+#define LED_MAPPING_CLOCK_FILL    6
+#define LED_MAPPING_CUSTOM        7
+
 #if (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR > 2)
-uint8_t LED_MAPPING_MODE = LED_MAPPING_CENTER_OUT;
+int LED_MAPPING_MODE = LED_MAPPING_CLOCK_HAND;
 #else
-uint8_t LED_MAPPING_MODE = LED_MAPPING_STANDARD;
+int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
 
 // Which pin on the Arduino is connected to the NeoPixels? 8 for old board
@@ -207,6 +247,10 @@ uint8_t LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED1_NAME      "All"
 #define LED2_NAME      "N/A"
 #define LED3_NAME      "N/A"
+#elif ARTEFACT_TYPE == LEGATUS
+#define LED1_NAME      "All"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A" 
 #endif
 
 // How many NeoPixels are attached to the Arduino?
@@ -226,7 +270,11 @@ uint8_t LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY)
 #define LED1_COUNT 10
 #define LED2_COUNT 10
-#define LED3_COUNT 1
+#define LED3_COUNT 10
+#elif ARTEFACT_TYPE == LEGATUS
+#define LED1_COUNT 20
+#define LED2_COUNT 0
+#define LED3_COUNT 0
 #endif
 
 #if LED1_COUNT > 0
@@ -249,14 +297,14 @@ uint8_t LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 
 // if false, a onset detected on either side results in a LED flash on both sides
 // if true, a onset detected on one side will only result in a flash on that side
-bool INDEPENDENT_FLASHES =              false; // WARNING NOT IMPLEMENTED - TODO
+int INDEPENDENT_FLASHES =              false; // WARNING NOT IMPLEMENTED - TODO
 
-bool FLASH_DOMINATES =                  false;
+int FLASH_DOMINATES =                  false;
 
 // if this is true then the brightness will b = (b + b) * b; in order to reduce its value, and make loud events even more noticable
-bool SQUARE_BRIGHTNESS =                true;
+int SQUARE_BRIGHTNESS =                true;
 
-bool SATURATED_COLORS =                 false;
+int SATURATED_COLORS =                 false;
 
 // how high the onset flash timer will go up to
 #define MAX_FLASH_TIME                  60
@@ -271,7 +319,6 @@ const uint16_t max_led_count = max(max(LED1_COUNT, LED2_COUNT), LED3_COUNT);
 
 byte drawingMemory[3][max_led_count * 3];       //  3 bytes per LED
 DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
-
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Weather Manager ////////////////////////////////////////
@@ -303,7 +350,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // used the scaled FFT readings or the normal FFT readings, the scaled readings will eensure that
 // all the bins of intrest will have their magnitudes add up to 1, thus is best used for determining the centroid within a sub frequency range (for instance 8k - 14k or something
 #define SCALE_FFT_BIN_RANGE             false
-#define FFT_FEATURES_ACTIVE                 1
+#define FFT_FEATURES_ACTIVE             1
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// User Controls //////////////////////////////////////////
@@ -311,20 +358,16 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 
 // in ms, how often will theUI controls update?
 #if ((ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2))
-#define UI_POLLING_RATE               1000
+#define UI_POLLING_RATE                 1000
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
-#define UI_POLLING_RATE               60
+#define UI_POLLING_RATE                 500
 #else
-#define UI_POLLING_RATE               100
+#define UI_POLLING_RATE                 500
 #endif // UI_POLLING_RATE
-
-// should the UIManager print when the user control elements are changed?
-#define P_UIMANAGER     true
 
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ///////////////////////////////// Datalogging //////////////////////////////////////////////////
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 #define DATALOG_ACTIVE                  false
 #define PRINT_EEPROM_ON_BOOT            false
 
@@ -393,7 +436,7 @@ elapsedMillis song_update_timer = 0;
 #define P_ONSET                                   false
 
 //////////////////////////// AutoGain //////////////////////////////////
-#define P_AUTOGAIN                               true
+#define P_AUTOGAIN                                 true
 
 // for calculating the dominate channel, it works best if the dominate channel is re-caculated every
 
@@ -409,11 +452,10 @@ elapsedMillis song_update_timer = 0;
 #define P_PEAK_VALS                               false
 // #define P_TONE_VALS                     false
 #define P_FREQ_VALS                               false
-#define P_AUDIO_USAGE_MAX                         false
+#define P_AUDIO_USAGE_MAX                         true
 #define P_DOMINATE_CHANNEL                        true
 
 // prints the max audio memory usage (to help calibrate how much is allocated to the system)
-#define P_AUDIO_MEMORY_MAX                        false
 #if P_AUDIO_USAGE_MAX == true
 elapsedMillis last_audio_usage_print;
 #define AUDIO_USAGE_POLL_RATE                     5000
@@ -443,11 +485,6 @@ elapsedMillis last_audio_usage_print;
 
 // will print readings from jumpers and pots
 #define P_USER_CONTROLS                           true
-
-//////////////////////////// Pots ////////////////////////////////////////////
-// this wll allow the POT to overide the brightness at the end of color wipe
-#define USER_BRIGHTNESS_OVERDRIVE                 true
-#define P_POT_VALS                                false
 
 ///////////////////////// Solenoids //////////////////////////////////////////
 #define P_SOLENOID_DEBUG                          true
@@ -496,7 +533,7 @@ double current_feature;
 ////////////////////////////////////////////////////////////////////////////
 // the autogain active flag currently also controls the dominate microphone selection process
 // will autogain based on the LED ON/OFF time be active?
-#define AUTOGAIN_ACTIVE                                 true
+int AUTOGAIN_ACTIVE      =                               true;
 // how much to adjust the gain in the autogain routine. A 1.0 corresponds to
 // potentially doubling or halfing the gain. A 0.5 will potentially result in
 // adding 50% to the gain or reducing it by 25%
@@ -552,6 +589,46 @@ int dominate_channel =                                  0;
 ////////////////////////////////////////////////////////////////////////////
 uint8_t num_fft_managers =                              2;
 
+#if ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == CICADA_MODE
+#define CENTROID_FEATURE_MIN                            4000
+#define CENTROID_FEATURE_MAX                            16000
+#elif ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
+#define CENTROID_FEATURE_MIN                            120
+#define CENTROID_FEATURE_MAX                            24000
+#elif ARTEFACT_TYPE == EXPLORATOR
+#define CENTROID_FEATURE_MIN                            120
+#define CENTROID_FEATURE_MAX                            24000
+#elif ARTEFACT_TYPE == LEGATUS
+#define CENTROID_FEATURE_MIN                            120
+#define CENTROID_FEATURE_MAX                            24000
+#endif
+
+////////////////////////////////////////////////////////////////////////////
+///////////////////////// User Controls ////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+///////////////////////////// P1 - Brightness Overide ////////////////////////
+// which pot will be used to control thebrightness overide
+// if USER_BS_ACTIVE is set to true the user will scale the natural
+// brightness levels (in pitch mode only) before being sent to the neopixel
+// manager (which then might constrain according to Lux levels)
+float user_brightness_scaler               = 1.0;
+
+float min_user_brightness_scaler           = 0.05;
+float mid_user_brightness_scaler           = 1.0;
+float max_user_brightness_scaler           = 3.0;
+
+float min_user_brightness_cuttoff           = 0.0;
+float mid_user_brightness_cuttoff           = 0.5;
+float max_user_brightness_cuttoff           = 1.0;
+
+// this will determine if the USER will have control over the brightness scaler
+// at this point v2.1 does this via jumpers and v3.0 does this via a pot
+// so the default value is true
+#define USER_BS_ACTIVE                        true
+
+int but_test[NUM_BUTTONS];
+float pot_test[NUM_POTS];
+
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Neo Manager //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -559,5 +636,196 @@ uint8_t num_fft_managers =                              2;
 #define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define NUM_NEOP_MANAGERS                               3
+#elif ARTEFACT_TYPE == LEGATUS         
+#define NUM_NEOP_MANAGERS                               1
 #endif
+
+// what factor will the new values be scaled by compared to the old values
+// when calculating the song brightness target vs current levels a 1.0 will turn off
+// the low filtering so only the new values will be used while 0.5 will result in the
+// average of the old and new value to be used, a higher value will be a quicker responce
+// the max value is 1.0 and the min value is 0.0
+#define HUE_LP_LEVEL                          0.15
+#define SATURATION_LP_LEVEL                   0.15
+#define BRIGHTNESS_LP_LEVEL                   0.15
+
+// if > 0 then the brightness will be smoothed with a previous value
+// thee higher the value the more it is smoothed
+#define HUE_DECAY_DELAY      1500
+#define HUE_DECAY_FACTOR     0.025
+
+#define SAT_DECAY_DELAY      6000
+#define SAT_DECAY_FACTOR     0.01
+
+#define BGT_DECAY_DELAY       1500
+#define BGT_DECAY_FACTOR     0.025
+
+#define BGT_MIN_UPDATE_FACTOR 0.25
+#define BGT_MAX_UPDATE_FACTOR 0.25
+
+#define SAT_MIN_UPDATE_FACTOR 0.05
+#define SAT_MAX_UPDATE_FACTOR 0.01
+
+#define HUE_MIN_UPDATE_FACTOR 0.25
+#define HUE_MAX_UPDATE_FACTOR 0.25
+
+double hue = 1.0;
+double brightness = 1.0;
+double saturation = 0.0;// needs to start at 0.0 or else the min/max value tracker has issues
+
+ValueTrackerDouble hue_tracker        = ValueTrackerDouble((String)"HUE", &hue, HUE_DECAY_FACTOR, HUE_DECAY_DELAY, HUE_LP_LEVEL);
+ValueTrackerDouble saturation_tracker = ValueTrackerDouble((String)"SATURATION", &saturation, SAT_DECAY_FACTOR, SAT_DECAY_DELAY, SATURATION_LP_LEVEL);
+ValueTrackerDouble brightness_tracker = ValueTrackerDouble((String)"BRIGHTNESS", &brightness, BGT_DECAY_FACTOR, BGT_DECAY_DELAY, BRIGHTNESS_LP_LEVEL);
+
+// TODO -- need to implement the target hue saturation and brightness mapping schema
+float target_hue = 1.0;
+float target_saturation = 1.0;
+float target_brightness = 1.0;
+
+int USE_TARGET_BRIGHTNESS = false;
+int USE_TARGET_HUE        = false;
+int USE_TARGET_SATURATION = false;
+
+////////////////////////////////////////////////////////////////////////////
+///////////////////////// Audio System /////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+// for speculator cicada installations channel 1 is song and channel 2 is click?
+// TODO - the input to the two different sides should be the dominate microphones
+
+// audio usage loggings
+elapsedMillis last_usage_print =              0;// for keeping track of audio memory usage
+
+// this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
+double USER_CONTROL_GAIN_ADJUST               = 1.0;
+
+
+#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR < 3
+#define STARTING_GAIN                         480.0
+#elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
+// 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
+#define STARTING_GAIN                         1.0
+#elif ARTEFACT_TYPE == EXPLORATOR
+#define STARTING_GAIN                         240.0
+#elif ARTEFACT_TYPE == LEGATUS
+#define STARTING_GAIN                         240.0
+#endif
+
+#if ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == CICADA_MODE
+// SONG HP
+#define LBQ1_THRESH         4000
+#define LBQ1_Q              0.85
+#define LBQ1_DB             -12
+// SONG LP
+#define LBQ2_THRESH         16000
+#define LBQ2_Q              0.85
+#define LBQ2_DB             -12
+// CLICK HP
+#define RBQ1_THRESH         1200
+#define RBQ1_Q              0.85
+#define RBQ1_DB             -12
+// CLICK LP
+#define RBQ2_THRESH         3000
+#define RBQ2_Q              0.85
+#define RBQ2_DB             -12
+
+#elif ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
+// SONG HP
+#define LBQ1_THRESH         120
+#define LBQ1_Q              0.85
+#define LBQ1_DB             -12
+// SONG LP
+#define LBQ2_THRESH         24000
+#define LBQ2_Q              0.85
+#define LBQ2_DB             -12
+
+// Should be Inactive
+#define RBQ1_THRESH         120
+#define RBQ1_Q              0.85
+#define RBQ1_DB             -12
+// Should be Inactive
+#define RBQ2_THRESH         24000
+#define RBQ2_Q              0.85
+#define RBQ2_DB             -12
+//////////////////
+#else
+// SONG HP
+#define LBQ1_THRESH         120
+#define LBQ1_Q              0.85
+#define LBQ1_DB             -12
+// SONG LP
+#define LBQ2_THRESH         24000
+#define LBQ2_Q              0.85
+#define LBQ2_DB             -12
+
+// Should be Inactive
+#define RBQ1_THRESH         120
+#define RBQ1_Q              0.85
+#define RBQ1_DB             -12
+// Should be Inactive
+#define RBQ2_THRESH         24000
+#define RBQ2_Q              0.85
+#define RBQ2_DB             -12
+#endif
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////      FFTManager  //////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+// used the scaled FFT readings or the normal FFT readings, the scaled readings will eensure that
+// all the bins of intrest will have their magnitudes add up to 1, thus is best used for determining the centroid within a sub frequency range (for instance 8k - 14k or something
+#define SCALE_FFT_BIN_RANGE                     false
+#define FFT_FEATURES_ACTIVE                     1
+
+/////////////////////////////// Color Mapping /////////////////////////////////////
+// when calculating the hue for the NeoPixel leds, what feature do you want to use?
+// look under Audio Features for the Available Features
+double hue_min =                                1.0;
+double hue_max =                                0.0;
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////// Audio Features //////////////////////////
+/////////////////////////////////////////////////////////////////////////
+// all the different features that are available to use through the feature collector for
+// various mappings.
+#define FEATURE_RMS                         (1)
+#define FEATURE_RMS_POS_DELTA               (11)
+#define FEATURE_RMS_AVG                     (12)
+#define FEATURE_PEAK                        (2)
+#define FEATURE_PEAK_POS_DELTA              (22)
+#define FEATURE_PEAK_AVG                    (23)
+#define FEATURE_FREQ                        (3)
+#define FEATURE_TONE                        (4)
+#define FEATURE_FFT                         (5)
+#define FEATURE_FFT_ENERGY                  (6)
+#define FEATURE_FFT_RELATIVE_ENERGY         (7)
+#define FEATURE_FFT_MAX_BIN                 (8)
+#define FEATURE_FFT_BIN_RANGE               (9)
+#define FEATURE_STRONG_FFT                  (10)
+#define FEATURE_CENTROID                    (13)
+#define FEATURE_FLUX                        (14)
+
+// When the color mapping is using HSB, this will be where the features used are determined
+uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
+uint8_t BRIGHTNESS_FEATURE  =               (FEATURE_FFT_ENERGY);
+uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
+
+int REVERSE_SATURATION     =               true;
+int REVERSE_BRIGHTNESS     =               false;
+int REVERSE_HUE            =               false;
+
+// These are different color mapping modes
+// #define COLOR_MAPPING_RGB                     0
+// originated with the pitch mode for the speculator
+#define COLOR_MAPPING_HSB                     0
+// the simple but effective explorator mapping strategy
+#define COLOR_MAPPING_EXPLORATOR              1
+
+// For the neopixels will the color mapping exist within the RGB or HSB domain?
+int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
+
+#define  MODE_SINGLE_RANGE                    0
+#define  MODE_ALL_BINS                        1
+#define  MODE_BIN_ENERGY                      2
+
+// should the centroid value be smoothed?
+#define SMOOTH_CENTROID                       true
+
 #endif // __CONFIGURATION_H__

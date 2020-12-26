@@ -14,11 +14,6 @@
 #include <PlaybackEngine.h>
 #endif
 
-/////////////////////////// Include the appropiate Mode.h file //////////////
-#if FIRMWARE_MODE == CICADA_MODE && ARTEFACT_TYPE == SPECULATOR
-#include "ModeCicada.h"
-#endif
-
 ////////////////////////////// Libraries needed for Every Artefact /////////////////////////////////////
 #include <LuxManager.h>
 #include <PrintUtils.h>
@@ -181,7 +176,7 @@ LuxManager lux_manager = LuxManager(lux_min_reading_delay, lux_max_reading_delay
 /////////////////////////////// NeoPixelManager //////////////////////////////////
 
 // for the explorators, there are three NeoPixels Strips
-#if ARTEFACT_TYPE == SPECULATOR
+#if ARTEFACT_TYPE == SPECULATOR || ARTEFACT_TYPE == LEGATUS
 WS2812Serial leds[1] = WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB);
 NeoGroup neos[1]     = NeoGroup(&leds[0], 0, LED1_COUNT - 1, "All Neos", MIN_FLASH_TIME, MAX_FLASH_TIME);
 
@@ -245,7 +240,7 @@ WeatherManager weather_manager = WeatherManager(HUMID_EXTREME_THRESH, TEMP_EXTRE
 #endif // WEATHER_MANAGER_PRESENT
 
 //////////////////////////////////// User Controls ///////////////////////////////
-UIManager uimanager = UIManager(UI_POLLING_RATE, P_UIMANAGER);
+UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 
 ////////////////////////////// Audio System ///////////////////////////////////////
 #if (ARTEFACT_TYPE == EXPLORATOR)
@@ -264,36 +259,125 @@ AudioConnection          patchCord7(amp1, fft);
 AudioConnection          patchCord10(amp1, 0, usb_output, 0);
 AudioConnection          patchCord11(amp1, 0, usb_output, 1);
 
-#elif (ARTEFACT_TYPE == SPECULATOR) && (FIRMWARE_MODE == PITCH_MODE)
+#elif (ARTEFACT_TYPE == SPECULATOR) || (ARTEFACT_TYPE == LEGATUS)
+/*
+ * #include <Audio.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+// GUItool: begin automatically generated code
+AudioInputI2S            I2S;           //xy=86.25000762939453,606.5000085830688
+AudioAnalyzeFFT1024      left_fft;       //xy=271.75000762939453,440.75000858306885
+AudioAnalyzeFFT1024      right_fft;      //xy=271.50000762939453,661.2500085830688
+AudioMixer4              input_mixer1;         //xy=287.00000762939453,495.25000858306885
+AudioMixer4              input_mixer2;         //xy=288.00000762939453,557.2500085830688
+AudioFilterBiquad        right_HPF2;     //xy=427.00000762939453,629.7500076293945
+AudioFilterBiquad        right_HPF1;  //xy=427.25000762939453,597.2500076293945
+AudioFilterBiquad        left_HPF1;   //xy=432.25000762939453,511.50000762939453
+AudioFilterBiquad        left_HPF2;      //xy=434.00000762939453,545.0000076293945
+AudioFilterBiquad        left_LPF1;   //xy=570.25,511.25
+AudioFilterBiquad        left_LPF2;      //xy=571,544.75
+AudioFilterBiquad        right_LPF2;     //xy=572,629.75
+AudioFilterBiquad        right_LPF1;  //xy=572.25,597.25
+AudioAmplifier           left_amp2;      //xy=705.0000095367432,544.750007390976
+AudioAmplifier           left_amp1;       //xy=705.2500095367432,511.25000739097595
+AudioAmplifier           right_amp2;     //xy=714.5000114440918,630.7500076293945
+AudioAmplifier           right_amp1;      //xy=714.7500114440918,597.2500076293945
+AudioAnalyzeRMS          left_rms1;       //xy=899.5000152587891,395.0000057220459
+AudioAnalyzeRMS          right_rms2;     //xy=899.2500305175781,761.500018119812
+AudioAnalyzePeak         right_peak2;    //xy=899.7500152587891,732.0000104904175
+AudioAnalyzePeak         left_peak1;      //xy=902.5000286102295,428.00000953674316
+AudioMixer4              output_mixer1;         //xy=911.5000152587891,546.7500076293945
+AudioMixer4              output_mixer2;         //xy=912.5000152587891,609.7500076293945
+AudioAnalyzeRMS          left_rms2;      //xy=921.2500019073486,467.75000381469727
+AudioAnalyzeRMS          right_rms1;      //xy=921.5000152587891,688.7500076293945
+AudioAnalyzePeak         left_peak2;     //xy=922.5000019073486,499.00000381469727
+AudioAnalyzePeak         right_peak1;     //xy=928.5000152587891,657.7500076293945
+AudioOutputUSB           output_usb;     //xy=1083.5000019073486,579.2500038146973
+AudioConnection          patchCord1(I2S, 0, left_fft, 0);
+AudioConnection          patchCord2(I2S, 0, input_mixer1, 0);
+AudioConnection          patchCord3(I2S, 0, input_mixer2, 0);
+AudioConnection          patchCord4(I2S, 1, right_HPF1, 0);
+AudioConnection          patchCord5(I2S, 1, right_HPF2, 0);
+AudioConnection          patchCord6(I2S, 1, right_fft, 0);
+AudioConnection          patchCord7(I2S, 1, input_mixer1, 1);
+AudioConnection          patchCord8(I2S, 1, input_mixer2, 1);
+AudioConnection          patchCord9(input_mixer1, left_HPF1);
+AudioConnection          patchCord10(input_mixer2, left_HPF2);
+AudioConnection          patchCord11(right_HPF2, right_LPF2);
+AudioConnection          patchCord12(right_HPF1, right_LPF1);
+AudioConnection          patchCord13(left_HPF1, left_LPF1);
+AudioConnection          patchCord14(left_HPF2, left_LPF2);
+AudioConnection          patchCord15(left_LPF1, left_amp1);
+AudioConnection          patchCord16(left_LPF2, left_amp2);
+AudioConnection          patchCord17(right_LPF2, right_amp2);
+AudioConnection          patchCord18(right_LPF1, right_amp1);
+AudioConnection          patchCord19(left_amp2, left_rms2);
+AudioConnection          patchCord20(left_amp2, left_peak2);
+AudioConnection          patchCord21(left_amp2, 0, output_mixer1, 1);
+AudioConnection          patchCord22(left_amp2, 0, output_mixer2, 3);
+AudioConnection          patchCord23(left_amp1, left_rms1);
+AudioConnection          patchCord24(left_amp1, left_peak1);
+AudioConnection          patchCord25(left_amp1, left_rms1);
+AudioConnection          patchCord26(left_amp1, 0, output_mixer1, 0);
+AudioConnection          patchCord27(left_amp1, 0, output_mixer2, 2);
+AudioConnection          patchCord28(right_amp2, right_peak2);
+AudioConnection          patchCord29(right_amp2, right_rms2);
+AudioConnection          patchCord30(right_amp2, 0, output_mixer2, 1);
+AudioConnection          patchCord31(right_amp2, 0, output_mixer1, 3);
+AudioConnection          patchCord32(right_amp1, right_rms1);
+AudioConnection          patchCord33(right_amp1, right_peak1);
+AudioConnection          patchCord34(right_amp1, right_rms1);
+AudioConnection          patchCord35(right_amp1, 0, output_mixer2, 0);
+AudioConnection          patchCord36(right_amp1, 0, output_mixer1, 2);
+AudioConnection          patchCord37(output_mixer1, 0, output_usb, 0);
+AudioConnection          patchCord38(output_mixer2, 0, output_usb, 1);
+// GUItool: end automatically generated code
+
+ * 
+ */
+
 ////////////////////////// Audio Objects //////////////////////////////////////////
-AudioInputI2S            i2s1;           //xy=55,291.8571424484253
-AudioFilterBiquad        biquad2;        //xy=217.00389099121094,302.0039281845093
-AudioFilterBiquad        biquad1;        //xy=219.00390625,270.00391578674316
-AudioAmplifier           amp2;           //xy=378.79129791259766,302.57704162597656
-AudioAmplifier           amp1;           //xy=380.2198715209961,264.0055875778198
-AudioAnalyzePeak         peak2;          //xy=517.0039100646973,316.003924369812
-AudioAnalyzePeak         peak1;          //xy=521.00390625,221.0039176940918
-AudioAnalyzeFFT1024      fft1;      //xy=521.3627586364746,251.71987438201904
-AudioAnalyzeFFT1024      fft2;      //xy=521.3627586364746,251.71987438201904
-AudioAnalyzeRMS          rms1;            //xy=650.0000076293945,151.00000190734863
-AudioAnalyzeRMS          rms2;            //xy=650.0000076293945,151.00000190734863
 
-AudioConnection          patchCord10(amp1, rms1);
-AudioConnection          patchCord11(amp2, rms2);
+AudioInputI2S            i2s1;           //xy=257,388
 
+// #if FIRMWRARE_MODE == CICADA_MODE
+AudioFilterBiquad        right_HPF;  //xy=417,421
+AudioFilterBiquad        right_LPF;  //xy=587,422
+AudioAmplifier           right_amp;      //xy=742,424 
+AudioAnalyzeFFT1024      right_fft;      //xy=960,510
+AudioAnalyzeRMS          right_rms;      //xy=964,477
+AudioAnalyzePeak         right_peak;     //xy=965,446
 
-AudioOutputUSB           usb1;           //xy=519.142822265625,284.71433544158936
-AudioConnection          patchCord_usb2(amp2, 0, usb1, 1);
-AudioConnection          patchCord_usb1(amp1, 0, usb1, 0);
+// #endif // firmware_mode == cicada_mode
 
-AudioConnection          patchCord1(i2s1, 0, biquad1, 0);
-AudioConnection          patchCord2(i2s1, 1, biquad2, 0);
-AudioConnection          patchCord3(biquad2, amp2);
-AudioConnection          patchCord7(biquad1, amp1);
-AudioConnection          patchCord6(amp2, peak2);
-AudioConnection          patchCord_fft_input1(amp1, fft1);
-AudioConnection          patchCord_fft_input2(amp2, fft2);
-AudioConnection          patchCord9(amp1, peak1);
+AudioFilterBiquad        left_HPF;   //xy=412,359
+AudioFilterBiquad        left_LPF;   //xy=578,359
+AudioAmplifier           left_amp;       //xy=738,360
+AudioAnalyzeFFT1024      left_fft;       //xy=950,295
+AudioAnalyzeRMS          left_rms;       //xy=954,263
+AudioAnalyzePeak         left_peak;      //xy=960,327
+
+AudioOutputUSB           output_usb;     //xy=1189,392
+
+AudioConnection          pc_bq1_l(i2s1, 0, left_HPF, 0);
+AudioConnection          pc_bq2_l(left_HPF, left_LPF);
+AudioConnection          pc_amp_l(left_LPF, left_amp);
+AudioConnection          pc_rms_l(left_amp, left_rms);
+AudioConnection          pc_usb_l(left_amp, 0, output_usb, 0);
+AudioConnection          pc_peak_l(left_amp, left_peak);
+AudioConnection          pc_fft_l(left_amp, left_fft);
+
+AudioConnection          pc_bq1_r(i2s1, 1, right_HPF, 0);
+AudioConnection          pc_bq2_r(right_HPF, right_LPF);
+AudioConnection          pc_amp_r(right_LPF, right_amp);
+AudioConnection          pc_rms_r(right_amp, right_rms);
+AudioConnection          pc_usb_r(right_amp, 0, output_usb, 1);
+AudioConnection          pc_peak_r(right_amp, right_peak);
+AudioConnection          pc_fft_r(right_amp, right_fft);
+
 #endif // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE 
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +480,7 @@ void printArtefactInfo() {
   Serial.println("EXPLORATOR");
   Serial.print("Body type  :\t");
   Serial.println(BODY_TYPE);
-#elif (ARTEFACT_TYPE == LEGATUS) {
+#elif ARTEFACT_TYPE == LEGATUS 
   Serial.println("LEGATUS");
 #else
   Serial.println("UNKNOWN!!!!!");
@@ -436,7 +520,6 @@ void printArtefactInfo() {
 #endif // SPECULATOR ARTEFACT TYPE
 }
 
-#if ARTEFACT_TYPE == SPECULATOR
 void setupAudio() {
 #if AUDIO_USB == false
   Serial.println("Disconnecting usb patch cords");
@@ -444,61 +527,109 @@ void setupAudio() {
   patchCord_usb2.disconnect();
 #endif // audio_usb
 
+#if FIRMWARE_MODE == PITCH_MODE
+  pc_bq1_r.disconnect();
+  pc_bq2_r.disconnect();
+  pc_amp_r.disconnect();
+  pc_rms_r.disconnect();
+  pc_peak_r.disconnect();
+  pc_fft_r.disconnect();
+  // patchCord16.disconnect();
+  // patchCord2.disconnect();
+#endif
+
+  // TODO connect and disconnect objects as needed
+
   ////////////// Audio ////////////
   printMajorDivide("Setting up Audio Parameters");
   AudioMemory(AUDIO_MEMORY);
   Serial.print("Audio Memory has been set to: ");
   Serial.println(AUDIO_MEMORY);
+  
   /////////////////////////////////////////////////////////////////////
-  feature_collector.linkAmplifier(&amp1, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
-  feature_collector.linkAmplifier(&amp2, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
+  feature_collector.linkAmplifier(&left_amp, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
+  feature_collector.linkAmplifier(&right_amp, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
   // feature_collector 0-1 are for the song front/rear
   if (PEAK_FEATURE_ACTIVE) {
-    feature_collector.linkPeak(&peak1, P_PEAK_VALS);
-    feature_collector.linkPeak(&peak2, P_PEAK_VALS);
+    feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
+    feature_collector.linkPeak(&right_peak, P_PEAK_VALS);
   }
   if (RMS_FEATURE_ACTIVE) {
-    feature_collector.linkRMS(&rms1, P_RMS_VALS);
-    feature_collector.linkRMS(&rms2, P_RMS_VALS);
+    feature_collector.linkRMS(&left_rms, P_RMS_VALS);
+    feature_collector.linkRMS(&right_rms, P_RMS_VALS);
   }
   if (FFT_FEATURES_ACTIVE) {
-    fft_manager[0].linkFFT(&fft1, "Front");
-    fft_manager[1].linkFFT(&fft2, "Rear");
+    fft_manager[0].linkFFT(&left_fft, "Front");
+    fft_manager[1].linkFFT(&right_fft, "Rear");
     for (int i = 0; i < num_fft_managers; i++) {
       Serial.print("Linked FFT to FFTManager mumber");
       Serial.println(i);
-      if (FIRMWARE_MODE == CICADA_MODE) {
-        fft_manager[i].setupCentroid(true, 4000, 16000);
-      } else if (FIRMWARE_MODE == PITCH_MODE) {
-        fft_manager[i].setupCentroid(true, 120, 24000);
-      }
+      fft_manager[i].setupCentroid(true, CENTROID_FEATURE_MIN, CENTROID_FEATURE_MAX);
       fft_manager[i].setPrintFFTValues(P_FFT_VALS);
       fft_manager[i].setPrintCentroidValues(P_CENTROID_VALS);
-      Serial.println("Started calculating Centroid in the FFTManager");
+      Serial.print("Started calculating Centroid in the FFTManager with a min/max of : ");
+      Serial.print(CENTROID_FEATURE_MIN);
+      Serial.print("\t");
+      Serial.println(CENTROID_FEATURE_MAX);
+      
       fft_manager[i].setCalculateFlux(true);
       fft_manager[i].setPrintFluxValues(P_FLUX_VALS);
       Serial.println("Started calculating FLUX in the FFTManager");
     }
   }
   Serial.println("Feature collectors have been linked");
-  /////////////////////////////////////////////////////////////////////
-  // #define BQ1_THRESH 30
-  // #define BQ2_
-  biquad1.setHighpass(0, 30, 0.85);
-  biquad1.setHighpass(1, 50, 0.85);
-  biquad1.setHighpass(2, 60, 0.85);
-  biquad1.setLowShelf(3, 80, ONSET_BQ1_DB);
-  Serial.println("Biquad filter 1 has been configured");
-  biquad2.setHighpass(0, 8000, 0.85);
-  biquad2.setHighpass(1, 8000, 0.85);
-  biquad2.setHighpass(2, 8000, 0.85);
-  biquad2.setLowShelf(3, 8000, ONSET_BQ1_DB);
-  Serial.println("Biquad filter 2 has been configured");
+  
+  /////////////////////////////////////////////////////////////////////  
+  left_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
+  left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
+  left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+  left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+  Serial.print("Left HPF has been configured (thresh/Q/dB): ");
+  Serial.print(LBQ1_THRESH);
+  Serial.print("\t");
+  Serial.print(LBQ1_Q);
+  Serial.print("\t");
+  Serial.println(LBQ1_DB);
 
+  left_LPF.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
+  left_LPF.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
+  left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+  left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+  Serial.print("Left LPF has been configured (thresh/Q/dB): ");
+  Serial.print(LBQ2_THRESH);
+  Serial.print("\t");
+  Serial.print(LBQ2_Q);
+  Serial.print("\t");
+  Serial.println(LBQ2_DB);
+
+  right_HPF.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+  right_HPF.setHighpass(1, RBQ1_THRESH, RBQ1_Q);
+  right_HPF.setHighpass(2, RBQ1_THRESH, RBQ1_Q);
+  right_HPF.setLowShelf(3, RBQ1_THRESH, RBQ1_DB);
+  Serial.print("Right HPF has been configured (thresh/Q/dB): ");
+  Serial.print(RBQ1_THRESH);
+  Serial.print("\t");
+  Serial.print(RBQ1_Q);
+  Serial.print("\t");
+  Serial.println(RBQ1_DB);
+
+  right_LPF.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
+  right_LPF.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
+  right_LPF.setLowpass(2, RBQ2_THRESH, RBQ2_Q);
+  right_LPF.setHighShelf(3, RBQ2_THRESH, RBQ2_DB);
+  Serial.print("Right LPF has been configured (thresh/Q/dB): ");
+  Serial.print(RBQ2_THRESH);
+  Serial.print("\t");
+  Serial.print(RBQ2_Q);
+  Serial.print("\t");
+  Serial.println(RBQ2_DB);
+  printMinorDivide();
+ 
   //////////////////////////////////////////////////////////////////////////////////
+  // TODO - make sure ENC_GAIN_ADJ exists for all bots
   Serial.println(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST);
   feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 0);
-  feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 1);
+  // feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 1);
   Serial.print("Set amp1 and amp2 gains to: ");
 
   // set gain level? automatically?
@@ -507,7 +638,7 @@ void setupAudio() {
 #if ARTEFACT_TYPE == SPECULATOR || ARTEFACT_TYPE == LEGATUS
   // Serial.println("Setting up the FFTManager to track the first channel");
   // fft_manager.addInput(&patchCord_fft_input1);
-  // fft_manager.addInput(&patchCord_fft_input2);
+  // patchCord_fft_input2.disconnect();
 #endif
   if (P_DOMINATE_CHANNEL) {
     Serial.print("setting the feature collector to print the dominate channel debug info");
@@ -550,6 +681,7 @@ void setupAudio() {
   printDivide();
 }
 
+#if ARTEFACT_TYPE == SPECULATOR
 void speculatorSetup() {
   // setup up some value tracker stuff
   brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
@@ -563,27 +695,29 @@ void speculatorSetup() {
   /////////////// User Controls ////////////////////////////////////////////
   // TODO make buttons do something for the speculators again
 #if HV_MAJOR == 3
-  uimanager.addBut(BUT1_PIN, BUT1_REVERSE, BUT1_PULLUP, &but_test[0], BUT1_NAME);
-  uimanager.addBut(BUT2_PIN, BUT2_REVERSE, BUT2_PULLUP, &but_test[1], BUT2_NAME);
-  uimanager.addBut(BUT3_PIN, BUT3_REVERSE, BUT3_PULLUP, &but_test[2], BUT3_NAME);
-  uimanager.addBut(BUT4_PIN, BUT4_REVERSE, BUT4_PULLUP, &but_test[3], BUT4_NAME);
-  uimanager.addBut(BUT5_PIN, BUT5_REVERSE, BUT5_PULLUP, &but_test[4], BUT5_NAME);
-  uimanager.addBut(BUT6_PIN, BUT6_REVERSE, BUT6_PULLUP, &but_test[5], BUT6_NAME);
-  uimanager.addBut(BUT7_PIN, BUT7_REVERSE, BUT7_PULLUP, &but_test[6], BUT7_NAME);
-  uimanager.addBut(BUT8_PIN, BUT8_REVERSE, BUT8_PULLUP, &but_test[7], BUT8_NAME);
-  uimanager.addBut(BUT9_PIN, BUT9_REVERSE, BUT9_PULLUP, &but_test[8], BUT9_NAME);
-  uimanager.addBut(BUT10_PIN, BUT10_REVERSE, BUT10_PULLUP, &but_test[9], BUT10_NAME);
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &COLOR_MAP_MODE, BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &SQUARE_BRIGHTNESS, BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, &REVERSE_HUE, BUT4_NAME);
+  uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, &REVERSE_SATURATION, BUT5_NAME);
+  uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, &REVERSE_BRIGHTNESS, BUT6_NAME);
+  uimanager.addBut(BUT7_PIN, BUT7_PULLUP, BUT7_LOW_VAL, BUT7_HIGH_VAL, &AUTOGAIN_ACTIVE, BUT7_NAME);
+  uimanager.addBut(BUT8_PIN, BUT8_PULLUP, BUT8_LOW_VAL, BUT8_HIGH_VAL, &BOOT_DELAY_ACTIVE, BUT8_NAME);
+  uimanager.addBut(BUT9_PIN, BUT9_PULLUP, BUT9_LOW_VAL, BUT9_HIGH_VAL, &LED_MAPPING_MODE, BUT9_NAME);
+  uimanager.addBut(BUT10_PIN, BUT10_PULLUP, BUT10_LOW_VAL, BUT10_HIGH_VAL, &but_test[0], BUT10_NAME);
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
-  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT4_NAME);
+  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT4_NAME); 
+  uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
+  uimanager.addPotRange(1, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
 #elif HV_MAJOR == 2
-  uimanager.addBut(BUT1_PIN, BUT1_REVERSE, BUT1_PULLUP, &COLOR_MAP_MODE, BUT1_NAME);
-  uimanager.addBut(BUT2_PIN, BUT2_REVERSE, BUT2_PULLUP, &SQUARE_BRIGHTNESS, BUT2_NAME);
-  uimanager.addBut(BUT3_PIN, BUT3_REVERSE, BUT3_PULLUP, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
-  uimanager.addBut(BUT4_PIN, BUT4_REVERSE, BUT4_PULLUP, &REVERSE_SATURATION, BUT4_NAME);
-  uimanager.addBut(BUT5_PIN, BUT5_REVERSE, BUT5_PULLUP, &REVERSE_HUE, BUT5_NAME);
-  uimanager.addBut(BUT6_PIN, BUT6_REVERSE, BUT6_PULLUP, &BOOT_DELAY_ACTIVE, BUT6_NAME);
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &COLOR_MAP_MODE, BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &SQUARE_BRIGHTNESS, BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP,BUT3_LOW_VAL, BUT3_HIGH_VAL, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP,BUT4_LOW_VAL, BUT4_HIGH_VAL, &REVERSE_SATURATION, BUT4_NAME);
+  uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, &REVERSE_HUE, BUT5_NAME);
+  uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, &BOOT_DELAY_ACTIVE, BUT6_NAME);
 #endif
   uimanager.setup();
   uimanager.printAll();
@@ -595,243 +729,40 @@ void speculatorSetup() {
   // setupDLManagerCicada();
   // printMinorDivide();
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////// Start of PITCH functions ////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-bool getColorFromFFTSingleRange(FFTManager1024 *f, uint8_t s, uint8_t e) {
-  double tot, frac;
-  frac = f->getFFTRangeByIdx(s, e);
-  tot = f->getFFTRangeByIdx(FFT_LOWEST_BIN, 128);
-  frac = frac / tot;
-  // RGBConverter::HsvToRgb(frac, 0.5, 1, 0, red, green, blue);
-  return 1;
+#endif
+
+#if ARTEFACT_TYPE == LEGATUS
+void legatusSetup() {
+    // setup up some value tracker stuff
+  brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
+  hue_tracker.setMinMaxUpdateFactor(HUE_MIN_UPDATE_FACTOR, HUE_MAX_UPDATE_FACTOR);
+  saturation_tracker.setMinMaxUpdateFactor(SAT_MIN_UPDATE_FACTOR, SAT_MAX_UPDATE_FACTOR);
+
+  //////////////// User Controls /////////////////////////////
+  explainSerialCommands(true);
+  // TODO - need to replace with the UIManager
+
+  /////////////// User Controls ////////////////////////////////////////////
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &but_test[1], BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, &but_test[2], BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, &but_test[3], BUT4_NAME);
+  uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, &but_test[4], BUT5_NAME);
+  uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, &but_test[5], BUT6_NAME);
+
+  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT2_NAME); 
+  uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
+  uimanager.addPotRange(1, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
+
+  uimanager.setup();
+  uimanager.printAll();
+  ///////////////////////// Audio //////////////////////////
+  setupAudio();
 }
+#endif // ARTEFACT_TYPE == LEGATUS
 
-double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft) {
-  double b = 0.0;
-  dprintMinorDivide(P_BRIGHTNESS);
-  dprint(P_BRIGHTNESS, "calculating HSB Brightness: ");
-  switch (BRIGHTNESS_FEATURE) {
-    case (FEATURE_PEAK_AVG):
-      dprintln(P_BRIGHTNESS, "feature is PEAK_AVG");
-      b = f->getDominatePeakAvg();
-      f->resetDominatePeakAvg();
-      break;
-    case (FEATURE_PEAK):
-      dprintln(P_BRIGHTNESS, "feature is PEAK");
-      b = f->getDominatePeak();
-      break;
-    case (FEATURE_RMS_AVG):
-      dprintln(P_BRIGHTNESS, "feature is RMS_AVG");
-      b = f->getDominateRMSAvg();
-      f->resetDominateRMSAvg();
-      break;
-    case (FEATURE_RMS):
-      dprintln(P_BRIGHTNESS, "feature is RMS");
-      b = f->getDominateRMS();
-      break;
-    case (FEATURE_FFT_ENERGY):
-      dprintln(P_BRIGHTNESS, "feature is FFT_ENERGY");
-      b = _fft->getFFTTotalEnergy();
-      break;
-    case (FEATURE_STRONG_FFT):
-      // range index is what the highest energy bin is within the range we care about
-      // b = _fft->getFFTTotalEnergy();
-      Serial.println("WARNING - FEATURE_STONG_FFT is not currently implemented");
-      break;
-    default:
-      Serial.println("ERROR - calculateHSBBrightness() does not accept that  BRIGHTNESS_FEATURE");
-      break;
-  }
-  ///////////////////////// If user controls are in place to scale the brightness it is done now //////////////////////
-  /////////////////////// Make sure that it is within bounds ////////////////////
-  dprint(P_BRIGHTNESS, "brightness is: ");
-  dprint(P_BRIGHTNESS, b);
-  brightness = b;
-  brightness_tracker.update();
-  brightness = brightness_tracker.getScaledAvg();
-  dprint(P_BRIGHTNESS, "\t"); dprintln(P_BRIGHTNESS, brightness);
-  ////////////////////////// When using target_brightness
-  if (USE_TARGET_BRIGHTNESS == true) {
-    // here the target_brightness value is used as the actual brightness and the actual as the target
-    if (brightness > target_brightness) {
-      target_brightness += 0.003;
-      if (brightness < target_brightness) {
-        target_brightness = brightness;
-      }
-    } else if (brightness < target_brightness) {
-      target_brightness -= 0.003;
-      if (brightness > target_brightness) {
-        target_brightness = brightness;
-      }
-    }
-    brightness = target_brightness;
-  }
-  /////////////////////////// Reverse ////////////////////////
-  if (REVERSE_BRIGHTNESS == true) {
-    brightness = 1.0 - brightness;
-  }
-  /////////////////////////// Apply user brightness scaler ////////////////////////
-  if (USER_BS_ACTIVE > 0) {
-    dprint(P_BS + P_BRIGHTNESS, "changing brightness due to user_brightness_scaler (scaler is: ");
-    dprint(P_BS + P_BRIGHTNESS, user_brightness_scaler, 4);
-    dprint(P_BS + P_BRIGHTNESS, ") | before: ");
-    dprint(P_BS + P_BRIGHTNESS, brightness, 4);
-    brightness = brightness * (user_brightness_scaler * (max_user_brightness_scaler - min_user_brightness_scaler) + min_user_brightness_scaler);
-    dprint(P_BS + P_BRIGHTNESS, " after: ");
-    dprintln(P_BS + P_BRIGHTNESS, brightness, 4);
-  }
-
-  //////////////////////// Scale down the brightness and make it more exponential for better results //////////////////
-  if (SQUARE_BRIGHTNESS == true && brightness < 1.0) {
-    dprint(P_BS + P_BRIGHTNESS, "changing brightness due to SQUARE_BRIGHTNESS | before: ");
-    dprint(P_BS + P_BRIGHTNESS, brightness, 4);
-    brightness = (brightness) * brightness ;
-    dprint(P_BS + P_BRIGHTNESS, " after: ");
-    dprintln(P_BS + P_BRIGHTNESS, brightness, 4);
-  }
-  /////////////////////// Make sure that it is within bounds ////////////////////
-  if (brightness < BRIGHTNESS_CUTTOFF_THRESHOLD) {
-    dprint(P_BS + P_BRIGHTNESS, "brightness lower than BRIGHTNESS_CUTTOFF_THRESHOLD of ");
-    dprint(P_BS + P_BRIGHTNESS, BRIGHTNESS_CUTTOFF_THRESHOLD);
-    dprintln(P_BS + P_BRIGHTNESS, " changing to 0.0");
-    brightness = 0;
-  } else if (brightness > 1.0 + BRIGHTNESS_CUTTOFF_THRESHOLD) {
-    dprint(P_BS + P_BRIGHTNESS, "brightness higher than 1.0 (");
-    dprint(P_BS + P_BRIGHTNESS, brightness);
-    dprintln(P_BS + P_BRIGHTNESS, "), changing to 1.0");
-    brightness = 1.0;
-  } else {
-    brightness = brightness - BRIGHTNESS_CUTTOFF_THRESHOLD;
-  }
-  dprintMinorDivide(P_BRIGHTNESS);
-  return brightness;
-}
-
-double calculateSaturation(FeatureCollector *f, FFTManager1024 *_fft) {
-  double sat = 0.0;
-  switch (SATURATION_FEATURE) {
-    case (FEATURE_PEAK_AVG):
-      sat = f->getDominatePeakAvg();
-      // Serial.println(sat);
-      // Serial.print("sat set to  : ");Serial.println(hsb[i][1]);
-      f->resetDominatePeakAvg();
-      break;
-    case (FEATURE_RMS_AVG):
-      sat = f->getDominateRMSAvg();
-      // Serial.print("sat set to  : ");Serial.println(hsb[i][1]);
-      f->resetDominateRMSAvg();
-      break;
-    case (FEATURE_FFT_RELATIVE_ENERGY):
-      // get how much energy is stored in the max bin, get the amount of energy stored in all bins
-      sat = _fft->getRelativeEnergy(_fft->getHighestEnergyIdx());
-      // Serial.print("highestEnergyIdx: ");Serial.println(_fft->getHighestEnergyIdx());
-      // Serial.print("relative energy in highest energy bin: ");Serial.println(sat);
-      break;
-    case (FEATURE_FLUX):
-      // sat = (_fft->getFlux() - 20) / 60;
-      sat = _fft->getFlux();
-      break;
-    default:
-      Serial.print("ERROR - calculateSaturation() does not accept that  SATURATION_FEATURE");
-      break;
-  }
-  saturation = sat;
-  saturation_tracker.update();
-  dprint(P_SATURATION, "saturation before/after scaling: ");
-  dprint(P_SATURATION, sat);
-  saturation = saturation_tracker.getScaledAvg();
-  saturation = (9.9 * log10((double)saturation + 1.0)) - (2.0 * (double)saturation);
-  if (REVERSE_SATURATION == true) {
-    saturation = 1.0 - saturation;
-  }
-  dprint(P_SATURATION, " / ");
-  dprint(P_SATURATION, sat, 4);
-  dprint(P_SATURATION, "\tsat min/max: ");
-  dprint(P_SATURATION, saturation_tracker.getMin(), 4);
-  dprint(P_SATURATION, " / ");
-  dprintln(P_SATURATION, saturation_tracker.getMax(), 4);
-  return saturation;
-}
-
-double calculateHue(FeatureCollector *f, FFTManager1024 *_fft) {
-  // In theory, the Hue should be between 0.0 and 1.0 to be useful for the rest of the program
-  double h = 0.0;
-  switch (HUE_FEATURE) {
-    case FEATURE_FFT_BIN_RANGE:
-      h = getColorFromFFTSingleRange(_fft, 3, 20);
-      break;
-    case FEATURE_FFT:
-      h = (double) constrain(_fft->getHighestEnergyIdx(), 7, 255);
-      break;
-    case FEATURE_FFT_MAX_BIN:
-      // calculate the bin with the most energy,
-      // Serial.print("Highest energy bin is: ");Serial.println(f->getHighestEnergyBin(FFT_LOWEST_BIN, FFT_HIGHEST_BIN));
-      // map the bin  index to a hue value
-      h = (double) (_fft->getHighestEnergyIdx(FFT_LOWEST_BIN, FFT_HIGHEST_BIN) - FFT_LOWEST_BIN) / FFT_HIGHEST_BIN;
-      // Serial.print("max bin hu e is : ");Serial.println(hue);
-      break;
-    case FEATURE_PEAK_AVG:
-      h = f->getDominatePeakAvg();
-      f->resetDominatePeakAvg();
-      break;
-    case FEATURE_PEAK:
-      h = f->getDominatePeak();
-      break;
-    case FEATURE_RMS_AVG:
-      h = f->getDominateRMSAvg();
-      break;
-    case FEATURE_RMS:
-      h = f->getDominateRMS();
-      break;
-    case FEATURE_CENTROID:
-      // the centroid will be a frequency between about 200 and 50000
-      // first I need to move it to a more linear scale
-      h = (double)_fft->getCentroid();
-      // next I need to scale down to a value between 0.0 and 1.0
-      break;
-    case FEATURE_FLUX:
-      h = _fft->getFlux();
-      break;
-    default:
-      Serial.println("ERROR - calculateHue() does not accept that HUE_FEATURE");
-      break;
-  }
-  dprint(P_HUE, "Hue is: ");
-  dprint(P_HUE, hue);
-  hue = h;
-  hue_tracker.update();
-  hue = hue_tracker.getScaledAvg();
-  /////////////////////////// Reverse ////////////////////////
-  if (REVERSE_HUE == true) {
-    hue = 1.0 - hue;
-  }
-  if (hue > 1.0) {
-    hue = 1.0;
-  } else if (hue < 0.0) {
-    hue = 0.0;
-  }
-  dprint(P_HUE, "\t");
-  dprintln(P_HUE, hue);
-  return hue;
-}
-
-
-void printRGB() {
-  // fft_manager.printFFTVals();
-  if (P_NEO_COLORS) {
-    neos[0].printColors();
-  }
-}
-
-void printHSB() {
-  if (P_HSB) {
-    Serial.print("h: "); Serial.print(hue);
-    Serial.print("\ts: "); Serial.print(saturation);
-    Serial.print("\tb: "); Serial.println(brightness);
-  }
-}
-
+#if ARTEFACT_TYPE == SPECULATOR
 void speculatorLoop() {
 #if CALCULATE_DOMINATE_CHANNEL
   dominate_channel = feature_collector.getDominateChannel();
@@ -842,7 +773,7 @@ void speculatorLoop() {
 
   if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
     double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]) * user_brightness_scaler;    // user brightness scaler is applied in this function
+    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]);    // user brightness scaler is applied in this function
     double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
     printHSB();
     printRGB();
@@ -862,8 +793,9 @@ void speculatorLoop() {
     Serial.println("ERROR = that color mode is not implemented in update neos");
   }
 }
+#endif // ARTEFACT_TYPE == SPECULATOR
 
-#elif ARTEFACT_TYPE == EXPLORATOR
+#if ARTEFACT_TYPE == EXPLORATOR
 void exploratorLoop() {
   if (BODY_TYPE == BELL_BODY) {
     exploratorBellBotLoop();
@@ -929,13 +861,13 @@ void exploratorSetup() {
 #endif
 
   /////////////// User Controls ////////////////////////////////////////////
-  uimanager.addBut(BUT1_PIN, BUT1_REVERSE, BUT1_PULLUP, &but_test[0], BUT1_NAME);
-  uimanager.addBut(BUT2_PIN, BUT2_REVERSE, BUT2_PULLUP, &but_test[1], BUT2_NAME);
-  uimanager.addBut(BUT3_PIN, BUT3_REVERSE, BUT3_PULLUP, &but_test[2], BUT3_NAME);
-  uimanager.addBut(BUT4_PIN, BUT4_REVERSE, BUT4_PULLUP, &but_test[3], BUT4_NAME);
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &but_test[1], BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, &but_test[2], BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, &but_test[3], BUT4_NAME);
 
-  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
-  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &STRIKE_LENGTH,  POT2_NAME);
+  uimanager.addPot(POT1_PIN, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_PLAY, &STRIKE_LENGTH,  POT2_NAME);
 
   uimanager.setup();
   uimanager.printAll();
@@ -1000,9 +932,7 @@ void setOutputs() {
   delay(2500);// let the system settle
 #endif
 }
-
-
-#endif //  ARTEFACT_TYPE == SPECULATOR
+#endif //  ARTEFACT_TYPE == EXPLORATOR
 
 #if (ARTEFACT_TYPE == EXPLORATOR) && TEST_SOLENOIDS == true
 void testSolenoids(unsigned int len) {
@@ -1048,7 +978,6 @@ void setupLuxManager() {
   delay(500);
 #if (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 3)
   lux_manager.add6030Sensors(2, 25);
-  lux_manager.linkNeoGroup(&neos[0]);
 #elif (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2)
   lux_manager.addSensorTcaIdx("Front", 0);
   lux_manager.addSensorTcaIdx("Rear", 1);
@@ -1274,6 +1203,11 @@ void buildPeckRhythm(int idx, uint32_t quarter) {
 }
 #endif // ARTEFACT_TYPE == EXPLORATOR
 
+#if ARTEFACT_TYPE == LEGATUS
+void legatusLoop() {
+  Serial.println("WARNING LEGATUS LOOP IS NOT YET IMPLEMENTED");
+}
+#endif // ARTEFACT_TYPE == LEGATUS
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -1291,7 +1225,7 @@ void setup() {
   printMinorDivide();
   printArtefactInfo();
 
-  /////////////////// NeoPixels ////////////////////////////////
+  /////////////////// NeoPixels //////////////////f //////////////
   printMinorDivide();
   Serial.println("Starting the LED strips");
   for (int i = 0; i < num_active_led_channels; i++) {
@@ -1436,6 +1370,9 @@ void loop() {
   ///////////////// User Controls ////////////////////////////
   if(uimanager.update() && P_USER_CONTROLS){
     uimanager.printAll();
+    for (int i = 0; i < NUM_NEOP_MANAGERS; i++) {
+       neos[i].changeMapping(LED_MAPPING_MODE);
+    }
   }
 
   ///////////////// WeatherManager ///////////////////////////
@@ -1482,5 +1419,9 @@ void loop() {
     dominate_channel_update = 0;
     feature_collector.calculateDominateChannel(fft_manager);
   }
+#endif
+
+#if P_AUDIO_USAGE_MAX == true
+  printAudioUsage();
 #endif
 }

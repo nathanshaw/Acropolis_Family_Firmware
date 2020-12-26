@@ -1,5 +1,5 @@
-#ifndef __CONFIGURATION_ADV_H__
-#define __CONFIGURATION_ADV_H__
+#ifndef __CONFIGURATION_HARDWARE_H__
+#define __CONFIGURATION_HARDWARE_H__
 #include "PrintUtils.h"
 #include "Macros.h"
 
@@ -11,6 +11,7 @@
 // it is recommended to map ENCLOSURE_TYPE to a physical switch
 uint8_t ENCLOSURE_TYPE =          ORB_ENCLOSURE_WITHOUT_HOLE;
 
+///////////////////// TODO - double check that is does something ////////////////////
 // different enclosures result in varying attenuation levels
 // ENC_GAIN_ADJUST is automatically calculated based on
 // the ARTEFACT_TYPE and ENCLOSURE_TYPE
@@ -24,11 +25,16 @@ double ENC_GAIN_ADJUST =        3.0;
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
 double ENC_GAIN_ADJUST =        0.75;
 #endif // ENCLOSURE_TYPE
+#elif ARTEFACT_TYPE == EXPLORATOR
+double ENC_GAIN_ADJUST =        1.0;
+#elif ARTEFACT_TYPE == LEGATUS
+double ENC_GAIN_ADJUST =        1.0;
 #endif // ARTEFACT_TYPE
 
 //////////////////////////////////////////////////////////////////
 /////////////////////// Enclosure Finish /////////////////////////
 //////////////////////////////////////////////////////////////////
+////////////////// TODO - ensure this is fully implemented ///////
 #define FINISH_NORMAL                  0
 #define FINISH_FROSTED                 1
 
@@ -82,14 +88,10 @@ double ENC_GAIN_ADJUST =        0.75;
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////// User Controls /////////////////////////
 //////////////////////////////////////////////////////////////////////
-// in ms, how often will theUI controls update?
-#define UI_POLLING_RATE 60
 // how much play will the pots have before returning a value?
 // good values should range between 0.002 and 0.005
 #define POT_PLAY        0.004
 
-// should the UIManager print when the user control elements are changed?
-#define P_UIMANAGER     true
 // for the bell bot basically
 #if (ARTEFACT_TYPE == EXPLORATOR) &&  (HV_MAJOR == 0)
 ///////////////////// Buttons /////////////////////////////////////////
@@ -100,10 +102,14 @@ double ENC_GAIN_ADJUST =        0.75;
 #define BUT4_PIN        17
 
 // should the values received from the buttons be reversed?
-#define BUT1_REVERSE    false
-#define BUT2_REVERSE    false
-#define BUT3_REVERSE    false
-#define BUT4_REVERSE    false
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+#define BUT3_LOW_VAL    0
+#define BUT3_HIGH_VAL   1
+#define BUT4_LOW_VAL    0
+#define BUT4_HIGH_VAL   1
 
 #define BUT1_ACTIVE     false
 #define BUT2_ACTIVE     false
@@ -155,10 +161,14 @@ double ENC_GAIN_ADJUST =        0.75;
 #define BUT4_PIN        17
 
 // should the values received from the buttons be reversed?
-#define BUT1_REVERSE    false
-#define BUT2_REVERSE    false
-#define BUT3_REVERSE    false
-#define BUT4_REVERSE    false
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+#define BUT3_LOW_VAL    0
+#define BUT3_HIGH_VAL   1
+#define BUT4_LOW_VAL    0
+#define BUT4_HIGH_VAL   1
 
 #define BUT1_ACTIVE     true
 #define BUT2_ACTIVE     true
@@ -210,12 +220,18 @@ double ENC_GAIN_ADJUST =        0.75;
 #define BUT6_PIN          17
 
 // reverse     (should the reading be reversed?)
-#define BUT1_REVERSE    false
-#define BUT2_REVERSE    false
-#define BUT3_REVERSE    false
-#define BUT4_REVERSE    false
-#define BUT5_REVERSE    false
-#define BUT6_REVERSE    false
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+#define BUT3_LOW_VAL    0
+#define BUT3_HIGH_VAL   1
+#define BUT4_LOW_VAL    0
+#define BUT4_HIGH_VAL   1
+#define BUT5_LOW_VAL    0
+#define BUT5_HIGH_VAL   1
+#define BUT6_LOW_VAL    0
+#define BUT6_HIGH_VAL   1
 
 // active      (is this button populated (available on the enclosure))
 #define BUT1_ACTIVE     true
@@ -267,16 +283,28 @@ double ENC_GAIN_ADJUST =        0.75;
 #define BUT10_PIN         14
 
 // reverse     (should the reading be reversed?)
-#define BUT1_REVERSE    false
-#define BUT2_REVERSE    false
-#define BUT3_REVERSE    false
-#define BUT4_REVERSE    false
-#define BUT5_REVERSE    false
-#define BUT6_REVERSE    false
-#define BUT7_REVERSE    false
-#define BUT8_REVERSE    false
-#define BUT9_REVERSE    false
-#define BUT10_REVERSE   false
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+#define BUT3_LOW_VAL    0
+#define BUT3_HIGH_VAL   1
+#define BUT4_LOW_VAL    1
+#define BUT4_HIGH_VAL   0
+#define BUT5_LOW_VAL    1
+#define BUT5_HIGH_VAL   0
+#define BUT6_LOW_VAL    1
+#define BUT6_HIGH_VAL   0
+#define BUT7_LOW_VAL    0
+#define BUT7_HIGH_VAL   1
+#define BUT8_LOW_VAL    1
+#define BUT8_HIGH_VAL   0
+// other options include outside in
+#define BUT9_LOW_VAL    LED_MAPPING_OUTSIDE_IN
+#define BUT9_HIGH_VAL   LED_MAPPING_BOTTOM_UP
+#define BUT10_LOW_VAL    0
+#define BUT10_HIGH_VAL   1
+
 
 // active      (is this button populated (available on the enclosure))
 #define BUT1_ACTIVE     true
@@ -304,19 +332,19 @@ double ENC_GAIN_ADJUST =        0.75;
 
 // TODO name these properly
 // name        (what is the name for the buttons)
-#define BUT1_NAME       "BUT1"
-#define BUT2_NAME       "BUT2"
-#define BUT3_NAME       "BUT3"
-#define BUT4_NAME       "BUT4"
-#define BUT5_NAME       "BUT5"
-#define BUT6_NAME       "BUT6"
-#define BUT7_NAME       "BUT7"
-#define BUT8_NAME       "BUT8"
-#define BUT9_NAME       "BUT9"
-#define BUT10_NAME      "BUT10"
+#define BUT1_NAME       "COLOR_MAP_MODE"
+#define BUT2_NAME       "SQUARE_BRIGHTNESS"
+#define BUT3_NAME       "USE_TARGET_BRIGHTNESS"
+#define BUT4_NAME       "REVERSE_HUE"
+#define BUT5_NAME       "REVERSE_SATURATION"
+#define BUT6_NAME       "REVERSE_BRIGHTNESS"
+#define BUT7_NAME       "AUTOGAIN_ACTIVE"
+#define BUT8_NAME       "BOOT_DELAY_ACTIVE"
+#define BUT9_NAME       "LED_MAPPING_MODE"
+#define BUT10_NAME      "unassigned"
 
 // num pots    (how many pots does the hardware support?)
-#define NUM_POTS        4
+#define NUM_POTS          4
 // pins        (what are the A pins associated with the pots?)
 #define POT1_PIN          22
 #define POT2_PIN          21
@@ -347,17 +375,86 @@ double ENC_GAIN_ADJUST =        0.75;
 #define POT3_NAME       "POT3"
 #define POT4_NAME       "BRIGHTNESS_CUTTOFF_THRESHOLD"
 
+#elif ARTEFACT_TYPE == LEGATUS
+
+// num buttons (how many buttons does the hardware support?)
+#define NUM_BUTTONS       6
+
+// pins        (what are the pins associated with the buttons?)
+#define BUT1_PIN          0
+#define BUT2_PIN          1
+#define BUT3_PIN          4
+#define BUT4_PIN          6
+#define BUT5_PIN          8
+#define BUT6_PIN          15
+
+// reverse     (should the reading be reversed?)
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+#define BUT3_LOW_VAL    0
+#define BUT3_HIGH_VAL   1
+#define BUT4_LOW_VAL    0
+#define BUT4_HIGH_VAL   1
+#define BUT5_LOW_VAL    0
+#define BUT5_HIGH_VAL   1
+#define BUT6_LOW_VAL    0
+#define BUT6_HIGH_VAL   1
+
+// active      (is this button populated (available on the enclosure))
+#define BUT1_ACTIVE     true
+#define BUT2_ACTIVE     true
+#define BUT3_ACTIVE     true
+#define BUT4_ACTIVE     true
+#define BUT5_ACTIVE     true
+#define BUT6_ACTIVE     true
+
+// pullup      (should the hardware pull-up be used)
+#define BUT1_PULLUP     true
+#define BUT2_PULLUP     true
+#define BUT3_PULLUP     true
+#define BUT4_PULLUP     true
+#define BUT5_PULLUP     true
+#define BUT6_PULLUP     true
+
+// TODO name these properly
+// name        (what is the name for the buttons)
+#define BUT1_NAME       "BUT1"
+#define BUT2_NAME       "BUT2"
+#define BUT3_NAME       "BUT3"
+#define BUT4_NAME       "BUT4"
+#define BUT5_NAME       "BUT5"
+#define BUT6_NAME       "BUT6"
+
+// num pots    (how many pots does the hardware support?)
+#define NUM_POTS          2
+
+// pins        (what are the A pins associated with the pots?)
+#define POT1_PIN        A3
+#define POT2_PIN        A7
+
+// reverse     (should the reading be reversed?)
+#define POT1_REVERSE    true
+#define POT2_REVERSE    true
+
+// active      (is this button populated (available on the enclosure))
+#define POT1_ACTIVE     true
+#define POT2_ACTIVE     true
+
+// play        (what is the amount of play allowed? 0.002 - 0.005 is usally good
+#define POT1_PLAY       0.004
+#define POT2_PLAY       0.004
+
+// name        (what is the name for the pot?)
+#define POT1_NAME       "POT1"
+#define POT2_NAME       "POT2"
+
 #endif // ARTEFACT_TYPE and HV_MAJOR
 
 // TODO - need  to move some of this to the EEPROM storage, and add a flag in the standard configuratui file to  either read that information or to write it
 // how long does the microphone test routine last for in the feature collector testMicrophone() function
 #define MICROPHONE_TEST_DURATION  1500
 #define LUX_TEST_DURATION         1000
-
-////////////////////////////////////////////////////////////////////////////
-///////////////////////// Jumper Settings //////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-// turn on/off reading jumpers in setup (if off take the default "true" values for jumper bools
-#define JUMPERS_POPULATED               1
 
 #endif // __HARDWARE_CONFIGURATION_H__

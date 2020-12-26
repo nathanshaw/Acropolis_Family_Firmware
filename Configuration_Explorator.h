@@ -258,8 +258,6 @@ const int sol_max[6] = {S1_MAX, S2_MAX, S3_MAX, S4_MAX, S5_MAX, S6_MAX};
 uint32_t ACTUATION_DELAY = 0;
 elapsedMillis last_playback_tmr;
 
-
-
 double peak_val = 0.0;
 double last_peak = 0.0;
 
@@ -286,7 +284,7 @@ void detectOnset() {
 
 #define AUDIO_MEMORY 60
 
-bool but_test[4];
+int but_test[4];
 float pot_test[4];
 
 float ACTIVITY_LEVEL = 0.0;

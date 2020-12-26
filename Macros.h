@@ -90,12 +90,6 @@
 // the Baud rate that our bots will be using
 #define SERIAL_BAUD_RATE          115200
 
-////////////////////////// LED MAPPING MODES ////////////////
-#define LED_MAPPING_STANDARD      0
-#define LED_MAPPING_BOTTOM_UP     1
-#define LED_MAPPING_ROUND         2
-#define LED_MAPPING_CENTER_OUT    3
-
 ////////////////////////// Lux Manager stuff ////////////////
 // how long will the lux calibratin routine last for?
 #define LUX_CALIBRATION_TIME            4000
