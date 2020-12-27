@@ -377,52 +377,29 @@ AudioConnection          pc_fft_l(left_amp, left_fft);
   AudioConnection          patchCord37(output_mixer1, 0, output_usb, 0);
   AudioConnection          patchCord38(output_mixer2, 0, output_usb, 1);
   // GUItool: end automatically generated code
-
-
 */
 
 ////////////////////////// Audio Objects //////////////////////////////////////////
+AudioInputI2S            i2s1;           //xy=811.6666030883789,543.3333549499512
+AudioFilterBiquad        left_HPF;       //xy=962.9998664855957,523.3333139419556
+AudioFilterBiquad        right_HPF;        //xy=966.6666641235352,556.6667098999023
+AudioMixer4              mixer1;         //xy=1106.6667137145996,563.3334369659424
+AudioFilterBiquad        left_LPF;       //xy=1243.6665573120117,561.6666469573975
+AudioAmplifier           left_amp;           //xy=1369.9999771118164,559.9999208450317
+AudioAnalyzeFFT1024      left_fft;       //xy=1570.999870300293,563.666654586792
+AudioAnalyzePeak         left_peak;      //xy=1574.999870300293,595.666654586792
+AudioOutputUSB           output_usb;     //xy=1581.9999313354492,630.6666469573975
 
-AudioInputI2S            i2s1;           //xy=257,388
-
-// #if FIRMWRARE_MODE == CICADA_MODE
-/*
-AudioFilterBiquad        right_HPF;  //xy=417,421
-AudioFilterBiquad        right_LPF;  //xy=587,422
-AudioAmplifier           right_amp;      //xy=742,424
-AudioAnalyzeFFT1024      right_fft;      //xy=960,510
-AudioAnalyzeRMS          right_rms;      //xy=964,477
-AudioAnalyzePeak         right_peak;     //xy=965,446
-*/
-// #endif // firmware_mode == cicada_mode
-
-AudioFilterBiquad        left_HPF;   //xy=412,359
-AudioFilterBiquad        left_LPF;   //xy=578,359
-AudioAmplifier           left_amp;       //xy=738,360
-AudioAnalyzeFFT1024      left_fft;       //xy=950,295
-AudioAnalyzeRMS          left_rms;       //xy=954,263
-AudioAnalyzePeak         left_peak;      //xy=960,327
-
-AudioOutputUSB           output_usb;     //xy=1189,392
-
-AudioConnection          pc_bq1_l(i2s1, 0, left_HPF, 0);
-AudioConnection          pc_bq2_l(left_HPF, left_LPF);
-AudioConnection          pc_amp_l(left_LPF, left_amp);
-AudioConnection          pc_rms_l(left_amp, left_rms);
-AudioConnection          pc_usb_l(left_amp, 0, output_usb, 0);
-AudioConnection          pc_peak_l(left_amp, left_peak);
-AudioConnection          pc_fft_l(left_amp, left_fft);
-
-/*
-AudioConnection          pc_bq1_r(i2s1, 1, right_HPF, 0);
-AudioConnection          pc_bq2_r(right_HPF, right_LPF);
-AudioConnection          pc_amp_r(right_LPF, right_amp);
-AudioConnection          pc_rms_r(right_amp, right_rms);
-AudioConnection          pc_usb_r(right_amp, 0, output_usb, 1);
-AudioConnection          pc_peak_r(right_amp, right_peak);
-AudioConnection          pc_fft_r(right_amp, right_fft);
-*/
-
+AudioConnection          patchCord1(i2s1, 0, left_HPF, 0);
+AudioConnection          patchCord2(i2s1, 1, right_HPF, 0);
+AudioConnection          patchCord3(left_HPF, 0, mixer1, 0);
+AudioConnection          patchCord4(right_HPF, 0, mixer1, 1);
+AudioConnection          patchCord5(mixer1, 0, output_usb, 1);
+AudioConnection          patchCord6(mixer1, left_LPF);
+AudioConnection          patchCord7(left_LPF, left_amp);
+AudioConnection          patchCord8(left_amp, left_fft);
+AudioConnection          patchCord9(left_amp, left_peak);
+AudioConnection          patchCord10(left_amp, 0, output_usb, 0);
 #endif // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE 
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -627,9 +604,9 @@ void setupAudio() {
 
   /////////////////////////////////////////////////////////////////////
   left_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
-  left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
-  left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
-  left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+  // left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
+  // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+  // left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
   Serial.print("Left HPF has been configured (thresh/Q/dB): ");
   Serial.print(LBQ1_THRESH);
   Serial.print("\t");
@@ -638,16 +615,16 @@ void setupAudio() {
   Serial.println(LBQ1_DB);
 
   left_LPF.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
-  left_LPF.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
-  left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
-  left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+  // left_LPF.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
+  // left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+  // left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
   Serial.print("Left LPF has been configured (thresh/Q/dB): ");
   Serial.print(LBQ2_THRESH);
   Serial.print("\t");
   Serial.print(LBQ2_Q);
   Serial.print("\t");
   Serial.println(LBQ2_DB);
-#if NUM_CHANNELS > 1
+  
   right_HPF.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(1, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(2, RBQ1_THRESH, RBQ1_Q);
@@ -658,7 +635,8 @@ void setupAudio() {
   Serial.print(RBQ1_Q);
   Serial.print("\t");
   Serial.println(RBQ1_DB);
-
+  
+#if NUM_CHANNELS > 1
   right_LPF.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
   right_LPF.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
   right_LPF.setLowpass(2, RBQ2_THRESH, RBQ2_Q);
@@ -676,6 +654,7 @@ void setupAudio() {
 
   //////////////////////////////////////////////////////////////////////////////////
   // TODO - make sure ENC_GAIN_ADJ exists for all bots
+  Serial.print("Starting gain is now set to: ");
   Serial.println(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST);
   feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 0);
   // feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 1);
@@ -685,10 +664,13 @@ void setupAudio() {
   // todo make this adapt to when microphones are broken on one or more side...
 
 #if ARTEFACT_TYPE == SPECULATOR || ARTEFACT_TYPE == LEGATUS
+  mixer1.gain(0, STARTING_GAIN);
+  mixer1.gain(0, STARTING_GAIN);
   // Serial.println("Setting up the FFTManager to track the first channel");
   // fft_manager.addInput(&patchCord_fft_input1);
   // patchCord_fft_input2.disconnect();
 #endif
+
   if (P_DOMINATE_CHANNEL) {
     Serial.print("setting the feature collector to print the dominate channel debug info");
   };
@@ -756,6 +738,7 @@ void speculatorSetup() {
   uimanager.addBut(BUT10_PIN, BUT10_PULLUP, BUT10_LOW_VAL, BUT10_HIGH_VAL, &but_test[0], BUT10_NAME);
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &ADDED_SATURATION, POT2_NAME);
   uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT4_NAME);
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
   uimanager.addPotRange(1, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
@@ -818,9 +801,8 @@ void speculatorLoop() {
   // Serial.print("dominate channel is : ");
   // Serial.println(dominate_channel);
 #endif
-
   if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
+    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);   
     double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]);    // user brightness scaler is applied in this function
     double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
     printHSB();

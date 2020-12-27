@@ -135,8 +135,11 @@ bool gain_adjust_active =                false;
 // how often does the feature collector update
 //33 is 30 times a second
 #define FC_UPDATE_RATE                        10
-#define AUDIO_MEMORY                          24
-
+#if HV_MAJOR == 2
+#define AUDIO_MEMORY                          12
+#else
+#define AUDIO_MEMORY                          20
+#endif
 bool stereo_audio =                           true;
 
 /////////////////////////////////////////////////////////////////////////

@@ -389,7 +389,7 @@ double ENC_GAIN_ADJUST =        1.0;
 
 // name        (what is the name for the pot?)
 #define POT1_NAME       "user_brightness_scaler"
-#define POT2_NAME       "POT2"
+#define POT2_NAME       "ADDED_SATURATION"
 #define POT3_NAME       "POT3"
 #define POT4_NAME       "BRIGHTNESS_CUTTOFF_THRESHOLD"
 

@@ -17,6 +17,9 @@
 /////////////////// TODO
 #define ARTEFACT_TYPE             SPECULATOR
 
+// TODO finish integrating this
+double ADDED_SATURATION  = 0.35;
+
 ////////////////////// Hardware Revision /////////////////////////////
 // There are different hardware revisions for different Artefacts
 // Starting with the Speculator the 2.0, 2.1 and 3.0 are the primary revisions
@@ -25,13 +28,14 @@
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
+// 0.1.4 = version used for the jan, 2021 southwest installations
 #define HV_MAJOR                  2
 #define HV_MINOR                  1
 
 //////////////////// Software Revision ////////////////////////////////
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               3
+#define SV_REVISION               4
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -131,11 +135,11 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 
 ////////////////////////////////// Lux Ambiant Lighting Thresholds /////////////////////
 #if (ARTEFACT_TYPE == SPECULATOR) && HV_MAJOR == 2
-#define NIGHT_LUX_THRESHOLD             1.0
+#define NIGHT_LUX_THRESHOLD             0.25
 // this is the threshold in which anything below will just be treated as the lowest reading
-#define LOW_LUX_THRESHOLD               10.0
+#define LOW_LUX_THRESHOLD               5.0
 // when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
-#define MID_LUX_THRESHOLD               350.0
+#define MID_LUX_THRESHOLD               20.0
 #define HIGH_LUX_THRESHOLD              1200.0
 #define EXTREME_LUX_THRESHOLD           5000.0
 
@@ -574,6 +578,8 @@ double current_feature;
 // will autogain based on the LED ON/OFF time be active?
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 int AUTOGAIN_ACTIVE      =                               false;
+#elif ARTEFACT_TYPE == SPECULATOR
+int AUTOGAIN_ACTIVE      =                               false;
 #else
 int AUTOGAIN_ACTIVE      =                               true;
 #endif
@@ -752,8 +758,8 @@ elapsedMillis last_usage_print =              0;// for keeping track of audio me
 // this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
 double USER_CONTROL_GAIN_ADJUST               = 1.0;
 
-#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR < 3
-#define STARTING_GAIN                         40.0
+#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 2
+#define STARTING_GAIN                         12.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 #define STARTING_GAIN                         1.0
@@ -785,59 +791,59 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 
 #elif ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
 // SONG HP
-#define LBQ1_THRESH         120
-#define LBQ1_Q              0.85
+#define LBQ1_THRESH         400
+#define LBQ1_Q              1.0
 #define LBQ1_DB             -12
 // SONG LP
-#define LBQ2_THRESH         24000
-#define LBQ2_Q              0.85
+#define LBQ2_THRESH         20000
+#define LBQ2_Q              1.0
 #define LBQ2_DB             -12
 
 // Should be Inactive
-#define RBQ1_THRESH         120
-#define RBQ1_Q              0.85
+#define RBQ1_THRESH         400
+#define RBQ1_Q              1.0
 #define RBQ1_DB             -12
 // Should be Inactive
-#define RBQ2_THRESH         24000
+#define RBQ2_THRESH         20000
 #define RBQ2_Q              0.85
 #define RBQ2_DB             -12
 //////////////////
 #elif ARTEFACT_TYPE == EXPLORATOR
 // SONG HP
-#define LBQ1_THRESH         120
-#define LBQ1_Q              0.85
+#define LBQ1_THRESH         400
+#define LBQ1_Q              1.0
 #define LBQ1_DB             -12
 // SONG LP
-#define LBQ2_THRESH         24000
-#define LBQ2_Q              0.85
+#define LBQ2_THRESH         20000
+#define LBQ2_Q              1.0
 #define LBQ2_DB             -12
 
 // Should be Inactive
-#define RBQ1_THRESH         120
-#define RBQ1_Q              0.85
+#define RBQ1_THRESH         400
+#define RBQ1_Q              1.0
 #define RBQ1_DB             -12
 // Should be Inactive
-#define RBQ2_THRESH         24000
-#define RBQ2_Q              0.85
+#define RBQ2_THRESH         20000
+#define RBQ2_Q              1.0
 #define RBQ2_DB             -12
 
 #else
 // SONG HP
-#define LBQ1_THRESH         120
-#define LBQ1_Q              0.85
+#define LBQ1_THRESH         400
+#define LBQ1_Q              1.0
 #define LBQ1_DB             -12
 // SONG LP
-#define LBQ2_THRESH         24000
-#define LBQ2_Q              0.85
+#define LBQ2_THRESH         20000
+#define LBQ2_Q              1.0
 #define LBQ2_DB             -12
 
 // Should be Inactive
-#define RBQ1_THRESH         120
-#define RBQ1_Q              0.85
+#define RBQ1_THRESH         400
+#define RBQ1_Q              1.0
 #define RBQ1_DB             -12
 // Should be Inactive
-#define RBQ2_THRESH         24000
-#define RBQ2_Q              0.85
+#define RBQ2_THRESH         20000
+#define RBQ2_Q              1.0
 #define RBQ2_DB             -12
 #endif
 /////////////////////////////////////////////////////////////////////////

@@ -299,6 +299,10 @@ double calculateSaturation(FeatureCollector *f, FFTManager1024 *_fft) {
   if (REVERSE_SATURATION == true) {
     saturation = 1.0 - saturation;
   }
+  saturation += ADDED_SATURATION; // just add some base saturation to make the feedback more colourful
+  if (saturation > 1.0) {
+    saturation = 1.0;
+  }
   dprint(P_SATURATION, " / ");
   dprint(P_SATURATION, sat, 4);
   dprint(P_SATURATION, "\tsat min/max: ");
