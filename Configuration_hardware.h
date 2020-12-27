@@ -90,7 +90,7 @@ double ENC_GAIN_ADJUST =        1.0;
 //////////////////////////////////////////////////////////////////////
 // how much play will the pots have before returning a value?
 // good values should range between 0.002 and 0.005
-#define POT_PLAY        0.004
+#define POT_PLAY        0.006
 
 // for the bell bot basically
 #if (ARTEFACT_TYPE == EXPLORATOR) &&  (HV_MAJOR == 0)
@@ -110,6 +110,11 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT3_HIGH_VAL   1
 #define BUT4_LOW_VAL    0
 #define BUT4_HIGH_VAL   1
+
+#define BUT1_LOW_CHANGES    true
+#define BUT2_LOW_CHANGES    true
+#define BUT3_LOW_CHANGES    true
+#define BUT4_LOW_CHANGES    true
 
 #define BUT1_ACTIVE     false
 #define BUT2_ACTIVE     false
@@ -171,6 +176,11 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT4_LOW_VAL    0
 #define BUT4_HIGH_VAL   1
 
+#define BUT1_LOW_CHANGES    true
+#define BUT2_LOW_CHANGES    true
+#define BUT3_LOW_CHANGES    true
+#define BUT4_LOW_CHANGES    true
+
 #if BODY_TYPE == CLAPPER_BODY
 #define BUT1_ACTIVE     false
 #define BUT2_ACTIVE     false
@@ -231,6 +241,13 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT4_PIN          15
 #define BUT5_PIN          16
 #define BUT6_PIN          17
+
+#define BUT1_LOW_CHANGES    true
+#define BUT2_LOW_CHANGES    true
+#define BUT3_LOW_CHANGES    true
+#define BUT4_LOW_CHANGES    true
+#define BUT5_LOW_CHANGES    true
+#define BUT6_LOW_CHANGES    true
 
 // reverse     (should the reading be reversed?)
 #define BUT1_LOW_VAL    0
@@ -300,29 +317,48 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT9_PIN          12
 #define BUT10_PIN         14
 
+#define BUT1_LOW_CHANGES    true
+#define BUT2_LOW_CHANGES    true
+#define BUT3_LOW_CHANGES    true
+#define BUT4_LOW_CHANGES    true
+#define BUT5_LOW_CHANGES    true
+#define BUT6_LOW_CHANGES    true
+#define BUT7_LOW_CHANGES    false
+#define BUT8_LOW_CHANGES    false
+#define BUT9_LOW_CHANGES    false
+#define BUT10_LOW_CHANGES   true
+
 // reverse     (should the reading be reversed?)
 #define BUT1_LOW_VAL    0
 #define BUT1_HIGH_VAL   1
+
 #define BUT2_LOW_VAL    0
 #define BUT2_HIGH_VAL   1
+
 #define BUT3_LOW_VAL    0
 #define BUT3_HIGH_VAL   1
-#define BUT4_LOW_VAL    1
-#define BUT4_HIGH_VAL   0
-#define BUT5_LOW_VAL    1
-#define BUT5_HIGH_VAL   0
-#define BUT6_LOW_VAL    1
-#define BUT6_HIGH_VAL   0
-#define BUT7_LOW_VAL    0
-#define BUT7_HIGH_VAL   1
-#define BUT8_LOW_VAL    1
-#define BUT8_HIGH_VAL   0
-// other options include outside in
-#define BUT9_LOW_VAL    LED_MAPPING_OUTSIDE_IN
-#define BUT9_HIGH_VAL   LED_MAPPING_BOTTOM_UP
-#define BUT10_LOW_VAL    0
-#define BUT10_HIGH_VAL   1
 
+#define BUT4_LOW_VAL    0
+#define BUT4_HIGH_VAL   1
+
+#define BUT5_LOW_VAL    0
+#define BUT5_HIGH_VAL   1
+
+#define BUT6_LOW_VAL    0
+#define BUT6_HIGH_VAL   1
+
+#define BUT7_LOW_VAL    LED_MAPPING_STANDARD
+#define BUT7_HIGH_VAL   LED_MAPPING_CENTER_OUT
+
+#define BUT8_LOW_VAL    LED_MAPPING_STANDARD
+#define BUT8_HIGH_VAL   LED_MAPPING_OUTSIDE_IN
+
+// other options include outside in
+#define BUT9_LOW_VAL    LED_MAPPING_STANDARD
+#define BUT9_HIGH_VAL   LED_MAPPING_CLOCK_FILL
+
+#define BUT10_LOW_VAL    1
+#define BUT10_HIGH_VAL   0
 
 // active      (is this button populated (available on the enclosure))
 #define BUT1_ACTIVE     true
@@ -356,10 +392,10 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT4_NAME       "REVERSE_HUE"
 #define BUT5_NAME       "REVERSE_SATURATION"
 #define BUT6_NAME       "REVERSE_BRIGHTNESS"
-#define BUT7_NAME       "AUTOGAIN_ACTIVE"
-#define BUT8_NAME       "BOOT_DELAY_ACTIVE"
-#define BUT9_NAME       "LED_MAPPING_MODE"
-#define BUT10_NAME      "unassigned"
+#define BUT7_NAME       "LED_MAPPING_MODE (CENTER_OUT)"
+#define BUT8_NAME       "LED_MAPPING_MODE (OUTSIDE_IN)"
+#define BUT9_NAME       "LED_MAPPING_MODE (CLOCK FACE)"
+#define BUT10_NAME      "BOOT_DELAY_ACTIVE"
 
 // num pots    (how many pots does the hardware support?)
 #define NUM_POTS          4

@@ -18,7 +18,7 @@
 #define ARTEFACT_TYPE             SPECULATOR
 
 // TODO finish integrating this
-double ADDED_SATURATION  = 0.35;
+float ADDED_SATURATION  = 0.35;
 
 ////////////////////// Hardware Revision /////////////////////////////
 // There are different hardware revisions for different Artefacts
@@ -29,8 +29,8 @@ double ADDED_SATURATION  = 0.35;
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
 // 0.1.4 = version used for the jan, 2021 southwest installations
-#define HV_MAJOR                  2
-#define HV_MINOR                  1
+#define HV_MAJOR                  3
+#define HV_MINOR                  0
 
 //////////////////// Software Revision ////////////////////////////////
 #define SV_MAJOR                  0
@@ -231,10 +231,10 @@ float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
 /////////////////////////////////// Neopixel LEDs /////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 // this is needed for the forced lux
-#define UPDATE_ON_OFF_RATIOS            true
+#define UPDATE_ON_OFF_RATIOS            false
 
 // when onset detection is active, this will be the threshold
-double ONSET_THRESH =                         1.20;
+double ONSET_THRESH =                   1.20;
 
 // this color is used for flashes
 #define ONSET_RED                       200
@@ -251,8 +251,8 @@ double ONSET_THRESH =                         1.20;
 #define LED_MAPPING_CLOCK_FILL    6
 #define LED_MAPPING_CUSTOM        7
 
-#if (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR > 2)
-int LED_MAPPING_MODE = LED_MAPPING_CLOCK_HAND;
+#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
+int LED_MAPPING_MODE = LED_MAPPING_CENTER_OUT;
 #else
 int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
@@ -441,7 +441,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_SMOOTH_HSB                    false
 #define P_SATURATION                    false
 #define P_HUE                           false
-#define P_BRIGHTNESS                    true
+#define P_BRIGHTNESS                    false
 
 #define P_NEO_COLORS                    false
 
@@ -476,11 +476,11 @@ elapsedMillis song_update_timer = 0;
 #define P_UPDATE_SONG_LENGTH                      false
 
 //////////////////////////// Onset Functionality ///////////////////////
-#define P_ONSET_FEATURES                          true
-#define P_ONSET                                   true
+#define P_ONSET_FEATURES                          false
+#define P_ONSET                                   false
 
 //////////////////////////// AutoGain //////////////////////////////////
-#define P_AUTOGAIN                                true
+#define P_AUTOGAIN                                false
 
 // for calculating the dominate channel, it works best if the dominate channel is re-caculated every
 
@@ -762,7 +762,7 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define STARTING_GAIN                         12.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
-#define STARTING_GAIN                         1.0
+#define STARTING_GAIN                         22.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define STARTING_GAIN                         40.0
 #elif ARTEFACT_TYPE == EXPLORATOR
@@ -892,8 +892,6 @@ uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
 uint8_t BRIGHTNESS_FEATURE  =               (FEATURE_FFT_ENERGY);
 #endif // ARTEFACT_TYPE == SPECULATOR
-
-
 
 int REVERSE_SATURATION     =               true;
 int REVERSE_BRIGHTNESS     =               false;

@@ -86,7 +86,6 @@ void updateFeedbackLEDs(FFTManager1024 *_fft_manager) {
     uint8_t red, green, blue;
 
     if (COLOR_FEATURE == SPECTRAL_CENTROID) {
-
       target_color = calculateColorFromCentroid(_fft_manager);
       dprint(P_COLOR, "target color: ");
       dprintln(P_COLOR, target_color);
