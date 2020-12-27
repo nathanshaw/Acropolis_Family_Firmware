@@ -202,7 +202,7 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft) {
   dprint(P_BRIGHTNESS, b);
   brightness = b;
   brightness_tracker.update();
-  brightness = brightness_tracker.getScaledAvg();
+  brightness = brightness_tracker.getScaled();
   dprint(P_BRIGHTNESS, "\t"); dprintln(P_BRIGHTNESS, brightness);
   ////////////////////////// When using target_brightness
   if (USE_TARGET_BRIGHTNESS == true) {
@@ -244,8 +244,6 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft) {
     dprint(P_BS + P_BRIGHTNESS, " after: ");
     dprintln(P_BS + P_BRIGHTNESS, brightness, 4);
   }
-
-
   /////////////////////// Make sure that it is within bounds ////////////////////
   if (brightness < BRIGHTNESS_CUTTOFF_THRESHOLD) {
     dprint(P_BS + P_BRIGHTNESS, "brightness lower than BRIGHTNESS_CUTTOFF_THRESHOLD of ");

@@ -148,7 +148,7 @@ bool stereo_audio =                           true;
 
 // Which Audio features will be activated?
 #define PEAK_FEATURE_ACTIVE                    1
-#define RMS_FEATURE_ACTIVE                     1
+#define RMS_FEATURE_ACTIVE                     0
 // these features are not currently implemented
 // #define TONE_FEATURE_ACTIVE                 1
 // #define FREQ_FEATURE_ACTIVE                 1

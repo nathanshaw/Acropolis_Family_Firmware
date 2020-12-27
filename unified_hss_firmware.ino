@@ -386,13 +386,14 @@ AudioConnection          pc_fft_l(left_amp, left_fft);
 AudioInputI2S            i2s1;           //xy=257,388
 
 // #if FIRMWRARE_MODE == CICADA_MODE
+/*
 AudioFilterBiquad        right_HPF;  //xy=417,421
 AudioFilterBiquad        right_LPF;  //xy=587,422
 AudioAmplifier           right_amp;      //xy=742,424
 AudioAnalyzeFFT1024      right_fft;      //xy=960,510
 AudioAnalyzeRMS          right_rms;      //xy=964,477
 AudioAnalyzePeak         right_peak;     //xy=965,446
-
+*/
 // #endif // firmware_mode == cicada_mode
 
 AudioFilterBiquad        left_HPF;   //xy=412,359
@@ -412,6 +413,7 @@ AudioConnection          pc_usb_l(left_amp, 0, output_usb, 0);
 AudioConnection          pc_peak_l(left_amp, left_peak);
 AudioConnection          pc_fft_l(left_amp, left_fft);
 
+/*
 AudioConnection          pc_bq1_r(i2s1, 1, right_HPF, 0);
 AudioConnection          pc_bq2_r(right_HPF, right_LPF);
 AudioConnection          pc_amp_r(right_LPF, right_amp);
@@ -419,6 +421,7 @@ AudioConnection          pc_rms_r(right_amp, right_rms);
 AudioConnection          pc_usb_r(right_amp, 0, output_usb, 1);
 AudioConnection          pc_peak_r(right_amp, right_peak);
 AudioConnection          pc_fft_r(right_amp, right_fft);
+*/
 
 #endif // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE 
 
@@ -569,17 +572,6 @@ void setupAudio() {
   patchCord_usb2.disconnect();
 #endif // audio_usb
 
-#if FIRMWARE_MODE == PITCH_MODE
-  pc_bq1_r.disconnect();
-  pc_bq2_r.disconnect();
-  pc_amp_r.disconnect();
-  pc_rms_r.disconnect();
-  pc_peak_r.disconnect();
-  pc_fft_r.disconnect();
-  // patchCord16.disconnect();
-  // patchCord2.disconnect();
-#endif
-
   // TODO connect and disconnect objects as needed
 
   ////////////// Audio ////////////
@@ -587,6 +579,7 @@ void setupAudio() {
   AudioMemory(AUDIO_MEMORY);
   Serial.print("Audio Memory has been set to: ");
   Serial.println(AUDIO_MEMORY);
+  delay(500);
 
   /////////////////////////////////////////////////////////////////////
   feature_collector.linkAmplifier(&left_amp, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
@@ -824,7 +817,6 @@ void speculatorLoop() {
   dominate_channel = feature_collector.getDominateChannel();
   // Serial.print("dominate channel is : ");
   // Serial.println(dominate_channel);
-  // delay(1000);
 #endif
 
   if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
@@ -985,6 +977,7 @@ void exploratorLoop() {
 //////////////////////////////////////////////////////////////////////////
 ////////////////// setup / main loops ////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
+#if ARTEFACT_TYPE == EXPLORATOR
 void exploratorSetup() {
 
   printMajorDivide("starting exploratorSetup() loop");
@@ -1074,7 +1067,7 @@ void setOutputs() {
   delay(2500);// let the system settle
 #endif
 }
-// #endif //  ARTEFACT_TYPE == EXPLORATOR
+#endif //  ARTEFACT_TYPE == EXPLORATOR
 
 #if (ARTEFACT_TYPE == EXPLORATOR) && TEST_SOLENOIDS == true
 void testSolenoids(unsigned int len) {

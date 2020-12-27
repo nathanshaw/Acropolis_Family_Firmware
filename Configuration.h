@@ -15,7 +15,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE             EXPLORATOR
+#define ARTEFACT_TYPE             SPECULATOR
 
 ////////////////////// Hardware Revision /////////////////////////////
 // There are different hardware revisions for different Artefacts
@@ -25,8 +25,8 @@
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
-#define HV_MAJOR                  1
-#define HV_MINOR                  0
+#define HV_MAJOR                  2
+#define HV_MINOR                  1
 
 //////////////////// Software Revision ////////////////////////////////
 #define SV_MAJOR                  0
@@ -76,6 +76,20 @@
 // speculator, explorator, and legatus configuration files
 #include "Configuration_hardware.h"
 
+#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 2
+#define NUM_AMPLIFIERS                1
+#define NUM_PEAK_ANAS                 1
+#define NUM_RMS_ANAS                  1
+#define NUM_FFT                       1
+#define NUM_CHANNELS                  1
+#else
+#define NUM_AMPLIFIERS                1
+#define NUM_PEAK_ANAS                 1
+#define NUM_RMS_ANAS                  1
+#define NUM_FFT                       1
+#define NUM_CHANNELS                  1
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Boot Settings //////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +123,11 @@ int BOOT_DELAY_ACTIVE    =           false;
 // values allowed
 #define LUX_ADJUSTS_BS                  1
 #define LUX_ADJUSTS_MIN_MAX             1
+#if ARTEFACT_TYPE == SPECULATOR
+uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_MIN_MAX;
+#else
 uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
+#endif
 
 ////////////////////////////////// Lux Ambiant Lighting Thresholds /////////////////////
 #if (ARTEFACT_TYPE == SPECULATOR) && HV_MAJOR == 2
@@ -415,11 +433,11 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_WEATHER_MANAGER_READINGS      false
 
 ///////////////////////// NeoPixels and Colour ////////////////////////
-#define P_HSB                           false
+#define P_HSB                           true
 #define P_SMOOTH_HSB                    false
 #define P_SATURATION                    false
 #define P_HUE                           false
-#define P_BRIGHTNESS                    false
+#define P_BRIGHTNESS                    true
 
 #define P_NEO_COLORS                    false
 
@@ -484,7 +502,7 @@ elapsedMillis last_audio_usage_print;
 #endif
 
 //////////////////////////// FFT ///////////////////////////////////////////
-#define P_FFT_VALS                                true
+#define P_FFT_VALS                                false
 // will print spectral flux if flux_active
 #define P_FLUX_VALS                               false
 #define P_ONSET_FLUX                              false
@@ -602,6 +620,7 @@ int AUTOGAIN_ACTIVE      =                               true;
 
 ////////////////////////////// Dominate Channel /////////////////////
 #define CALCULATE_DOMINATE_CHANNEL                      true
+
 #if CALCULATE_DOMINATE_CHANNEL == true
 uint64_t first_dominate_channel_calculation =           1000 * 60 * 2;  // starting two minutes into the program
 uint32_t dominate_channel_update_rate =                 1000 * 60 * 10; // every ten minutes
@@ -613,6 +632,10 @@ int dominate_channel =                                  0;
 ///////////////////////// FFT Manager //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+uint8_t num_fft_managers =                              1;
+#elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 2
+uint8_t num_fft_managers =                              1;
+#elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 uint8_t num_fft_managers =                              1;
 #else
 uint8_t num_fft_managers =                              2;
@@ -730,7 +753,7 @@ elapsedMillis last_usage_print =              0;// for keeping track of audio me
 double USER_CONTROL_GAIN_ADJUST               = 1.0;
 
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR < 3
-#define STARTING_GAIN                         480.0
+#define STARTING_GAIN                         40.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 #define STARTING_GAIN                         1.0
@@ -854,9 +877,17 @@ double hue_max =                                0.0;
 #define FEATURE_FLUX                        (14)
 
 // When the color mapping is using HSB, this will be where the features used are determined
+#if ARTEFACT_TYPE == SPECULATOR
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
-uint8_t BRIGHTNESS_FEATURE  =               (FEATURE_FFT_ENERGY);
 uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK;
+#else
+uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
+uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
+uint8_t BRIGHTNESS_FEATURE  =               (FEATURE_FFT_ENERGY);
+#endif // ARTEFACT_TYPE == SPECULATOR
+
+
 
 int REVERSE_SATURATION     =               true;
 int REVERSE_BRIGHTNESS     =               false;
@@ -870,7 +901,11 @@ int REVERSE_HUE            =               false;
 #define COLOR_MAPPING_EXPLORATOR              1
 
 // For the neopixels will the color mapping exist within the RGB or HSB domain?
+#if ARTEFACT_TYPE == SPECULATOR
+int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+#else
 int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
+#endif
 
 #define  MODE_SINGLE_RANGE                    0
 #define  MODE_ALL_BINS                        1

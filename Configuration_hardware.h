@@ -235,14 +235,19 @@ double ENC_GAIN_ADJUST =        1.0;
 // reverse     (should the reading be reversed?)
 #define BUT1_LOW_VAL    0
 #define BUT1_HIGH_VAL   1
+
 #define BUT2_LOW_VAL    0
 #define BUT2_HIGH_VAL   1
+
 #define BUT3_LOW_VAL    0
 #define BUT3_HIGH_VAL   1
+
 #define BUT4_LOW_VAL    0
 #define BUT4_HIGH_VAL   1
+
 #define BUT5_LOW_VAL    0
 #define BUT5_HIGH_VAL   1
+
 #define BUT6_LOW_VAL    0
 #define BUT6_HIGH_VAL   1
 
