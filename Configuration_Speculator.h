@@ -34,7 +34,7 @@
 #define OT_POT_NUM                            2
 #define USER_OT_MIN                           0.1
 #define USER_OT_MAX                           2.5
-double ONSET_THRESH =                         1.0;
+
 
 ///////////////////////////// P4 - Brightness Threshold ////////////////////////
 // the fourth pot will be used to change the song thresehold

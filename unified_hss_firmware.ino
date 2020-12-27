@@ -9,7 +9,7 @@
 // #include <MemoryFree.h>
 
 // mechanisms needs be be added before the Mode file
-#if ARTEFACT_TYPE == EXPLORATOR
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE != CLAPPER_BODY
 #include <Mechanisms.h>
 #include <PlaybackEngine.h>
 #endif
@@ -17,18 +17,29 @@
 ////////////////////////////// Libraries needed for Every Artefact /////////////////////////////////////
 #include <LuxManager.h>
 #include <PrintUtils.h>
-#include <UIManager.h>
 #include <WS2812Serial.h>
 #include <NeopixelManager.h>
-#include <Audio.h>
 #include <AudioEngine.h>
 #include <Wire.h>
 #include <SPI.h>
 
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#else
+#include <UIManager.h>
+#endif
+
 ///////////////////////////// Libraries only needed for certain Artefacts ///////////////////////////////
-#if (ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3) || (ARTEFACT_TYPE == EXPLORATOR)
+#if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 #define WEATHER_MANAGER_PRESENT        true
 #include <WeatherManager.h>
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == WOODPECKER_BODY
+#define WEATHER_MANAGER_PRESENT        true
+#include <WeatherManager.h>
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == BELL_BODY
+#define WEATHER_MANAGER_PRESENT        true
+#include <WeatherManager.h>
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#define WEATHER_MANAGER_PRESENT        false
 #else
 #define WEATHER_MANAGER_PRESENT        false
 #endif
@@ -189,6 +200,7 @@ WS2812Serial leds[num_active_led_channels] = {
   ,
 #endif
 #endif
+
 #if  LED2_ACTIVE == true
   WS2812Serial(LED2_COUNT, displayMemory[1], drawingMemory[1], LED2_PIN, WS2812_GRB)
 #if LED3_ACTIVE == true
@@ -209,7 +221,11 @@ NeoGroup neos[num_active_led_channels] = {
 #endif
 #endif
 #if  LED2_ACTIVE == true
+#if LED1_ACTIVE == true
   NeoGroup(&leds[1], 0, LED2_COUNT, LED2_NAME)
+#else
+  NeoGroup(&leds[0], 0, LED2_COUNT, LED2_NAME)
+#endif
 #if LED3_ACTIVE == true
   ,
 #endif
@@ -223,7 +239,11 @@ NeoGroup neos[num_active_led_channels] = {
 
 /////////////////////////////// FFTManager ///////////////////////////////////////
 // all artefacts will have an input FFTManager
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+FFTManager1024 fft_manager[1] = {FFTManager1024(FFT_LOWEST_BIN, FFT_HIGHEST_BIN, "FFT")};
+#else
 FFTManager1024 fft_manager[2] = {FFTManager1024(FFT_LOWEST_BIN, FFT_HIGHEST_BIN, "Front FFT"), FFTManager1024(FFT_LOWEST_BIN, FFT_HIGHEST_BIN, "Rear FFT")};
+#endif // fft_managers
 
 /////////////////////////////// FeatureCollector /////////////////////////////////
 // all artefacts will have a single FeatureCollector . . .
@@ -240,10 +260,12 @@ WeatherManager weather_manager = WeatherManager(HUMID_EXTREME_THRESH, TEMP_EXTRE
 #endif // WEATHER_MANAGER_PRESENT
 
 //////////////////////////////////// User Controls ///////////////////////////////
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#else
 UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
-
+#endif
 ////////////////////////////// Audio System ///////////////////////////////////////
-#if (ARTEFACT_TYPE == EXPLORATOR)
+#if (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY)
 AudioInputI2S            i2s;              //xy=634,246
 AudioAmplifier           amp1;      //xy=777.1429023742676,277.14284896850586
 AudioFilterBiquad        biquad1;
@@ -259,85 +281,105 @@ AudioConnection          patchCord7(amp1, fft);
 AudioConnection          patchCord10(amp1, 0, usb_output, 0);
 AudioConnection          patchCord11(amp1, 0, usb_output, 1);
 
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == CLAPPER_BODY)
+
+AudioInputI2S            i2s1;           //xy=257,388
+
+// only the HPF and AMP, rms and fft
+AudioFilterBiquad        left_HPF;   //xy=412,359
+AudioFilterBiquad        left_LPF;   //xy=578,359
+AudioAmplifier           left_amp;       //xy=738,360
+AudioAnalyzeFFT1024      left_fft;       //xy=950,295
+AudioAnalyzePeak         left_peak;      //xy=960,327
+
+AudioOutputUSB           output_usb;     //xy=1189,392
+
+AudioConnection          pc_bq1_l(i2s1, 0, left_HPF, 0);
+AudioConnection          pc_amp_l(left_HPF, left_amp);
+AudioConnection          pc_peak_l(left_amp, left_peak);
+AudioConnection          pc_usb_l(left_amp, 0, output_usb, 0);
+AudioConnection          pc_usb_r(i2s1, 0, output_usb, 1);
+AudioConnection          pc_fft_l(left_amp, left_fft);
+
 #elif (ARTEFACT_TYPE == SPECULATOR) || (ARTEFACT_TYPE == LEGATUS)
 /*
- * #include <Audio.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
-#include <SerialFlash.h>
+   #include <Audio.h>
+  #include <Wire.h>
+  #include <SPI.h>
+  #include <SD.h>
+  #include <SerialFlash.h>
 
-// GUItool: begin automatically generated code
-AudioInputI2S            I2S;           //xy=86.25000762939453,606.5000085830688
-AudioAnalyzeFFT1024      left_fft;       //xy=271.75000762939453,440.75000858306885
-AudioAnalyzeFFT1024      right_fft;      //xy=271.50000762939453,661.2500085830688
-AudioMixer4              input_mixer1;         //xy=287.00000762939453,495.25000858306885
-AudioMixer4              input_mixer2;         //xy=288.00000762939453,557.2500085830688
-AudioFilterBiquad        right_HPF2;     //xy=427.00000762939453,629.7500076293945
-AudioFilterBiquad        right_HPF1;  //xy=427.25000762939453,597.2500076293945
-AudioFilterBiquad        left_HPF1;   //xy=432.25000762939453,511.50000762939453
-AudioFilterBiquad        left_HPF2;      //xy=434.00000762939453,545.0000076293945
-AudioFilterBiquad        left_LPF1;   //xy=570.25,511.25
-AudioFilterBiquad        left_LPF2;      //xy=571,544.75
-AudioFilterBiquad        right_LPF2;     //xy=572,629.75
-AudioFilterBiquad        right_LPF1;  //xy=572.25,597.25
-AudioAmplifier           left_amp2;      //xy=705.0000095367432,544.750007390976
-AudioAmplifier           left_amp1;       //xy=705.2500095367432,511.25000739097595
-AudioAmplifier           right_amp2;     //xy=714.5000114440918,630.7500076293945
-AudioAmplifier           right_amp1;      //xy=714.7500114440918,597.2500076293945
-AudioAnalyzeRMS          left_rms1;       //xy=899.5000152587891,395.0000057220459
-AudioAnalyzeRMS          right_rms2;     //xy=899.2500305175781,761.500018119812
-AudioAnalyzePeak         right_peak2;    //xy=899.7500152587891,732.0000104904175
-AudioAnalyzePeak         left_peak1;      //xy=902.5000286102295,428.00000953674316
-AudioMixer4              output_mixer1;         //xy=911.5000152587891,546.7500076293945
-AudioMixer4              output_mixer2;         //xy=912.5000152587891,609.7500076293945
-AudioAnalyzeRMS          left_rms2;      //xy=921.2500019073486,467.75000381469727
-AudioAnalyzeRMS          right_rms1;      //xy=921.5000152587891,688.7500076293945
-AudioAnalyzePeak         left_peak2;     //xy=922.5000019073486,499.00000381469727
-AudioAnalyzePeak         right_peak1;     //xy=928.5000152587891,657.7500076293945
-AudioOutputUSB           output_usb;     //xy=1083.5000019073486,579.2500038146973
-AudioConnection          patchCord1(I2S, 0, left_fft, 0);
-AudioConnection          patchCord2(I2S, 0, input_mixer1, 0);
-AudioConnection          patchCord3(I2S, 0, input_mixer2, 0);
-AudioConnection          patchCord4(I2S, 1, right_HPF1, 0);
-AudioConnection          patchCord5(I2S, 1, right_HPF2, 0);
-AudioConnection          patchCord6(I2S, 1, right_fft, 0);
-AudioConnection          patchCord7(I2S, 1, input_mixer1, 1);
-AudioConnection          patchCord8(I2S, 1, input_mixer2, 1);
-AudioConnection          patchCord9(input_mixer1, left_HPF1);
-AudioConnection          patchCord10(input_mixer2, left_HPF2);
-AudioConnection          patchCord11(right_HPF2, right_LPF2);
-AudioConnection          patchCord12(right_HPF1, right_LPF1);
-AudioConnection          patchCord13(left_HPF1, left_LPF1);
-AudioConnection          patchCord14(left_HPF2, left_LPF2);
-AudioConnection          patchCord15(left_LPF1, left_amp1);
-AudioConnection          patchCord16(left_LPF2, left_amp2);
-AudioConnection          patchCord17(right_LPF2, right_amp2);
-AudioConnection          patchCord18(right_LPF1, right_amp1);
-AudioConnection          patchCord19(left_amp2, left_rms2);
-AudioConnection          patchCord20(left_amp2, left_peak2);
-AudioConnection          patchCord21(left_amp2, 0, output_mixer1, 1);
-AudioConnection          patchCord22(left_amp2, 0, output_mixer2, 3);
-AudioConnection          patchCord23(left_amp1, left_rms1);
-AudioConnection          patchCord24(left_amp1, left_peak1);
-AudioConnection          patchCord25(left_amp1, left_rms1);
-AudioConnection          patchCord26(left_amp1, 0, output_mixer1, 0);
-AudioConnection          patchCord27(left_amp1, 0, output_mixer2, 2);
-AudioConnection          patchCord28(right_amp2, right_peak2);
-AudioConnection          patchCord29(right_amp2, right_rms2);
-AudioConnection          patchCord30(right_amp2, 0, output_mixer2, 1);
-AudioConnection          patchCord31(right_amp2, 0, output_mixer1, 3);
-AudioConnection          patchCord32(right_amp1, right_rms1);
-AudioConnection          patchCord33(right_amp1, right_peak1);
-AudioConnection          patchCord34(right_amp1, right_rms1);
-AudioConnection          patchCord35(right_amp1, 0, output_mixer2, 0);
-AudioConnection          patchCord36(right_amp1, 0, output_mixer1, 2);
-AudioConnection          patchCord37(output_mixer1, 0, output_usb, 0);
-AudioConnection          patchCord38(output_mixer2, 0, output_usb, 1);
-// GUItool: end automatically generated code
+  // GUItool: begin automatically generated code
+  AudioInputI2S            I2S;           //xy=86.25000762939453,606.5000085830688
+  AudioAnalyzeFFT1024      left_fft;       //xy=271.75000762939453,440.75000858306885
+  AudioAnalyzeFFT1024      right_fft;      //xy=271.50000762939453,661.2500085830688
+  AudioMixer4              input_mixer1;         //xy=287.00000762939453,495.25000858306885
+  AudioMixer4              input_mixer2;         //xy=288.00000762939453,557.2500085830688
+  AudioFilterBiquad        right_HPF2;     //xy=427.00000762939453,629.7500076293945
+  AudioFilterBiquad        right_HPF1;  //xy=427.25000762939453,597.2500076293945
+  AudioFilterBiquad        left_HPF1;   //xy=432.25000762939453,511.50000762939453
+  AudioFilterBiquad        left_HPF2;      //xy=434.00000762939453,545.0000076293945
+  AudioFilterBiquad        left_LPF1;   //xy=570.25,511.25
+  AudioFilterBiquad        left_LPF2;      //xy=571,544.75
+  AudioFilterBiquad        right_LPF2;     //xy=572,629.75
+  AudioFilterBiquad        right_LPF1;  //xy=572.25,597.25
+  AudioAmplifier           left_amp2;      //xy=705.0000095367432,544.750007390976
+  AudioAmplifier           left_amp1;       //xy=705.2500095367432,511.25000739097595
+  AudioAmplifier           right_amp2;     //xy=714.5000114440918,630.7500076293945
+  AudioAmplifier           right_amp1;      //xy=714.7500114440918,597.2500076293945
+  AudioAnalyzeRMS          left_rms1;       //xy=899.5000152587891,395.0000057220459
+  AudioAnalyzeRMS          right_rms2;     //xy=899.2500305175781,761.500018119812
+  AudioAnalyzePeak         right_peak2;    //xy=899.7500152587891,732.0000104904175
+  AudioAnalyzePeak         left_peak1;      //xy=902.5000286102295,428.00000953674316
+  AudioMixer4              output_mixer1;         //xy=911.5000152587891,546.7500076293945
+  AudioMixer4              output_mixer2;         //xy=912.5000152587891,609.7500076293945
+  AudioAnalyzeRMS          left_rms2;      //xy=921.2500019073486,467.75000381469727
+  AudioAnalyzeRMS          right_rms1;      //xy=921.5000152587891,688.7500076293945
+  AudioAnalyzePeak         left_peak2;     //xy=922.5000019073486,499.00000381469727
+  AudioAnalyzePeak         right_peak1;     //xy=928.5000152587891,657.7500076293945
+  AudioOutputUSB           output_usb;     //xy=1083.5000019073486,579.2500038146973
+  AudioConnection          patchCord1(I2S, 0, left_fft, 0);
+  AudioConnection          patchCord2(I2S, 0, input_mixer1, 0);
+  AudioConnection          patchCord3(I2S, 0, input_mixer2, 0);
+  AudioConnection          patchCord4(I2S, 1, right_HPF1, 0);
+  AudioConnection          patchCord5(I2S, 1, right_HPF2, 0);
+  AudioConnection          patchCord6(I2S, 1, right_fft, 0);
+  AudioConnection          patchCord7(I2S, 1, input_mixer1, 1);
+  AudioConnection          patchCord8(I2S, 1, input_mixer2, 1);
+  AudioConnection          patchCord9(input_mixer1, left_HPF1);
+  AudioConnection          patchCord10(input_mixer2, left_HPF2);
+  AudioConnection          patchCord11(right_HPF2, right_LPF2);
+  AudioConnection          patchCord12(right_HPF1, right_LPF1);
+  AudioConnection          patchCord13(left_HPF1, left_LPF1);
+  AudioConnection          patchCord14(left_HPF2, left_LPF2);
+  AudioConnection          patchCord15(left_LPF1, left_amp1);
+  AudioConnection          patchCord16(left_LPF2, left_amp2);
+  AudioConnection          patchCord17(right_LPF2, right_amp2);
+  AudioConnection          patchCord18(right_LPF1, right_amp1);
+  AudioConnection          patchCord19(left_amp2, left_rms2);
+  AudioConnection          patchCord20(left_amp2, left_peak2);
+  AudioConnection          patchCord21(left_amp2, 0, output_mixer1, 1);
+  AudioConnection          patchCord22(left_amp2, 0, output_mixer2, 3);
+  AudioConnection          patchCord23(left_amp1, left_rms1);
+  AudioConnection          patchCord24(left_amp1, left_peak1);
+  AudioConnection          patchCord25(left_amp1, left_rms1);
+  AudioConnection          patchCord26(left_amp1, 0, output_mixer1, 0);
+  AudioConnection          patchCord27(left_amp1, 0, output_mixer2, 2);
+  AudioConnection          patchCord28(right_amp2, right_peak2);
+  AudioConnection          patchCord29(right_amp2, right_rms2);
+  AudioConnection          patchCord30(right_amp2, 0, output_mixer2, 1);
+  AudioConnection          patchCord31(right_amp2, 0, output_mixer1, 3);
+  AudioConnection          patchCord32(right_amp1, right_rms1);
+  AudioConnection          patchCord33(right_amp1, right_peak1);
+  AudioConnection          patchCord34(right_amp1, right_rms1);
+  AudioConnection          patchCord35(right_amp1, 0, output_mixer2, 0);
+  AudioConnection          patchCord36(right_amp1, 0, output_mixer1, 2);
+  AudioConnection          patchCord37(output_mixer1, 0, output_usb, 0);
+  AudioConnection          patchCord38(output_mixer2, 0, output_usb, 1);
+  // GUItool: end automatically generated code
 
- * 
- */
+
+*/
 
 ////////////////////////// Audio Objects //////////////////////////////////////////
 
@@ -346,7 +388,7 @@ AudioInputI2S            i2s1;           //xy=257,388
 // #if FIRMWRARE_MODE == CICADA_MODE
 AudioFilterBiquad        right_HPF;  //xy=417,421
 AudioFilterBiquad        right_LPF;  //xy=587,422
-AudioAmplifier           right_amp;      //xy=742,424 
+AudioAmplifier           right_amp;      //xy=742,424
 AudioAnalyzeFFT1024      right_fft;      //xy=960,510
 AudioAnalyzeRMS          right_rms;      //xy=964,477
 AudioAnalyzePeak         right_peak;     //xy=965,446
@@ -480,7 +522,7 @@ void printArtefactInfo() {
   Serial.println("EXPLORATOR");
   Serial.print("Body type  :\t");
   Serial.println(BODY_TYPE);
-#elif ARTEFACT_TYPE == LEGATUS 
+#elif ARTEFACT_TYPE == LEGATUS
   Serial.println("LEGATUS");
 #else
   Serial.println("UNKNOWN!!!!!");
@@ -545,22 +587,33 @@ void setupAudio() {
   AudioMemory(AUDIO_MEMORY);
   Serial.print("Audio Memory has been set to: ");
   Serial.println(AUDIO_MEMORY);
-  
+
   /////////////////////////////////////////////////////////////////////
   feature_collector.linkAmplifier(&left_amp, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
+#if NUM_AMPLIFIERS > 1
   feature_collector.linkAmplifier(&right_amp, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
+#endif
   // feature_collector 0-1 are for the song front/rear
   if (PEAK_FEATURE_ACTIVE) {
     feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
+#if NUM_PEAK_ANAS > 1
     feature_collector.linkPeak(&right_peak, P_PEAK_VALS);
+#endif
   }
-  if (RMS_FEATURE_ACTIVE) {
-    feature_collector.linkRMS(&left_rms, P_RMS_VALS);
-    feature_collector.linkRMS(&right_rms, P_RMS_VALS);
-  }
+
+#if (RMS_FEATURE_ACTIVE)
+  feature_collector.linkRMS(&left_rms, P_RMS_VALS);
+#if NUM_RMS_ANAS > 1
+  feature_collector.linkRMS(&right_rms, P_RMS_VALS);
+#endif
+#endif
+
   if (FFT_FEATURES_ACTIVE) {
     fft_manager[0].linkFFT(&left_fft, "Front");
+#if NUM_FFT > 1
     fft_manager[1].linkFFT(&right_fft, "Rear");
+#endif
+
     for (int i = 0; i < num_fft_managers; i++) {
       Serial.print("Linked FFT to FFTManager mumber");
       Serial.println(i);
@@ -571,15 +624,15 @@ void setupAudio() {
       Serial.print(CENTROID_FEATURE_MIN);
       Serial.print("\t");
       Serial.println(CENTROID_FEATURE_MAX);
-      
+
       fft_manager[i].setCalculateFlux(true);
       fft_manager[i].setPrintFluxValues(P_FLUX_VALS);
       Serial.println("Started calculating FLUX in the FFTManager");
     }
   }
   Serial.println("Feature collectors have been linked");
-  
-  /////////////////////////////////////////////////////////////////////  
+
+  /////////////////////////////////////////////////////////////////////
   left_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
   left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
   left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
@@ -601,7 +654,7 @@ void setupAudio() {
   Serial.print(LBQ2_Q);
   Serial.print("\t");
   Serial.println(LBQ2_DB);
-
+#if NUM_CHANNELS > 1
   right_HPF.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(1, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(2, RBQ1_THRESH, RBQ1_Q);
@@ -623,8 +676,11 @@ void setupAudio() {
   Serial.print(RBQ2_Q);
   Serial.print("\t");
   Serial.println(RBQ2_DB);
+#else
+  Serial.print("Skipping setup of 'right' channel as it does not exist");
+#endif
   printMinorDivide();
- 
+
   //////////////////////////////////////////////////////////////////////////////////
   // TODO - make sure ENC_GAIN_ADJ exists for all bots
   Serial.println(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST);
@@ -707,15 +763,15 @@ void speculatorSetup() {
   uimanager.addBut(BUT10_PIN, BUT10_PULLUP, BUT10_LOW_VAL, BUT10_HIGH_VAL, &but_test[0], BUT10_NAME);
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
-  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT4_NAME); 
+  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT4_NAME);
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
   uimanager.addPotRange(1, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
 #elif HV_MAJOR == 2
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &COLOR_MAP_MODE, BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &SQUARE_BRIGHTNESS, BUT2_NAME);
-  uimanager.addBut(BUT3_PIN, BUT3_PULLUP,BUT3_LOW_VAL, BUT3_HIGH_VAL, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
-  uimanager.addBut(BUT4_PIN, BUT4_PULLUP,BUT4_LOW_VAL, BUT4_HIGH_VAL, &REVERSE_SATURATION, BUT4_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, &REVERSE_SATURATION, BUT4_NAME);
   uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, &REVERSE_HUE, BUT5_NAME);
   uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, &BOOT_DELAY_ACTIVE, BUT6_NAME);
 #endif
@@ -733,7 +789,7 @@ void speculatorSetup() {
 
 #if ARTEFACT_TYPE == LEGATUS
 void legatusSetup() {
-    // setup up some value tracker stuff
+  // setup up some value tracker stuff
   brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
   hue_tracker.setMinMaxUpdateFactor(HUE_MIN_UPDATE_FACTOR, HUE_MAX_UPDATE_FACTOR);
   saturation_tracker.setMinMaxUpdateFactor(SAT_MIN_UPDATE_FACTOR, SAT_MAX_UPDATE_FACTOR);
@@ -751,7 +807,7 @@ void legatusSetup() {
   uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, &but_test[5], BUT6_NAME);
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
-  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT2_NAME); 
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT2_NAME);
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
   uimanager.addPotRange(1, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
@@ -795,16 +851,9 @@ void speculatorLoop() {
 }
 #endif // ARTEFACT_TYPE == SPECULATOR
 
-#if ARTEFACT_TYPE == EXPLORATOR
-void exploratorLoop() {
-  if (BODY_TYPE == BELL_BODY) {
-    exploratorBellBotLoop();
-  } else if (BODY_TYPE == WOODPECKER_BODY) {
-    exploratorWoodpeckerLoop();
-  }
-}
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE  == WOODPECKER_BODY
 
-void exploratorWoodpeckerLoop() {
+void exploratorLoop() {
   ///////////////// Actuator Outputs //////////////////
   playback_engine.update(); // will also update all linked mechanisms
 
@@ -831,8 +880,8 @@ void exploratorWoodpeckerLoop() {
   }
 }
 
-void exploratorBellBotLoop() {
-#if BODY__TYPE == BELL_BODY
+#elif ARTEFAT_TYPE == EXPLORATOR && BODY_TYPE == BELL_BODY
+void exploratorLoop() {
   ///////////////// Actuator Outputs //////////////////
   updateSolenoids(); // turns off all solenoids which have
   playback_engine.update();
@@ -844,10 +893,94 @@ void exploratorBellBotLoop() {
     playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
     last_playback_tmr = 0;
   }
-  ///////////////// Passive Visual Feedback ///////////
-  updateFeedbackLEDs(&fft_manager[dominate_channel]);
-#endif
+  updateFeedbackLEDs(&fft_manager[0]);
 }
+
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+
+#define LISTENING_STATE 0
+#define ACTUATING_STATE 1
+
+double onset_cent = 1000.0;
+double onset_rms = 0.0;
+double onset_feature = 0.0;
+
+ValueTrackerDouble onset_tracker = ValueTrackerDouble((String)"Onset Feature", &onset_feature, 0.1, 3000, 1.0);
+ValueTrackerDouble cent_tracker = ValueTrackerDouble((String)"Cent", &onset_cent, 0.1, 3000, 1.0);
+ValueTrackerDouble rms_tracker = ValueTrackerDouble((String)"RMS", &onset_rms, 0.1, 3000, 1.0);
+
+bool updateOnset() {
+  // for a onset in theory the spectral flux will be high, the
+  // centroid will decrease since the last frame, and there should be an
+  // increase of amplitude in the 1k - 3k freq range
+
+  // for all these values we want a 1.0 to be a confident assesment
+  // from that feature
+  /////////////////////////// Spectral Flux //////////////////////////
+  double onset_flux = fft_manager[0].getScaledFlux();
+  dprint(P_ONSET_FLUX, "onset flux: ");
+  dprintln(P_ONSET_FLUX, onset_flux);
+
+  //////////////////////////// Cent Neg Delta ////////////////////////
+  onset_cent = fft_manager[0].getCentroid();
+  cent_tracker.update();
+  onset_cent = cent_tracker.getScaled();
+
+  //////////////////////////// Energy between 1k - 3k //////////////////
+  // using the bins instead of the hard coded frequencies saves some cycles
+  // double range_rms = fft_manager.getFFTRangeByFreq(1000, 2000);
+  onset_rms = feature_collector.getPeak(0);
+  rms_tracker.update();
+  onset_rms = rms_tracker.getScaled();
+
+  //////////////////////////// Feature Calculation /////////////////////
+  onset_feature = onset_flux + onset_cent + onset_rms;
+  onset_tracker.update();
+  // onset_feature = onset_tracker.getScaled();
+
+  // note that normally 1.0 is the threshold for onsets
+  if (onset_feature >= ONSET_THRESH) {
+    if (P_ONSET_FEATURES == true && onset_feature > 0.1) {
+      Serial.print("cent / flux / rms :\t");
+      Serial.print((onset_cent), 8);
+      Serial.print("\t");
+      Serial.print(onset_flux, 8);
+      Serial.print("\t");
+      Serial.print(onset_rms, 8);
+      Serial.print("  =  ");
+      Serial.println(onset_feature, 8);
+    }
+    uint8_t red, green, blue;
+    ////////////////// Calculate Actual Values ///////////////////////
+    red = (current_color * ONSET_RED) * lux_manager.getBrightnessScaler();
+    green = (current_color * ONSET_GREEN) * lux_manager.getBrightnessScaler();
+    blue = (current_color * ONSET_BLUE) * lux_manager.getBrightnessScaler();
+    // Serial.println("____________________ ONSET ________________________ 3.0");
+    dprint(P_ONSET, "onset feature is above threshold: ");
+    dprint(P_ONSET, onset_feature);
+    dprint(P_ONSET, " - ");
+    dprint(P_ONSET, ONSET_THRESH);
+    neos[0].colorWipeAdd(red, green, blue, lux_manager.getBrightnessScaler() * user_brightness_scaler);
+    return true;
+  }
+  return false;
+}
+
+
+void exploratorLoop() {
+  updateSolenoids(); // turns off all solenoids which need to be turned off
+  //  listen for onsets
+  if (updateOnset() || last_playback_tmr > 60000) {
+    triggerSolenoid(2, 40);
+    triggerSolenoid(7, 40);
+    last_playback_tmr = 0;
+  }
+  // if onset detected, immedietally actuate
+  // pause audio analysis for x period of time
+  updateFeedbackLEDs(&fft_manager[dominate_channel]);
+}
+
+#endif // Explorator Loops
 
 //////////////////////////////////////////////////////////////////////////
 ////////////////// setup / main loops ////////////////////////////////////
@@ -861,6 +994,7 @@ void exploratorSetup() {
 #endif
 
   /////////////// User Controls ////////////////////////////////////////////
+#if BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &but_test[0], BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &but_test[1], BUT2_NAME);
   uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, &but_test[2], BUT3_NAME);
@@ -871,6 +1005,7 @@ void exploratorSetup() {
 
   uimanager.setup();
   uimanager.printAll();
+#endif // UI controls for the woodpecker and bellbot
 
   ////////////////////// Audio
   printMinorDivide();
@@ -880,27 +1015,34 @@ void exploratorSetup() {
   uint32_t lpf = 14000;
   uint32_t hpf = 200;
   double q = 0.8;
-  amp1.gain(60.0);
 
-  biquad1.setLowpass(0, lpf, q);
-  biquad1.setLowpass(1, lpf, q);
-  biquad1.setHighpass(2, hpf, q);
-  biquad1.setHighpass(3, hpf, q);
+  left_amp.gain(60.0);
+
+  left_HPF.setLowpass(0, lpf, q);
+  left_HPF.setLowpass(1, lpf, q);
+#if BODY_TYPE == CLAPPER_BODY
+  left_HPF.setLowpass(2, lpf, q);
+  left_HPF.setLowpass(3, lpf, q);
+#else
+  left_HPF.setHighpass(2, hpf, q);
+  left_HPF.setHighpass(3, hpf, q);
+#endif
 
   configurePlaybackEngine();
 
-  fft_manager[0].linkFFT(&fft1);
+  fft_manager[0].linkFFT(&left_fft, "All");
   fft_manager[0].setCalculateCent(true);
   fft_manager[0].setCalculateFlux(true);
 
-  feature_collector.linkPeak(&peak1, P_PEAK_VALS);
+  feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
+
   Serial.println("Finished starting the LED strips");
   printMinorDivide();
 
   printMinorDivide();
-  delay(3000);
   Serial.println("Finished setup Loop");
   colorWipeAll(0, 120, 30, 0.25);
+  delay(3000);
   printMinorDivide();
 }
 
@@ -932,7 +1074,7 @@ void setOutputs() {
   delay(2500);// let the system settle
 #endif
 }
-#endif //  ARTEFACT_TYPE == EXPLORATOR
+// #endif //  ARTEFACT_TYPE == EXPLORATOR
 
 #if (ARTEFACT_TYPE == EXPLORATOR) && TEST_SOLENOIDS == true
 void testSolenoids(unsigned int len) {
@@ -1141,6 +1283,7 @@ void configurePlaybackEngine() {
 #endif // BODY_TYPE == BELL_BODY
 }
 
+#if BODY_TYPE == WOODPECKER_BODY
 void buildPeckRhythm(int idx, uint32_t quarter) {
   uint32_t t = 0;
   uint32_t eigth = quarter / 2;
@@ -1201,6 +1344,7 @@ void buildPeckRhythm(int idx, uint32_t quarter) {
     t = quarter;
   }
 }
+#endif // BODY_TYPE == WOODPECKER_BODY
 #endif // ARTEFACT_TYPE == EXPLORATOR
 
 #if ARTEFACT_TYPE == LEGATUS
@@ -1228,13 +1372,14 @@ void setup() {
   /////////////////// NeoPixels //////////////////f //////////////
   printMinorDivide();
   Serial.println("Starting the LED strips");
+
   for (int i = 0; i < num_active_led_channels; i++) {
     leds[i].begin();
     Serial.print("neogroup ");
     Serial.println(i);
+
     neos[i].begin();
     neos[i].colorWipe(12, 12, 12, 1.0);
-
     printMinorDivide();
     Serial.println("LEDS have been initalised");
     Serial.print("There are ");
@@ -1286,6 +1431,7 @@ void setup() {
     Serial.println(REVERSE_SATURATION);
     Serial.print("REVERSE_BRIGHTNESS is set to                      : \t");
     Serial.println(REVERSE_BRIGHTNESS);
+    delay(2000);
 #endif
   }
   Serial.println("Finished starting the LED strips");
@@ -1336,10 +1482,13 @@ void setup() {
       Serial.print("boot delay segment length in seconds is : ");
       Serial.println(segment / 1000, 2);
     }
-    neos[0].setPixel(it, 10, 32, 20, 1.0); 
-    if (BOOT_DELAY_ACTIVE) {    
+    neos[0].setPixel(it, 10, 32, 20, 1.0);
+    if (BOOT_DELAY_ACTIVE) {
       delay(segment);
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#else
       uimanager.update();
+#endif // only update UIManager if it exists
     }
   }
   neos[0].colorWipe(0, 5, 0, 1.0);
@@ -1368,12 +1517,15 @@ void loop() {
   }
 
   ///////////////// User Controls ////////////////////////////
-  if(uimanager.update() && P_USER_CONTROLS){
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#else
+  if (uimanager.update() && P_USER_CONTROLS) {
     uimanager.printAll();
     for (int i = 0; i < NUM_NEOP_MANAGERS; i++) {
-       neos[i].changeMapping(LED_MAPPING_MODE);
+      neos[i].changeMapping(LED_MAPPING_MODE);
     }
   }
+#endif
 
   ///////////////// WeatherManager ///////////////////////////
 #if WEATHER_MANAGER_PRESENT == true

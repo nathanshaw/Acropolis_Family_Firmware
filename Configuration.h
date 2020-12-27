@@ -15,7 +15,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE             SPECULATOR
+#define ARTEFACT_TYPE             EXPLORATOR
 
 ////////////////////// Hardware Revision /////////////////////////////
 // There are different hardware revisions for different Artefacts
@@ -25,8 +25,8 @@
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
-#define HV_MAJOR                  2
-#define HV_MINOR                  1
+#define HV_MAJOR                  1
+#define HV_MINOR                  0
 
 //////////////////// Software Revision ////////////////////////////////
 #define SV_MAJOR                  0
@@ -40,7 +40,8 @@
 #if ARTEFACT_TYPE == EXPLORATOR
 #define WOODPECKER_BODY           0
 #define BELL_BODY                 1
-#define BODY_TYPE                 WOODPECKER_BODY
+#define CLAPPER_BODY              2
+#define BODY_TYPE                 CLAPPER_BODY
 #endif
 
 ////////////////////// Firmware Mode //////////////////////////////////////////////////////
@@ -50,11 +51,12 @@
 // For the Explorator......
 #define PLAYBACK_MODE             99
 #define REACTIVE_MODE             100
+#define ECHO_FEEDBACK_MODE        101
 
 #if ARTEFACT_TYPE == SPECULATOR
 #define FIRMWARE_MODE             PITCH_MODE
 #else
-#define FIRMWARE_MODE             PLAYBACK_MODE
+#define FIRMWARE_MODE             ECHO_FEEDBACK_MODE
 #endif
 
 //////////////////////////////////////////////////////////
@@ -82,6 +84,8 @@
 // how long will the bot wait until starting the main loop
 // this is useful for when it neeeds to bee put into an enclosure and then installed in the environment
 uint32_t  BOOT_DELAY      =           (1000 * 60 * 2);
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+uint32_t  BOOT_DELAY      =           (10000);
 #elif ARTEFACT_TYPE == EXPLORATOR
 uint32_t  BOOT_DELAY      =           (1000);
 #else
@@ -103,7 +107,7 @@ int BOOT_DELAY_ACTIVE    =           false;
 // the two options are to either generate a brightness scaler floating point value
 // to which all color messages are multiplied against, or to adjust the maximum and minimum
 // values allowed
-#define LUX_ADJUSTS_BS                  0
+#define LUX_ADJUSTS_BS                  1
 #define LUX_ADJUSTS_MIN_MAX             1
 uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 
@@ -207,6 +211,9 @@ float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
 // this is needed for the forced lux
 #define UPDATE_ON_OFF_RATIOS            true
 
+// when onset detection is active, this will be the threshold
+double ONSET_THRESH =                         1.20;
+
 // this color is used for flashes
 #define ONSET_RED                       200
 #define ONSET_GREEN                     200
@@ -228,11 +235,18 @@ int LED_MAPPING_MODE = LED_MAPPING_CLOCK_HAND;
 int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
 
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 // Which pin on the Arduino is connected to the NeoPixels? 8 for old board
+#define LED1_PIN 8
+// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
+#define LED2_PIN 5
+#define LED3_PIN 10
+#else
 #define LED1_PIN 5
 // note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
 #define LED2_PIN 8
 #define LED3_PIN 10
+#endif
 
 // what the names of the neopixel strips will be
 #if (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == BELL_BODY)
@@ -242,6 +256,10 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY)
 #define LED1_NAME      "Eye Stock"
 #define LED2_NAME      "Pecker"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == CLAPPER_BODY)
+#define LED1_NAME      "Inside Ring"
+#define LED2_NAME      "N/A"
 #define LED3_NAME      "N/A"
 #elif (ARTEFACT_TYPE == SPECULATOR)
 #define LED1_NAME      "All"
@@ -267,6 +285,10 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED1_COUNT 10
 #define LED2_COUNT 10
 #define LED3_COUNT 10
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == CLAPPER_BODY)
+#define LED1_COUNT 20
+#define LED2_COUNT 0
+#define LED3_COUNT 0
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY)
 #define LED1_COUNT 10
 #define LED2_COUNT 10
@@ -361,6 +383,8 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define UI_POLLING_RATE                 1000
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 #define UI_POLLING_RATE                 500
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#define UI_POLLING_RATE                 600000
 #else
 #define UI_POLLING_RATE                 500
 #endif // UI_POLLING_RATE
@@ -383,11 +407,9 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_LEDS_ON                       false
 // print lux debug mostly prints info about when extreme lux is entered and
 // other things in the lux manager, it is reccomended to leave this printing on
-#define P_LED_ON_RATIO                  true
-#define P_COLOR                         false
-#define P_COLOR_WIPE                    false
-// for printing neopixelmanager onset (click) data
-#define P_ONSET                         false
+#define P_LED_ON_RATIO                  false
+#define P_COLOR                         true
+#define P_COLOR_WIPE                    true
 
 ////////////////////////////// weather manager ////////////////////////
 #define P_WEATHER_MANAGER_READINGS      false
@@ -417,7 +439,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_CALCULATE_BRIGHTNESS_LENGTH   false
 
 // this is where the final brightness scaler is applied
-#define P_PACK_COLORS                   false
+#define P_PACK_COLORS                   true
 
 #define P_SONG_GENERAL                  false
 #define P_SONG_COLOR                    false
@@ -432,11 +454,11 @@ elapsedMillis song_update_timer = 0;
 #define P_UPDATE_SONG_LENGTH                      false
 
 //////////////////////////// Onset Functionality ///////////////////////
-#define P_ONSET_FEATURES                          false
-#define P_ONSET                                   false
+#define P_ONSET_FEATURES                          true
+#define P_ONSET                                   true
 
 //////////////////////////// AutoGain //////////////////////////////////
-#define P_AUTOGAIN                                 true
+#define P_AUTOGAIN                                true
 
 // for calculating the dominate channel, it works best if the dominate channel is re-caculated every
 
@@ -462,7 +484,7 @@ elapsedMillis last_audio_usage_print;
 #endif
 
 //////////////////////////// FFT ///////////////////////////////////////////
-#define P_FFT_VALS                                false
+#define P_FFT_VALS                                true
 // will print spectral flux if flux_active
 #define P_FLUX_VALS                               false
 #define P_ONSET_FLUX                              false
@@ -473,7 +495,6 @@ elapsedMillis last_audio_usage_print;
 
 // activates some printing which will print out how long different functions calls take
 #define P_FUNCTION_TIMES                          false
-
 
 //////////////////////////// EEPROM ///////////////////////////////////
 // set to true if you want to print out data stored in EEPROM on boot
@@ -533,7 +554,11 @@ double current_feature;
 ////////////////////////////////////////////////////////////////////////////
 // the autogain active flag currently also controls the dominate microphone selection process
 // will autogain based on the LED ON/OFF time be active?
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+int AUTOGAIN_ACTIVE      =                               false;
+#else
 int AUTOGAIN_ACTIVE      =                               true;
+#endif
 // how much to adjust the gain in the autogain routine. A 1.0 corresponds to
 // potentially doubling or halfing the gain. A 0.5 will potentially result in
 // adding 50% to the gain or reducing it by 25%
@@ -587,7 +612,11 @@ int dominate_channel =                                  0;
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// FFT Manager //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+uint8_t num_fft_managers =                              1;
+#else
 uint8_t num_fft_managers =                              2;
+#endif
 
 #if ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == CICADA_MODE
 #define CENTROID_FEATURE_MIN                            4000
@@ -597,7 +626,7 @@ uint8_t num_fft_managers =                              2;
 #define CENTROID_FEATURE_MAX                            24000
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define CENTROID_FEATURE_MIN                            120
-#define CENTROID_FEATURE_MAX                            24000
+#define CENTROID_FEATURE_MAX                            20000
 #elif ARTEFACT_TYPE == LEGATUS
 #define CENTROID_FEATURE_MIN                            120
 #define CENTROID_FEATURE_MAX                            24000
@@ -633,6 +662,8 @@ float pot_test[NUM_POTS];
 ///////////////////////// Neo Manager //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 #if ARTEFACT_TYPE == SPECULATOR
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define NUM_NEOP_MANAGERS                               3
@@ -698,12 +729,13 @@ elapsedMillis last_usage_print =              0;// for keeping track of audio me
 // this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
 double USER_CONTROL_GAIN_ADJUST               = 1.0;
 
-
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR < 3
 #define STARTING_GAIN                         480.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 #define STARTING_GAIN                         1.0
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#define STARTING_GAIN                         40.0
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define STARTING_GAIN                         240.0
 #elif ARTEFACT_TYPE == LEGATUS
@@ -747,6 +779,25 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define RBQ2_Q              0.85
 #define RBQ2_DB             -12
 //////////////////
+#elif ARTEFACT_TYPE == EXPLORATOR
+// SONG HP
+#define LBQ1_THRESH         120
+#define LBQ1_Q              0.85
+#define LBQ1_DB             -12
+// SONG LP
+#define LBQ2_THRESH         24000
+#define LBQ2_Q              0.85
+#define LBQ2_DB             -12
+
+// Should be Inactive
+#define RBQ1_THRESH         120
+#define RBQ1_Q              0.85
+#define RBQ1_DB             -12
+// Should be Inactive
+#define RBQ2_THRESH         24000
+#define RBQ2_Q              0.85
+#define RBQ2_DB             -12
+
 #else
 // SONG HP
 #define LBQ1_THRESH         120

@@ -40,7 +40,7 @@
 const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 
 ///////////////////////// for the woodpecker bot
-#elif HV_MAJOR == 1
+#elif HV_MAJOR == 1 && BODY_TYPE == WOODPECKER_BODY
 #define NUM_MOTORS            3
 
 #define MOT1_ACTIVE           true
@@ -71,43 +71,42 @@ const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 #define M2_GEAR_RATIO         67
 #define M3_GEAR_RATIO         1
 
-const bool active_motors[NUM_MOTORS] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
+const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
+
+#elif HV_MAJOR == 1 && BODY_TYPE == WOODPECKER_BODY
+#define NUM_MOTORS            0
+
+#define MOT1_ACTIVE           false
+#define MOT1_DIR_PIN          26
+#define MOT1_PWM_PIN          25
+#define MOT1_EN_PIN           28
+#define MOT1_FAULT_PIN        27
+
+#define MOT2_ACTIVE           false
+#define MOT2_DIR_PIN          29
+#define MOT2_PWM_PIN          32
+#define MOT2_EN_PIN           31
+#define MOT2_FAULT_PIN        30
+
+#define MOT3_ACTIVE           false
+#define MOT3_DIR_PIN          21
+#define MOT3_PWM_PIN          20
+#define MOT3_EN_PIN           2
+#define MOT3_FAULT_PIN        22
+
+// the direction of the motors, if one is spinning in the wrong way then change this value
+#define M1_POLARITY           false
+#define M2_POLARITY           false
+#define M3_POLARITY           false
+
+// this value can be used to determine how long and how fast to spin each motor...
+#define M1_GEAR_RATIO         1
+#define M2_GEAR_RATIO         1
+#define M3_GEAR_RATIO         1
+
+const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 
 #endif // HV_MAJOR
-
-/*
-void testMotor(int w, unsigned int len) {
-  motors[w].enableDrivers();
-  Serial.println();//"------------------------------");
-  Serial.print("Starting Motor Test\n");
-  motors[w].setM1Speed(50);
-  Serial.print(" 50\t");
-  delay(len / 14);
-  motors[w].setM1Speed(150);
-  Serial.print(" 150\t");
-  delay(len / 3.5);
-  motors[w].setM1Speed(50);
-  Serial.print(" 50\t");
-  delay(len / 7);
-  // motor.setM1Speed(0);
-  // Serial.print(" 0");
-  // delay(len / 7);
-  motors[w].setM1Speed(-50);
-  Serial.print(" -50\t");
-  delay(len / 7);
-  motors[w].setM1Speed(-250);
-  Serial.print(" -250\t");
-  delay(len / 3.5);
-  motors[w].setM1Speed(-50);
-  Serial.print(" -50\t");
-  delay(len / 14);
-  Serial.print(" 0");
-  motors[w].setM1Speed(0);
-  motors[w].disableDrivers();
-  Serial.println("\nFinished Motor Test");
-  Serial.println();//"----------------------------");
-}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Solenoid Actuators /////////////////////////////////////
@@ -116,7 +115,7 @@ void testMotor(int w, unsigned int len) {
 #define DAMPENER_DELAY 10
 
 /////////////////////////////// For the Bell Bot //////////////////////////////////////
-#if HV_MAJOR == 0
+#if HV_MAJOR == 0 && BODY_TYPE == BELL_BODY
 #define NUM_SOLENOIDS 6
 #define SOL1_PIN 12
 #define SOL2_PIN 11
@@ -146,7 +145,7 @@ void testMotor(int w, unsigned int len) {
 #define SOL5_ACTIVE true
 #define SOL6_ACTIVE true
 
-#elif BODY_TYPE == WOODPECKER_BODY
+#elif HV_MAJOR == 1 && BODY_TYPE == WOODPECKER_BODY
 // todo these need to be chosen by the body not the HV
 #define SOL1_ACTIVE true
 #define SOL2_ACTIVE false
@@ -156,6 +155,18 @@ void testMotor(int w, unsigned int len) {
 #define SOL6_ACTIVE false
 #define SOL7_ACTIVE false
 #define SOL8_ACTIVE false
+#define SOL9_ACTIVE false
+
+#elif HV_MAJOR == 1 && BODY_TYPE == CLAPPER_BODY 
+// todo these need to be chosen by the body not the HV
+#define SOL1_ACTIVE false
+#define SOL2_ACTIVE false
+#define SOL3_ACTIVE true
+#define SOL4_ACTIVE false
+#define SOL5_ACTIVE false
+#define SOL6_ACTIVE false
+#define SOL7_ACTIVE false
+#define SOL8_ACTIVE true
 #define SOL9_ACTIVE false
 #endif // HV_MAJOR == 1
 
@@ -262,6 +273,17 @@ double peak_val = 0.0;
 double last_peak = 0.0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Audio Features /////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Which Audio features will be activated?
+#define PEAK_FEATURE_ACTIVE                 1
+#if BODY_TYPE == CLAPPER_BODY 
+#define RMS_FEATURE_ACTIVE                  0
+#else
+#define RMS_FEATURE_ACTIVE                  1
+#endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////// Rhythm detection stuff ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // the maximum number of rhythms to store
@@ -282,10 +304,10 @@ void detectOnset() {
   // given the current audio features determine if an onset has occured
 }
 
-#define AUDIO_MEMORY 60
+#define AUDIO_MEMORY 18
 
-int but_test[4];
-float pot_test[4];
+// int but_test[4];
+// float pot_test[4];
 
 float ACTIVITY_LEVEL = 0.0;
 float MOTOR_MOVEMENT = 0.0;

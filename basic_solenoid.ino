@@ -61,7 +61,7 @@ void createPeckRhythm(uint8_t num, uint16_t on_time, uint16_t str ) {
   }
   Serial.println();
 }
-
+*/
 
 void triggerSolenoid(uint8_t num, uint16_t on_time) {
   // if the solenoid in question is not currently active
@@ -71,7 +71,7 @@ void triggerSolenoid(uint8_t num, uint16_t on_time) {
     return;
   }
   if (sol_state[num] == false && last_sol_action[num] > SOL_COOLDOWN) {
-    digitalWrite(s_pins[num], LOW);
+    digitalWrite(s_pins[num], HIGH);
     last_sol_action[num] = 0;
     sol_timers[num] = on_time;
     sol_state[num] = true;
@@ -85,7 +85,7 @@ void triggerSolenoid(uint8_t num, uint16_t on_time) {
     dprint(P_SOLENOID_DEBUG, num);
     dprintln(P_SOLENOID_DEBUG, " as it is already active");
   } else if (last_sol_action[num] < SOL_COOLDOWN) {
-    dprint(P_SOLENOID_DEBUG, "did not trigger solenoids as last_sol_action is less than SOL_COOLDOWN");
+    dprintln(P_SOLENOID_DEBUG, "did not trigger solenoids as last_sol_action is less than SOL_COOLDOWN");
   }
 }
 
@@ -97,7 +97,7 @@ void updateSolenoids() {
       // and it has been enguaged for the right period of time
       if (last_sol_action[i] > sol_timers[i]) {
         // turn it off
-        digitalWrite(s_pins[i], HIGH);
+        digitalWrite(s_pins[i], LOW);
         // set the solenoid as inactive in the code
         sol_state[i] = false;
         dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
@@ -116,5 +116,4 @@ void updateSolenoids() {
     }
   }
 }
-*/
 #endif // ARTEFACT_TYPE == EXPLORATOR

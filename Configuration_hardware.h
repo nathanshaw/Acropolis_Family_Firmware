@@ -155,6 +155,7 @@ double ENC_GAIN_ADJUST =        1.0;
 
 ///////////////////// Buttons //////////////////////////////////////////////////
 #define NUM_BUTTONS     4
+
 #define BUT1_PIN        33
 #define BUT2_PIN        A13
 #define BUT3_PIN        A12
@@ -170,10 +171,17 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT4_LOW_VAL    0
 #define BUT4_HIGH_VAL   1
 
+#if BODY_TYPE == CLAPPER_BODY
+#define BUT1_ACTIVE     false
+#define BUT2_ACTIVE     false
+#define BUT3_ACTIVE     false
+#define BUT4_ACTIVE     false
+#else // for the woodpecker and bellbot body
 #define BUT1_ACTIVE     true
 #define BUT2_ACTIVE     true
 #define BUT3_ACTIVE     true
 #define BUT4_ACTIVE     true
+#endif
 
 #define BUT1_PULLUP     false
 #define BUT2_PULLUP     false
@@ -195,8 +203,13 @@ double ENC_GAIN_ADJUST =        1.0;
 #define POT1_REVERSE    false
 #define POT2_REVERSE    false
 
+#if BODY_TYPE == CLAPPER_BODY
+#define POT1_ACTIVE     false
+#define POT2_ACTIVE     false
+#else // for the woodpecker and bellbot body
 #define POT1_ACTIVE     true
 #define POT2_ACTIVE     true
+#endif
 
 // how much play will the pots have before returning a value?
 // good values should range between 0.002 and 0.005
