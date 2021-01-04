@@ -936,9 +936,7 @@ bool updateOnset() {
     dprint(P_ONSET, " - ");
     dprint(P_ONSET, ONSET_THRESH);
     neos[0].colorWipeAdd(red, green, blue, lux_manager.getBrightnessScaler() * user_brightness_scaler);
-    if (millis() >  60000) {
-      return true;
-    }
+    return true;
   }
   return false;
 }
@@ -946,14 +944,34 @@ bool updateOnset() {
 void exploratorLoop() {
   updateSolenoids(); // turns off all solenoids which need to be turned off
   //  listen for onsets
- if (updateOnset() || last_playback_tmr > 60000) {
-    triggerSolenoid(2, 40);
-    triggerSolenoid(7, 40);
+ if (millis() > 90000 && (updateOnset() || last_playback_tmr > 60000)) {
+    triggerSolenoid(2, 25);
+    triggerSolenoid(7, 25);
     last_playback_tmr = 0;
   }
   // if onset detected, immedietally actuate
   // pause audio analysis for x period of time
-  updateFeedbackLEDs(&fft_manager[dominate_channel]);
+    if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
+    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);   
+    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]);    // user brightness scaler is applied in this function
+    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
+    printHSB();
+    printRGB();
+
+    // if (feature_collector.isActive() == true) {
+    neos[0].colorWipeHSB(h, s, b);// now colorWipe the LEDs with the HSB value
+    // } else {
+    // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
+    // }
+  }
+  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR) {
+    updateFeedbackLEDs(&fft_manager[dominate_channel]);
+    // Serial.println("Finished running updateFeedbackLEDs()");
+    // delay(2000);
+  }
+  else {
+    Serial.println("ERROR = that color mode is not implemented in update neos");
+  }
 }
 
 #endif // Explorator Loops

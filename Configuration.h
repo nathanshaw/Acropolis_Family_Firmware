@@ -15,7 +15,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE             SPECULATOR
+#define ARTEFACT_TYPE             EXPLORATOR
 
 // TODO finish integrating this
 float ADDED_SATURATION  = 0.4;
@@ -29,13 +29,13 @@ float ADDED_SATURATION  = 0.4;
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
 // 0.1.4 = version used for the jan, 2021 southwest installations
-#define HV_MAJOR                  3
+#define HV_MAJOR                  1
 #define HV_MINOR                  0
 
 //////////////////// Software Revision ////////////////////////////////
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               4
+#define SV_REVISION               5
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -45,7 +45,7 @@ float ADDED_SATURATION  = 0.4;
 #define WOODPECKER_BODY           0
 #define BELL_BODY                 1
 #define CLAPPER_BODY              2
-#define BODY_TYPE                 WOODPECKER_BODY
+#define BODY_TYPE                 CLAPPER_BODY
 #endif
 
 ////////////////////// Firmware Mode //////////////////////////////////////////////////////
@@ -764,7 +764,7 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 #define STARTING_GAIN                         240.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
-#define STARTING_GAIN                         40.0
+#define STARTING_GAIN                         20.0
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define STARTING_GAIN                         240.0
 #elif ARTEFACT_TYPE == LEGATUS
@@ -906,6 +906,8 @@ int REVERSE_HUE            =               false;
 
 // For the neopixels will the color mapping exist within the RGB or HSB domain?
 #if ARTEFACT_TYPE == SPECULATOR
+int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
 #else
 int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;

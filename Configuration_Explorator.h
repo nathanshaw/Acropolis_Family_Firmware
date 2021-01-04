@@ -263,7 +263,7 @@ const int sol_max[6] = {S1_MAX, S2_MAX, S3_MAX, S4_MAX, S5_MAX, S6_MAX};
 //////////////////////////// Global Actuation Settings and Values ////////////////////
 
 // time in ms in which the solenoids need to cool down between individual actuations
-#define SOL_COOLDOWN 20
+#define SOL_COOLDOWN 50
 
 // This value is used to calculate how long between unit actuations
 uint32_t ACTUATION_DELAY = 0;
