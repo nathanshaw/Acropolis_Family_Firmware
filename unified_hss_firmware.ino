@@ -265,23 +265,23 @@ WeatherManager weather_manager = WeatherManager(HUMID_EXTREME_THRESH, TEMP_EXTRE
 UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 #endif
 ////////////////////////////// Audio System ///////////////////////////////////////
-#if (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY)
+/*#if (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY)
 AudioInputI2S            i2s;              //xy=634,246
-AudioAmplifier           amp1;      //xy=777.1429023742676,277.14284896850586
+AudioAmplifier           left_amp;      //xy=777.1429023742676,277.14284896850586
 AudioFilterBiquad        biquad1;
-AudioAnalyzePeak         peak1;             //xy=1139.4286575317383,258.42859840393066
-AudioAnalyzeFFT1024      fft;           //xy=1145.4286575317383,290.42859840393066
+AudioAnalyzePeak         left_peak;             //xy=1139.4286575317383,258.42859840393066
+AudioAnalyzeFFT1024      left_fft;           //xy=1145.4286575317383,290.42859840393066
 AudioAnalyzeClipCounter  clip_counter;
 AudioOutputUSB           usb_output;       //xy=1147.4286575317383,194.42859840393066
 AudioConnection          patchCord1(i2s, 0, biquad1, 0);
-AudioConnection          patchCord2(biquad1, amp1);
-AudioConnection          patchCord3(amp1, clip_counter);
-AudioConnection          patchCord6(amp1, peak1);
-AudioConnection          patchCord7(amp1, fft);
-AudioConnection          patchCord10(amp1, 0, usb_output, 0);
-AudioConnection          patchCord11(amp1, 0, usb_output, 1);
-
-#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == CLAPPER_BODY)
+AudioConnection          patchCord2(biquad1, left_amp);
+AudioConnection          patchCord3(left_amp, clip_counter);
+AudioConnection          patchCord6(left_amp, left_peak);
+AudioConnection          patchCord7(left_amp, left_fft);
+AudioConnection          patchCord10(left_amp, 0, usb_output, 0);
+AudioConnection          patchCord11(left_amp, 0, usb_output, 1);
+*/
+#if (ARTEFACT_TYPE == EXPLORATOR)// && (BODY_TYPE == CLAPPER_BODY)
 
 AudioInputI2S            i2s1;           //xy=257,388
 
@@ -625,6 +625,7 @@ void setupAudio() {
   Serial.print("\t");
   Serial.println(LBQ2_DB);
   
+#if NUM_CHANNELS > 1
   right_HPF.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(1, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(2, RBQ1_THRESH, RBQ1_Q);
@@ -635,8 +636,7 @@ void setupAudio() {
   Serial.print(RBQ1_Q);
   Serial.print("\t");
   Serial.println(RBQ1_DB);
-  
-#if NUM_CHANNELS > 1
+
   right_LPF.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
   right_LPF.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
   right_LPF.setLowpass(2, RBQ2_THRESH, RBQ2_Q);
@@ -726,7 +726,7 @@ void speculatorSetup() {
   /////////////// User Controls ////////////////////////////////////////////
   // TODO make buttons do something for the speculators again
 #if HV_MAJOR == 3
-  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &COLOR_MAP_MODE, BUT1_NAME);
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &USE_TARGET_HUE, BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &SQUARE_BRIGHTNESS, BUT2_NAME);
   uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
   uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &REVERSE_HUE, BUT4_NAME);
@@ -809,11 +809,11 @@ void speculatorLoop() {
     printHSB();
     printRGB();
 
-    if (feature_collector.isActive() == true) {
-      neos[0].colorWipeHSB(h, s, b);// now colorWipe the LEDs with the HSB value
-    } else {
-      Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
-    }
+    // if (feature_collector.isActive() == true) {
+    neos[0].colorWipeHSB(h, s, b);// now colorWipe the LEDs with the HSB value
+    // } else {
+    // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
+    // }
   }
   else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR) {
     updateFeedbackLEDs(&fft_manager[dominate_channel]);
@@ -936,16 +936,17 @@ bool updateOnset() {
     dprint(P_ONSET, " - ");
     dprint(P_ONSET, ONSET_THRESH);
     neos[0].colorWipeAdd(red, green, blue, lux_manager.getBrightnessScaler() * user_brightness_scaler);
-    return true;
+    if (millis() >  60000) {
+      return true;
+    }
   }
   return false;
 }
 
-
 void exploratorLoop() {
   updateSolenoids(); // turns off all solenoids which need to be turned off
   //  listen for onsets
-  if (updateOnset() || last_playback_tmr > 60000) {
+ if (updateOnset() || last_playback_tmr > 60000) {
     triggerSolenoid(2, 40);
     triggerSolenoid(7, 40);
     last_playback_tmr = 0;
@@ -971,13 +972,13 @@ void exploratorSetup() {
 
   /////////////// User Controls ////////////////////////////////////////////
 #if BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY
-  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, &but_test[0], BUT1_NAME);
-  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, &but_test[1], BUT2_NAME);
-  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, &but_test[2], BUT3_NAME);
-  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, &but_test[3], BUT4_NAME);
-
-  uimanager.addPot(POT1_PIN, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
-  uimanager.addPot(POT2_PIN, POT2_PLAY, &STRIKE_LENGTH,  POT2_NAME);
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &but_test[2], BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &but_test[3], BUT4_NAME);
+ 
+  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &STRIKE_LENGTH,  POT2_NAME);
 
   uimanager.setup();
   uimanager.printAll();

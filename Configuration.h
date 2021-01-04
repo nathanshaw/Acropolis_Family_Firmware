@@ -18,7 +18,7 @@
 #define ARTEFACT_TYPE             SPECULATOR
 
 // TODO finish integrating this
-float ADDED_SATURATION  = 0.35;
+float ADDED_SATURATION  = 0.4;
 
 ////////////////////// Hardware Revision /////////////////////////////
 // There are different hardware revisions for different Artefacts
@@ -45,7 +45,7 @@ float ADDED_SATURATION  = 0.35;
 #define WOODPECKER_BODY           0
 #define BELL_BODY                 1
 #define CLAPPER_BODY              2
-#define BODY_TYPE                 CLAPPER_BODY
+#define BODY_TYPE                 WOODPECKER_BODY
 #endif
 
 ////////////////////// Firmware Mode //////////////////////////////////////////////////////
@@ -145,11 +145,11 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 
 #elif (ARTEFACT_TYPE == SPECULATOR) && HV_MAJOR == 3
 // the v3 hardware needs higher thresholds as it is brighter and thus needs to decrease its brightness sooner
-#define NIGHT_LUX_THRESHOLD             10.0
+#define NIGHT_LUX_THRESHOLD             0.25
 // this is the threshold in which anything below will just be treated as the lowest reading
-#define LOW_LUX_THRESHOLD               350.0
+#define LOW_LUX_THRESHOLD               5.0
 // when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
-#define MID_LUX_THRESHOLD               1200.0
+#define MID_LUX_THRESHOLD               15.0
 #define HIGH_LUX_THRESHOLD              3000.0
 #define EXTREME_LUX_THRESHOLD           5000.0
 
@@ -192,7 +192,7 @@ uint8_t LIGHTING_CONDITION = LC_NORMAL;
 uint16_t  MIN_BRIGHTNESS =              0;
 
 #if (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 3)
-uint16_t  MAX_BRIGHTNESS =              510;
+uint16_t  MAX_BRIGHTNESS =              765;
 #else
 uint16_t  MAX_BRIGHTNESS =              765;
 #endif
@@ -201,14 +201,14 @@ uint16_t  MAX_BRIGHTNESS =              765;
 // on scale of 0-1.0 what is the min multiplier for the user defined brightness scaler
 // 0.05 was too low, did not provide good enough feedback for the night time
 #if (ARTEFACT_TYPE == SPECULATOR) || (ARTEFACT_TYPE == LEGATUS)
-#define LUX_BS_MIN                      0.1
+#define LUX_BS_MIN                      0.75
 #define LUX_BS_MAX                      2.50
 #else
 #define LUX_BS_MIN                      0.75
 #define LUX_BS_MAX                      1.50
 #endif
 /////////////////////////////// Update Regularity //////////////////////////
-uint32_t lux_max_reading_delay =        1000 * 60 * 1;   // every minute
+uint32_t lux_max_reading_delay =        1000 * 60 * 3;   // every 3 minute
 uint32_t lux_min_reading_delay =        1000 * 10;       // ten seconds
 
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR > 2
@@ -219,7 +219,7 @@ uint32_t lux_min_reading_delay =        1000 * 10;       // ten seconds
 
 #if FIRMWARE_MODE == CICADA_MODE
 float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.15;
-#elif FIRMWARE_MODE == PITCH_MODE
+#elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 2
 float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.01;
 #elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 3
 float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
@@ -346,9 +346,9 @@ int INDEPENDENT_FLASHES =              false; // WARNING NOT IMPLEMENTED - TODO
 int FLASH_DOMINATES =                  false;
 
 // if this is true then the brightness will b = (b + b) * b; in order to reduce its value, and make loud events even more noticable
-int SQUARE_BRIGHTNESS =                true;
+int SQUARE_BRIGHTNESS =                false;
 
-int SATURATED_COLORS =                 false;
+int SATURATED_COLORS =                 true;
 
 // how high the onset flash timer will go up to
 #define MAX_FLASH_TIME                  60
@@ -430,14 +430,14 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // print lux debug mostly prints info about when extreme lux is entered and
 // other things in the lux manager, it is reccomended to leave this printing on
 #define P_LED_ON_RATIO                  false
-#define P_COLOR                         true
-#define P_COLOR_WIPE                    true
+#define P_COLOR                         false
+#define P_COLOR_WIPE                    false
 
 ////////////////////////////// weather manager ////////////////////////
 #define P_WEATHER_MANAGER_READINGS      false
 
 ///////////////////////// NeoPixels and Colour ////////////////////////
-#define P_HSB                           true
+#define P_HSB                           false
 #define P_SMOOTH_HSB                    false
 #define P_SATURATION                    false
 #define P_HUE                           false
@@ -461,7 +461,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_CALCULATE_BRIGHTNESS_LENGTH   false
 
 // this is where the final brightness scaler is applied
-#define P_PACK_COLORS                   true
+#define P_PACK_COLORS                   false
 
 #define P_SONG_GENERAL                  false
 #define P_SONG_COLOR                    false
@@ -625,7 +625,7 @@ int AUTOGAIN_ACTIVE      =                               true;
 #define AUTOGAIN_MAX_GAIN                               (double)3000.0
 
 ////////////////////////////// Dominate Channel /////////////////////
-#define CALCULATE_DOMINATE_CHANNEL                      true
+#define CALCULATE_DOMINATE_CHANNEL                      false
 
 #if CALCULATE_DOMINATE_CHANNEL == true
 uint64_t first_dominate_channel_calculation =           1000 * 60 * 2;  // starting two minutes into the program
@@ -651,8 +651,8 @@ uint8_t num_fft_managers =                              2;
 #define CENTROID_FEATURE_MIN                            4000
 #define CENTROID_FEATURE_MAX                            16000
 #elif ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
-#define CENTROID_FEATURE_MIN                            120
-#define CENTROID_FEATURE_MAX                            24000
+#define CENTROID_FEATURE_MIN                            200
+#define CENTROID_FEATURE_MAX                            20000
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define CENTROID_FEATURE_MIN                            120
 #define CENTROID_FEATURE_MAX                            20000
@@ -705,33 +705,33 @@ float pot_test[NUM_POTS];
 // the low filtering so only the new values will be used while 0.5 will result in the
 // average of the old and new value to be used, a higher value will be a quicker responce
 // the max value is 1.0 and the min value is 0.0
-#define HUE_LP_LEVEL                          0.15
-#define SATURATION_LP_LEVEL                   0.15
-#define BRIGHTNESS_LP_LEVEL                   0.15
+#define HUE_LP_LEVEL                          0.02
+#define SATURATION_LP_LEVEL                   0.02
+#define BRIGHTNESS_LP_LEVEL                   0.02
 
 // if > 0 then the brightness will be smoothed with a previous value
 // thee higher the value the more it is smoothed
-#define HUE_DECAY_DELAY      1500
-#define HUE_DECAY_FACTOR     0.025
+#define HUE_DECAY_DELAY      15000
+#define HUE_DECAY_FACTOR     0.1
 
-#define SAT_DECAY_DELAY      6000
-#define SAT_DECAY_FACTOR     0.01
+#define SAT_DECAY_DELAY      15000
+#define SAT_DECAY_FACTOR     0.1
 
-#define BGT_DECAY_DELAY       1500
-#define BGT_DECAY_FACTOR     0.025
+#define BGT_DECAY_DELAY      15000
+#define BGT_DECAY_FACTOR     0.1
 
-#define BGT_MIN_UPDATE_FACTOR 0.25
-#define BGT_MAX_UPDATE_FACTOR 0.25
+#define BGT_MIN_UPDATE_FACTOR BRIGHTNESS_LP_LEVEL
+#define BGT_MAX_UPDATE_FACTOR BRIGHTNESS_LP_LEVEL
 
-#define SAT_MIN_UPDATE_FACTOR 0.05
-#define SAT_MAX_UPDATE_FACTOR 0.01
+#define SAT_MIN_UPDATE_FACTOR SATURATION_LP_LEVEL
+#define SAT_MAX_UPDATE_FACTOR SATURATION_LP_LEVEL
 
-#define HUE_MIN_UPDATE_FACTOR 0.25
-#define HUE_MAX_UPDATE_FACTOR 0.25
+#define HUE_MIN_UPDATE_FACTOR HUE_LP_LEVEL
+#define HUE_MAX_UPDATE_FACTOR HUE_LP_LEVEL
 
-double hue = 1.0;
-double brightness = 1.0;
-double saturation = 0.0;// needs to start at 0.0 or else the min/max value tracker has issues
+double hue = 0.5;
+double brightness = 0.5;
+double saturation = 0.5;// needs to start at 0.0 or else the min/max value tracker has issues
 
 ValueTrackerDouble hue_tracker        = ValueTrackerDouble((String)"HUE", &hue, HUE_DECAY_FACTOR, HUE_DECAY_DELAY, HUE_LP_LEVEL);
 ValueTrackerDouble saturation_tracker = ValueTrackerDouble((String)"SATURATION", &saturation, SAT_DECAY_FACTOR, SAT_DECAY_DELAY, SATURATION_LP_LEVEL);
@@ -762,7 +762,7 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define STARTING_GAIN                         12.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
-#define STARTING_GAIN                         22.0
+#define STARTING_GAIN                         240.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define STARTING_GAIN                         40.0
 #elif ARTEFACT_TYPE == EXPLORATOR
@@ -885,8 +885,8 @@ double hue_max =                                0.0;
 // When the color mapping is using HSB, this will be where the features used are determined
 #if ARTEFACT_TYPE == SPECULATOR
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
-uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
-uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK;
+uint8_t SATURATION_FEATURE  =               FEATURE_PEAK_AVG;
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_ENERGY;
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);

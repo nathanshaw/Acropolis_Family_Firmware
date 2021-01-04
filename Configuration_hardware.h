@@ -3,6 +3,8 @@
 #include "PrintUtils.h"
 #include "Macros.h"
 
+#define FLIP_SWITCHES             true
+
 /////////////////////// Enclosure Type //////////////////////////////
 // Currently there are four the Speculator enclosures: 
 // GROUND_ENCLOSURE, ORB_ENCLOSURE_WITH_HOLE
@@ -328,7 +330,46 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT9_LOW_CHANGES    false
 #define BUT10_LOW_CHANGES   true
 
+
+
+#if FLIP_SWITCHES == true
+
 // reverse     (should the reading be reversed?)
+#define BUT1_LOW_VAL    1
+#define BUT1_HIGH_VAL   0
+
+#define BUT2_LOW_VAL    1
+#define BUT2_HIGH_VAL   0
+
+#define BUT3_LOW_VAL    1
+#define BUT3_HIGH_VAL   0
+
+#define BUT4_LOW_VAL    1
+#define BUT4_HIGH_VAL   0
+
+#define BUT5_LOW_VAL    1
+#define BUT5_HIGH_VAL   0
+
+#define BUT6_LOW_VAL    1
+#define BUT6_HIGH_VAL   0
+
+#define BUT7_HIGH_VAL    LED_MAPPING_STANDARD
+#define BUT7_LOW_VAL     LED_MAPPING_CENTER_OUT
+
+#define BUT8_HIGH_VAL    LED_MAPPING_STANDARD
+#define BUT8_LOW_VAL     LED_MAPPING_OUTSIDE_IN
+
+// other options include outside in
+#define BUT9_HIGH_VAL    LED_MAPPING_STANDARD
+#define BUT9_LOW_VAL     LED_MAPPING_CLOCK_FILL
+
+#define BUT10_LOW_VAL    0
+#define BUT10_HIGH_VAL   1
+
+#else // flip switches
+
+// reverse     (should the reading be reversed?)
+
 #define BUT1_LOW_VAL    0
 #define BUT1_HIGH_VAL   1
 
@@ -355,10 +396,11 @@ double ENC_GAIN_ADJUST =        1.0;
 
 // other options include outside in
 #define BUT9_LOW_VAL    LED_MAPPING_STANDARD
-#define BUT9_HIGH_VAL   LED_MAPPING_CLOCK_FILL
+#define BUT9_HIGH_VAL   LED_MAPPING_BOTTOM_UP
 
 #define BUT10_LOW_VAL    1
 #define BUT10_HIGH_VAL   0
+#endif // flip switches
 
 // active      (is this button populated (available on the enclosure))
 #define BUT1_ACTIVE     true
@@ -386,7 +428,7 @@ double ENC_GAIN_ADJUST =        1.0;
 
 // TODO name these properly
 // name        (what is the name for the buttons)
-#define BUT1_NAME       "COLOR_MAP_MODE"
+#define BUT1_NAME       "USE_TARGET_HUE"
 #define BUT2_NAME       "SQUARE_BRIGHTNESS"
 #define BUT3_NAME       "USE_TARGET_BRIGHTNESS"
 #define BUT4_NAME       "REVERSE_HUE"
@@ -404,6 +446,13 @@ double ENC_GAIN_ADJUST =        1.0;
 #define POT2_PIN          21
 #define POT3_PIN          20
 #define POT4_PIN          17
+
+/*
+#define POT1_PIN          21
+#define POT2_PIN          20
+#define POT3_PIN          22
+#define POT4_PIN          17
+*/
 
 // reverse     (should the reading be reversed?)
 #define POT1_REVERSE    true

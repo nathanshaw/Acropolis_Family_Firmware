@@ -201,7 +201,7 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft) {
   dprint(P_BRIGHTNESS, b);
   brightness = b;
   brightness_tracker.update();
-  brightness = brightness_tracker.getScaled();
+  brightness = brightness_tracker.getRAvg();
   dprint(P_BRIGHTNESS, "\t"); dprintln(P_BRIGHTNESS, brightness);
   ////////////////////////// When using target_brightness
   if (USE_TARGET_BRIGHTNESS == true) {
@@ -217,8 +217,13 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft) {
         target_brightness = brightness;
       }
     }
+    Serial.print("brightness changed due to target: ");
+    Serial.print(brightness);
+    Serial.print(" = ");
     brightness = target_brightness;
+    Serial.println(brightness);
   }
+  
   /////////////////////////// Reverse ////////////////////////
   if (REVERSE_BRIGHTNESS == true) {
     brightness = 1.0 - brightness;
@@ -293,8 +298,8 @@ double calculateSaturation(FeatureCollector *f, FFTManager1024 *_fft) {
   saturation_tracker.update();
   dprint(P_SATURATION, "saturation before/after scaling: ");
   dprint(P_SATURATION, sat);
-  saturation = saturation_tracker.getScaledAvg();
-  saturation = (9.9 * log10((double)saturation + 1.0)) - (2.0 * (double)saturation);
+  saturation = saturation_tracker.getRAvg();
+  // saturation = (9.9 * log10((double)saturation + 1.0)) - (2.0 * (double)saturation);
   if (REVERSE_SATURATION == true) {
     saturation = 1.0 - saturation;
   }
@@ -358,7 +363,7 @@ double calculateHue(FeatureCollector *f, FFTManager1024 *_fft) {
   dprint(P_HUE, hue);
   hue = h;
   hue_tracker.update();
-  hue = hue_tracker.getScaledAvg();
+  hue = hue_tracker.getRAvg();
   /////////////////////////// Reverse ////////////////////////
   if (REVERSE_HUE == true) {
     hue = 1.0 - hue;

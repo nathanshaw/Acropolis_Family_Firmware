@@ -277,7 +277,7 @@ double last_peak = 0.0;
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Which Audio features will be activated?
 #define PEAK_FEATURE_ACTIVE                 1
-#if BODY_TYPE == CLAPPER_BODY 
+#if ARTEFACT_TYPE == EXPLORATOR
 #define RMS_FEATURE_ACTIVE                  0
 #else
 #define RMS_FEATURE_ACTIVE                  1
