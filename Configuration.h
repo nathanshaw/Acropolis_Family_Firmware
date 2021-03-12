@@ -9,33 +9,46 @@
 #define TEST_SOLENOIDS           false
 #define TEST_MOTORS              false
 #define TEST_LEDS                false
+// TODO
+#define TEST_LUX                 false
+#define TEST_TEMP                false
+#define TEST_DOF                 false
 
 /////////////////////// Artefact Type ////////////////////////////////
 // There are three artefact types currently availible
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE             EXPLORATOR
+#define ARTEFACT_TYPE             LEGATUS
 
 // TODO finish integrating this
 float ADDED_SATURATION  = 0.4;
 
 ////////////////////// Hardware Revision /////////////////////////////
+///////////////// Speculator  //
 // There are different hardware revisions for different Artefacts
 // Starting with the Speculator the 2.0, 2.1 and 3.0 are the primary revisions
 // where the 2.0 and 2.1 are 10 LED 100 mm units, where the 2.1 has 6 jumpers and
 // the 2.0 has no user controls. The 3.0 is the 80 mm units with 40 LEDs
+//////////////// Explorator //
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers
+// revision 2.0 is the smaller PCB with two solenoid outputs and a single motor driver
 // 0.1.4 = version used for the jan, 2021 southwest installations
+//////////////// Legatus //
+// There are three current Legatus firmware revisions:
+// v0.1 - "square PCB"
+// v1.0 - first circular PCB with the modular audio codecs and amplifiers
+// v1.1 - second circular PCB with the jellybean audio amplifier and the audio codec
+
 #define HV_MAJOR                  1
-#define HV_MINOR                  0
+#define HV_MINOR                  1
 
 //////////////////// Software Revision ////////////////////////////////
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               5
+#define SV_REVISION               6
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -45,7 +58,9 @@ float ADDED_SATURATION  = 0.4;
 #define WOODPECKER_BODY           0
 #define BELL_BODY                 1
 #define CLAPPER_BODY              2
-#define BODY_TYPE                 CLAPPER_BODY
+#define SHAKER_BODY               3
+#define MB_BODY                   4
+#define BODY_TYPE                 SHAKER_BODY
 #endif
 
 ////////////////////// Firmware Mode //////////////////////////////////////////////////////
@@ -59,6 +74,8 @@ float ADDED_SATURATION  = 0.4;
 
 #if ARTEFACT_TYPE == SPECULATOR
 #define FIRMWARE_MODE             PITCH_MODE
+#elif ARTEFACT_TYPE == LEGATUS
+#define FIRMWRE_MORE              PLAYBACK_MODE
 #else
 #define FIRMWARE_MODE             ECHO_FEEDBACK_MODE
 #endif
@@ -167,7 +184,7 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 // this is the threshold in which anything below will just be treated as the lowest reading
 #define LOW_LUX_THRESHOLD               10.0
 // when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
-#define MID_LUX_THRESHOLD               350.0
+#define MID_LUX_THRESHOLD P              350.0
 #define HIGH_LUX_THRESHOLD              1200.0
 #define EXTREME_LUX_THRESHOLD           5000.0
 
@@ -263,11 +280,18 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 // note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
 #define LED2_PIN 5
 #define LED3_PIN 10
+
+#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
+#define LED1_PIN 5
+#define LED2_PIN 24
+#define LED3_PIN 25
+
 #else
 #define LED1_PIN 5
 // note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
 #define LED2_PIN 8
 #define LED3_PIN 10
+
 #endif
 
 // what the names of the neopixel strips will be
@@ -281,6 +305,14 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED3_NAME      "N/A"
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == CLAPPER_BODY)
 #define LED1_NAME      "Inside Ring"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == MB_BODY)
+#define LED1_NAME      "Inside Ring"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == SHAKER_BODY)
+#define LED1_NAME      "Bottom Ring"
 #define LED2_NAME      "N/A"
 #define LED3_NAME      "N/A"
 #elif (ARTEFACT_TYPE == SPECULATOR)
@@ -315,6 +347,14 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED1_COUNT 10
 #define LED2_COUNT 10
 #define LED3_COUNT 10
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == SHAKER_BODY)
+#define LED1_COUNT 10
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == MB_BODY)
+#define LED1_COUNT 10
+#define LED2_COUNT 0
+#define LED3_COUNT 0
 #elif ARTEFACT_TYPE == LEGATUS
 #define LED1_COUNT 20
 #define LED2_COUNT 0
@@ -400,6 +440,8 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 ////////////////////////////// User Controls //////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
+// TODO - buttons should be linked to inturrupts
+
 // in ms, how often will theUI controls update?
 #if ((ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2))
 #define UI_POLLING_RATE                 1000
@@ -407,6 +449,10 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define UI_POLLING_RATE                 500
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define UI_POLLING_RATE                 600000
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+#define UI_POLLING_RATE                 20
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+#define UI_POLLING_RATE                 20
 #else
 #define UI_POLLING_RATE                 500
 #endif // UI_POLLING_RATE
@@ -527,7 +573,7 @@ elapsedMillis last_audio_usage_print;
 ////////////////////////////////////////////////////////////////////////////
 
 // will print readings from jumpers and pots
-#define P_USER_CONTROLS                           true
+#define P_USER_CONTROLS                           false
 
 ///////////////////////// Solenoids //////////////////////////////////////////
 #define P_SOLENOID_DEBUG                          true
@@ -578,7 +624,13 @@ double current_feature;
 // will autogain based on the LED ON/OFF time be active?
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 int AUTOGAIN_ACTIVE      =                               false;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+int AUTOGAIN_ACTIVE      =                               false;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+int AUTOGAIN_ACTIVE      =                               false;
 #elif ARTEFACT_TYPE == SPECULATOR
+int AUTOGAIN_ACTIVE      =                               false;
+#elif ARTEFACT_TYPE == LEGATUS
 int AUTOGAIN_ACTIVE      =                               false;
 #else
 int AUTOGAIN_ACTIVE      =                               true;
@@ -639,9 +691,15 @@ int dominate_channel =                                  0;
 ////////////////////////////////////////////////////////////////////////////
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 uint8_t num_fft_managers =                              1;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+uint8_t num_fft_managers =                              1;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+uint8_t num_fft_managers =                              1;
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 2
 uint8_t num_fft_managers =                              1;
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
+uint8_t num_fft_managers =                              1;
+#elif ARTEFACT_TYPE == LEGATUS 
 uint8_t num_fft_managers =                              1;
 #else
 uint8_t num_fft_managers =                              2;
@@ -693,6 +751,10 @@ float pot_test[NUM_POTS];
 #if ARTEFACT_TYPE == SPECULATOR
 #define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
 #define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define NUM_NEOP_MANAGERS                               3
@@ -758,12 +820,19 @@ elapsedMillis last_usage_print =              0;// for keeping track of audio me
 // this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
 double USER_CONTROL_GAIN_ADJUST               = 1.0;
 
+// TODO - implement this
+#define SPH_MICROPHONE                        0
+#define TDK_MICROPHONE                        1
+#define MICROPHONE_TYPE                       TDK_MICROPHONE
+
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 2
 #define STARTING_GAIN                         12.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 #define STARTING_GAIN                         240.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#define STARTING_GAIN                         20.0
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define STARTING_GAIN                         240.0
@@ -908,6 +977,10 @@ int REVERSE_HUE            =               false;
 #if ARTEFACT_TYPE == SPECULATOR
 int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
 int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
 #else
 int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;

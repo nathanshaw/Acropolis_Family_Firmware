@@ -23,7 +23,24 @@
 #include <Wire.h>
 #include <SPI.h>
 
+#if ARTEFACT_TYPE == EXPLORATOR && (BODY_TYPE ==  SHAKER_BODY)
+
+#include "Encoder.h"
+Encoder enc(20, 21);
+long enc_position = 0;
+#define GEAR_RATIO            67
+
+#elif ARTEFACT_TYPE == EXPLORATOR && (BODY_TYPE ==  MB_BODY)
+
+#include "Encoder.h"
+// Encoder enc(20, 21);
+long enc_position = 0;
+#define GEAR_RATIO            488
+
+#endif // encloder library
+
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+// TODO
 #else
 #include <UIManager.h>
 #endif
@@ -40,11 +57,20 @@
 #include <WeatherManager.h>
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define WEATHER_MANAGER_PRESENT        false
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+#define WEATHER_MANAGER_PRESENT        true
+#include <WeatherManager.h>
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+#define WEATHER_MANAGER_PRESENT        true
+#include <WeatherManager.h>
+#elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
+#define WEATHER_MANAGER_PRESENT        true
+#include <WeatherManager.h>
 #else
 #define WEATHER_MANAGER_PRESENT        false
 #endif
 
-#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == WOODPECKER_BODY
+#if ARTEFACT_TYPE == EXPLORATOR && ((BODY_TYPE == WOODPECKER_BODY) || (BODY_TYPE == SHAKER_BODY))
 // TODO - update to the way that motors are taken care of in the main_simple program
 
 //////////////////////////////////////////////////////////////////////////
@@ -266,20 +292,20 @@ UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 #endif
 ////////////////////////////// Audio System ///////////////////////////////////////
 /*#if (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY)
-AudioInputI2S            i2s;              //xy=634,246
-AudioAmplifier           left_amp;      //xy=777.1429023742676,277.14284896850586
-AudioFilterBiquad        biquad1;
-AudioAnalyzePeak         left_peak;             //xy=1139.4286575317383,258.42859840393066
-AudioAnalyzeFFT1024      left_fft;           //xy=1145.4286575317383,290.42859840393066
-AudioAnalyzeClipCounter  clip_counter;
-AudioOutputUSB           usb_output;       //xy=1147.4286575317383,194.42859840393066
-AudioConnection          patchCord1(i2s, 0, biquad1, 0);
-AudioConnection          patchCord2(biquad1, left_amp);
-AudioConnection          patchCord3(left_amp, clip_counter);
-AudioConnection          patchCord6(left_amp, left_peak);
-AudioConnection          patchCord7(left_amp, left_fft);
-AudioConnection          patchCord10(left_amp, 0, usb_output, 0);
-AudioConnection          patchCord11(left_amp, 0, usb_output, 1);
+  AudioInputI2S            i2s;              //xy=634,246
+  AudioAmplifier           left_amp;      //xy=777.1429023742676,277.14284896850586
+  AudioFilterBiquad        biquad1;
+  AudioAnalyzePeak         left_peak;             //xy=1139.4286575317383,258.42859840393066
+  AudioAnalyzeFFT1024      left_fft;           //xy=1145.4286575317383,290.42859840393066
+  AudioAnalyzeClipCounter  clip_counter;
+  AudioOutputUSB           usb_output;       //xy=1147.4286575317383,194.42859840393066
+  AudioConnection          patchCord1(i2s, 0, biquad1, 0);
+  AudioConnection          patchCord2(biquad1, left_amp);
+  AudioConnection          patchCord3(left_amp, clip_counter);
+  AudioConnection          patchCord6(left_amp, left_peak);
+  AudioConnection          patchCord7(left_amp, left_fft);
+  AudioConnection          patchCord10(left_amp, 0, usb_output, 0);
+  AudioConnection          patchCord11(left_amp, 0, usb_output, 1);
 */
 #if (ARTEFACT_TYPE == EXPLORATOR)// && (BODY_TYPE == CLAPPER_BODY)
 
@@ -624,7 +650,7 @@ void setupAudio() {
   Serial.print(LBQ2_Q);
   Serial.print("\t");
   Serial.println(LBQ2_DB);
-  
+
 #if NUM_CHANNELS > 1
   right_HPF.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
   right_HPF.setHighpass(1, RBQ1_THRESH, RBQ1_Q);
@@ -803,7 +829,7 @@ void speculatorLoop() {
   // Serial.println(dominate_channel);
 #endif
   if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);   
+    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]);    // user brightness scaler is applied in this function
     double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
     printHSB();
@@ -826,7 +852,82 @@ void speculatorLoop() {
 }
 #endif // ARTEFACT_TYPE == SPECULATOR
 
-#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE  == WOODPECKER_BODY
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+
+int motor_speed = 0;
+int target_motor_speed = 0;
+int next_motor_speed = 0;
+int motor_time  = 0;
+int next_motor_time =  0;
+const int max_motor_speed = 450;
+const int min_motor_speed = -450;
+int enc_pos = 0;
+
+void shake(int on_speed, int on_time, int rev_speed, int rev_time) {
+  target_motor_speed = on_speed;
+  next_motor_speed = rev_speed;
+  motor_time = on_time;
+  next_motor_time = rev_time;
+
+  Serial.print("shaking with the following parameters: ");
+  Serial.print(on_speed);
+  Serial.print("\t");
+  Serial.print(on_time);
+  Serial.print("\t");
+  Serial.print(rev_speed);
+  Serial.print("\t");
+  Serial.println(rev_time);
+  neos[0].colorWipe(0, 255,  0, 1.0);
+  motors.enableDrivers();
+  motors.setM1Speed(on_speed);
+  Serial.print("starting / ending pos: ");
+  enc_pos = enc.read();
+  Serial.print(enc_position);
+  
+  delay(on_time);
+  neos[0].colorWipe(255, 0, 0, 1.0);
+  if (rev_speed > 0) {
+    rev_speed *= -1;
+  }
+  motors.setM1Speed(rev_speed);
+  delay(rev_time);
+  motors.setM1Speed(0);
+  motors.disableDrivers();
+  enc_position = enc.read();
+  Serial.print(enc_position);
+  neos[0].colorWipe(0, 0, 0, 1.0);
+}
+
+void updateMotor() {
+  // turn off motor, ramp motor speed, and so on
+
+}
+
+void exploratorLoop()  {
+  updateMotor();
+
+  ///////////////// Passive Visual Feedback ///////////
+  updateFeedbackLEDs(&fft_manager[dominate_channel]);
+
+  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
+  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
+  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
+  // activity level adds a base of up to five minutes
+  ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
+  // uint16_t t = random(45, 150);
+
+  // TODO
+  ACTUATION_DELAY = ACTUATION_DELAY * 0.5;
+
+  if (last_playback_tmr > ACTUATION_DELAY) {
+    Serial.print("ACTUATION_DELAY is : ");
+    Serial.println(ACTUATION_DELAY);
+    shake(250, 40, 200, 20);
+    last_playback_tmr = 0;
+  }
+}
+
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == WOODPECKER_BODY
 
 void exploratorLoop() {
   ///////////////// Actuator Outputs //////////////////
@@ -855,7 +956,7 @@ void exploratorLoop() {
   }
 }
 
-#elif ARTEFAT_TYPE == EXPLORATOR && BODY_TYPE == BELL_BODY
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == BELL_BODY
 void exploratorLoop() {
   ///////////////// Actuator Outputs //////////////////
   updateSolenoids(); // turns off all solenoids which have
@@ -944,15 +1045,15 @@ bool updateOnset() {
 void exploratorLoop() {
   updateSolenoids(); // turns off all solenoids which need to be turned off
   //  listen for onsets
- if (millis() > 90000 && (updateOnset() || last_playback_tmr > 60000)) {
+  if (millis() > 90000 && (updateOnset() || last_playback_tmr > 60000)) {
     triggerSolenoid(2, 25);
     triggerSolenoid(7, 25);
     last_playback_tmr = 0;
   }
   // if onset detected, immedietally actuate
   // pause audio analysis for x period of time
-    if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);   
+  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
+    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]);    // user brightness scaler is applied in this function
     double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
     printHSB();
@@ -994,7 +1095,7 @@ void exploratorSetup() {
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
   uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &but_test[2], BUT3_NAME);
   uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &but_test[3], BUT4_NAME);
- 
+
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
   uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &STRIKE_LENGTH,  POT2_NAME);
 
@@ -1114,17 +1215,25 @@ void setupLuxManager() {
 
   delay(500);
 #if (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 3)
+  Serial.println("Starting LuxManager");
   lux_manager.add6030Sensors(2, 25);
+  Serial.println("Finished starting LuxManager");
 #elif (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2)
+  Serial.println("Starting LuxManager");
   lux_manager.addSensorTcaIdx("Front", 0);
   lux_manager.addSensorTcaIdx("Rear", 1);
   lux_manager.startTCA7700Sensors(VEML7700_GAIN_1, VEML7700_IT_25MS); // todo add this to config_adv? todo
+  Serial.println("Finished starting LuxManager");
 #elif (ARTEFACT_TYPE == EXPLORATOR)
   Serial.println("Starting LuxManager");
   lux_manager.add7700Sensor((String)"Eye-Stock");
   lux_manager.start7700Sensor(VEML7700_GAIN_1, VEML7700_IT_25MS); // todo add this to config_adv? todo
   Serial.println("Finished starting LuxManager");
   printMinorDivide();
+#elif ARTEFACT_TYPE == LEGATUS
+  Serial.println("Starting LuxManager");
+  lux_manager.add6030Sensors(2, 25);
+  Serial.println("Finished starting LuxManager");
 #endif // HV_MAJOR
   delay(2000);
 
@@ -1275,6 +1384,7 @@ void configurePlaybackEngine() {
   }
   playback_engine.linkMechanism(& pecker[0]);
   playback_engine.linkNeoGroup(& neos[1]);
+
 #endif // BODY_TYPE == BELL_BODY
 }
 

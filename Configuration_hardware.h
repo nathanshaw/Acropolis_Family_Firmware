@@ -51,6 +51,7 @@ double ENC_GAIN_ADJUST =        1.0;
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Microphones ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+// TODO
 #if ARTEFACT_TYPE == SPECULATOR
 #define NUM_MICROPHONES                 2
 #elif ARTEFACT_TYPE == EXPLORATOR
@@ -83,9 +84,6 @@ double ENC_GAIN_ADJUST =        1.0;
 #define I2C_MULTI                 0
 #define TCA_CHANNELS              0 
 #endif
-
-//////////// MICROCONTROLLER PIN OUTS ////
-#define LED_PIN                   5
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////// User Controls /////////////////////////
@@ -478,7 +476,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #define POT3_NAME       "POT3"
 #define POT4_NAME       "BRIGHTNESS_CUTTOFF_THRESHOLD"
 
-#elif ARTEFACT_TYPE == LEGATUS
+#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 0
 
 // num buttons (how many buttons does the hardware support?)
 #define NUM_BUTTONS       6
@@ -552,6 +550,81 @@ double ENC_GAIN_ADJUST =        1.0;
 // name        (what is the name for the pot?)
 #define POT1_NAME       "POT1"
 #define POT2_NAME       "POT2"
+
+#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
+
+// num buttons (how many buttons does the hardware support?)
+#define NUM_BUTTONS       6
+
+// pins        (what are the pins associated with the buttons?)
+#define BUT1_PIN          0
+#define BUT2_PIN          1
+#define BUT3_PIN          2
+#define BUT4_PIN          3
+#define BUT5_PIN          4
+#define BUT6_PIN          6
+
+// reverse     (should the reading be reversed?)
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+#define BUT3_LOW_VAL    0
+#define BUT3_HIGH_VAL   1
+#define BUT4_LOW_VAL    0
+#define BUT4_HIGH_VAL   1
+#define BUT5_LOW_VAL    0
+#define BUT5_HIGH_VAL   1
+#define BUT6_LOW_VAL    0
+#define BUT6_HIGH_VAL   1
+
+// active      (is this button populated (available on the enclosure))
+#define BUT1_ACTIVE     true
+#define BUT2_ACTIVE     true
+#define BUT3_ACTIVE     true
+#define BUT4_ACTIVE     true
+#define BUT5_ACTIVE     true
+#define BUT6_ACTIVE     true
+
+// pullup      (should the hardware pull-up be used in the microcontroller)
+#define BUT1_PULLUP     true
+#define BUT2_PULLUP     true
+#define BUT3_PULLUP     true
+#define BUT4_PULLUP     true
+#define BUT5_PULLUP     true
+#define BUT6_PULLUP     true
+
+// TODO name these properly
+// name        (what is the name for the buttons)
+#define BUT1_NAME       "BUT1"
+#define BUT2_NAME       "BUT2"
+#define BUT3_NAME       "BUT3"
+#define BUT4_NAME       "BUT4"
+#define BUT5_NAME       "BUT5"
+#define BUT6_NAME       "BUT6"
+
+// num pots    (how many pots does the hardware support?)
+#define NUM_POTS          2
+
+// pins        (what are the A pins associated with the pots?)
+#define POT1_PIN        A3
+#define POT2_PIN        A7
+
+// reverse     (should the reading be reversed?)
+#define POT1_REVERSE    true
+#define POT2_REVERSE    true
+
+// active      (is this button populated (available on the enclosure))
+#define POT1_ACTIVE     true
+#define POT2_ACTIVE     true
+
+// play        (what is the amount of play allowed? 0.002 - 0.005 is usally good
+#define POT1_PLAY       0.004
+#define POT2_PLAY       0.004
+
+// name        (what is the name for the pot?)
+#define POT1_NAME       "Brightness"
+#define POT2_NAME       "Amplitude"
 
 #endif // ARTEFACT_TYPE and HV_MAJOR
 

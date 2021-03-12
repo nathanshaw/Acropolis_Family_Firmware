@@ -37,10 +37,8 @@
 #define M2_GEAR_RATIO         1
 #define M3_GEAR_RATIO         1
 
-const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
-
 ///////////////////////// for the woodpecker bot
-#elif HV_MAJOR == 1 && BODY_TYPE == WOODPECKER_BODY
+#elif HV_MAJOR == 1 && BODY_TYPE  == WOODPECKER_BODY
 #define NUM_MOTORS            3
 
 #define MOT1_ACTIVE           true
@@ -71,12 +69,10 @@ const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 #define M2_GEAR_RATIO         67
 #define M3_GEAR_RATIO         1
 
-const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
+#elif HV_MAJOR == 1 && BODY_TYPE  == SHAKER_BODY
+#define NUM_MOTORS            1
 
-#elif HV_MAJOR == 1 && BODY_TYPE == WOODPECKER_BODY
-#define NUM_MOTORS            0
-
-#define MOT1_ACTIVE           false
+#define MOT1_ACTIVE           true
 #define MOT1_DIR_PIN          26
 #define MOT1_PWM_PIN          25
 #define MOT1_EN_PIN           28
@@ -100,13 +96,51 @@ const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 #define M3_POLARITY           false
 
 // this value can be used to determine how long and how fast to spin each motor...
-#define M1_GEAR_RATIO         1
+#define M1_GEAR_RATIO         67
 #define M2_GEAR_RATIO         1
 #define M3_GEAR_RATIO         1
 
-const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
+
+#elif HV_MAJOR == 2 && BODY_TYPE  == MB_BODY
+#define NUM_MOTORS            1
+
+#define MOT1_ACTIVE           true
+#define MOT1_DIR_PIN          26
+#define MOT1_PWM_PIN          25
+#define MOT1_EN_PIN           28
+#define MOT1_FAULT_PIN        27
+
+// these are unused pins on the rear of the board
+#define MOT2_ACTIVE           false
+#define MOT2_DIR_PIN          29
+#define MOT2_PWM_PIN          32
+#define MOT2_EN_PIN           31
+#define MOT2_FAULT_PIN        30
+
+// these are unused pins on the rear of the board
+#define MOT3_ACTIVE           false
+#define MOT3_DIR_PIN          24
+#define MOT3_PWM_PIN          25
+#define MOT3_EN_PIN           26
+#define MOT3_FAULT_PIN        27
+
+// the direction of the motors, if one is spinning in the wrong way then change this value
+#define M1_POLARITY           false
+#define M2_POLARITY           false
+#define M3_POLARITY           false
+
+// this value can be used to determine how long and how fast to spin each motor...
+#define M1_GEAR_RATIO         488
+#define M2_GEAR_RATIO         1
+#define M3_GEAR_RATIO         1
 
 #endif // HV_MAJOR
+
+#if NUM_MOTORS   == 3
+const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
+#elif NUM_MOTORS == 1
+const bool active_motors[1] = {MOT1_ACTIVE};
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Solenoid Actuators /////////////////////////////////////
@@ -135,6 +169,12 @@ const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 #define SOL7_PIN 15
 #define SOL8_PIN 16
 #define SOL9_PIN 7
+
+#elif HV_MAJOR == 2
+#define NUM_SOLENOIDS 2
+#define SOL1_PIN 3
+#define SOL2_PIN 7
+
 #endif
 
 #if BODY_TYPE == BELL_BODY
@@ -168,7 +208,25 @@ const bool active_motors[3] = {MOT1_ACTIVE, MOT2_ACTIVE, MOT3_ACTIVE};
 #define SOL7_ACTIVE false
 #define SOL8_ACTIVE true
 #define SOL9_ACTIVE false
+
+#elif HV_MAJOR == 1 && BODY_TYPE == SHAKER_BODY 
+// todo these need to be chosen by the body not the HV
+#define SOL1_ACTIVE false
+#define SOL2_ACTIVE false
+#define SOL3_ACTIVE false
+#define SOL4_ACTIVE false
+#define SOL5_ACTIVE false
+#define SOL6_ACTIVE false
+#define SOL7_ACTIVE false
+#define SOL8_ACTIVE false
+#define SOL9_ACTIVE false
+
+#elif HV_MAJOR == 2 && BODY_TYPE == MB_BODY
+#define SOL1_ACTIVE false
+#define SOL2_ACTIVE false
+
 #endif // HV_MAJOR == 1
+
 
 #if NUM_SOLENOIDS == 9
 const int s_pins[] = {SOL1_PIN, SOL2_PIN, SOL3_PIN, SOL4_PIN, SOL5_PIN, SOL6_PIN, SOL7_PIN, SOL8_PIN, SOL9_PIN};
@@ -254,6 +312,30 @@ elapsedMillis last_sol_action[6];
 
 const int sol_min[6] = {S1_MIN, S2_MIN, S3_MIN, S4_MIN, S5_MIN, S6_MIN};
 const int sol_max[6] = {S1_MAX, S2_MAX, S3_MAX, S4_MAX, S5_MAX, S6_MAX};
+
+#elif NUM_SOLENOIDS == 2
+const int s_pins[] = {SOL1_PIN, SOL2_PIN};
+uint16_t sol_on_time[] = {30, 30};
+bool sol_state[] = {false, false}; // is the solenoid on or off
+bool sol_active[] = {SOL1_ACTIVE, SOL2_ACTIVE}; // is the solenoid on or off
+const uint8_t num_active_solenoids = SOL1_ACTIVE + SOL2_ACTIVE;
+unsigned long sol_timers[2];
+elapsedMillis last_sol_action[2];
+
+// the max and min values for the solenoids corrisponds to the lowest value which
+// results in an audible sounds from the actuator
+// the max is the value which produces the loudest sonic event from the solenoid
+// any values higher than the max will not produce a louder sound
+// These values should be tested and set within this file once determined in-situ
+
+#define S1_MIN                10
+#define S1_MAX                100
+#define S2_MIN                10
+#define S2_MAX                100
+
+const int sol_min[6] = {S1_MIN, S2_MIN};
+const int sol_max[6] = {S1_MAX, S2_MAX};
+
 #endif
 
 
