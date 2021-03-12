@@ -135,6 +135,14 @@ int BOOT_DELAY_ACTIVE    =           false;
 // if set to true an audio USB object will be created so the audio can be debuged via Audacity
 #define AUDIO_USB                       true
 
+// Which Audio features will be activated?
+#define PEAK_FEATURE_ACTIVE                 1
+#if ARTEFACT_TYPE == EXPLORATOR
+#define RMS_FEATURE_ACTIVE                  0
+#else
+#define RMS_FEATURE_ACTIVE                  1
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Lux Manager ////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +192,7 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 // this is the threshold in which anything below will just be treated as the lowest reading
 #define LOW_LUX_THRESHOLD               10.0
 // when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
-#define MID_LUX_THRESHOLD P              350.0
+#define MID_LUX_THRESHOLD               350.0
 #define HIGH_LUX_THRESHOLD              1200.0
 #define EXTREME_LUX_THRESHOLD           5000.0
 
@@ -992,5 +1000,6 @@ int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
 
 // should the centroid value be smoothed?
 #define SMOOTH_CENTROID                       true
+
 
 #endif // __CONFIGURATION_H__

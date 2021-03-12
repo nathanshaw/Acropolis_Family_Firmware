@@ -317,6 +317,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT9_PIN          12
 #define BUT10_PIN         14
 
+// TODO what dooes this do?
 #define BUT1_LOW_CHANGES    true
 #define BUT2_LOW_CHANGES    true
 #define BUT3_LOW_CHANGES    true
@@ -327,8 +328,6 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT8_LOW_CHANGES    false
 #define BUT9_LOW_CHANGES    false
 #define BUT10_LOW_CHANGES   true
-
-
 
 #if FLIP_SWITCHES == true
 
@@ -528,103 +527,118 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT5_NAME       "BUT5"
 #define BUT6_NAME       "BUT6"
 
+#define BUT1_LOW_CHANGES    true
+#define BUT2_LOW_CHANGES    true
+#define BUT3_LOW_CHANGES    true
+#define BUT4_LOW_CHANGES    true
+#define BUT5_LOW_CHANGES    true
+#define BUT6_LOW_CHANGES    true
+
 // num pots    (how many pots does the hardware support?)
 #define NUM_POTS          2
 
 // pins        (what are the A pins associated with the pots?)
-#define POT1_PIN        A3
-#define POT2_PIN        A7
+#define POT1_PIN          A3
+#define POT2_PIN          A7
 
 // reverse     (should the reading be reversed?)
-#define POT1_REVERSE    true
-#define POT2_REVERSE    true
+#define POT1_REVERSE      true
+#define POT2_REVERSE      true
 
 // active      (is this button populated (available on the enclosure))
-#define POT1_ACTIVE     true
-#define POT2_ACTIVE     true
+#define POT1_ACTIVE       true
+#define POT2_ACTIVE       true
 
 // play        (what is the amount of play allowed? 0.002 - 0.005 is usally good
-#define POT1_PLAY       0.004
-#define POT2_PLAY       0.004
+#define POT1_PLAY         0.004
+#define POT2_PLAY         0.004
 
 // name        (what is the name for the pot?)
-#define POT1_NAME       "POT1"
-#define POT2_NAME       "POT2"
+#define POT1_NAME         "POT1"
+#define POT2_NAME         "POT2"
 
 #elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
 
 // num buttons (how many buttons does the hardware support?)
-#define NUM_BUTTONS       6
+#define NUM_BUTTONS         6
 
 // pins        (what are the pins associated with the buttons?)
-#define BUT1_PIN          0
-#define BUT2_PIN          1
-#define BUT3_PIN          2
-#define BUT4_PIN          3
-#define BUT5_PIN          4
-#define BUT6_PIN          6
+#define BUT1_PIN            0
+#define BUT2_PIN            1
+#define BUT3_PIN            2
+#define BUT4_PIN            3
+#define BUT5_PIN            4
+#define BUT6_PIN            6
 
 // reverse     (should the reading be reversed?)
-#define BUT1_LOW_VAL    0
-#define BUT1_HIGH_VAL   1
-#define BUT2_LOW_VAL    0
-#define BUT2_HIGH_VAL   1
-#define BUT3_LOW_VAL    0
-#define BUT3_HIGH_VAL   1
-#define BUT4_LOW_VAL    0
-#define BUT4_HIGH_VAL   1
-#define BUT5_LOW_VAL    0
-#define BUT5_HIGH_VAL   1
-#define BUT6_LOW_VAL    0
-#define BUT6_HIGH_VAL   1
+#define BUT1_LOW_VAL        1
+#define BUT1_HIGH_VAL       0
+#define BUT2_LOW_VAL        1
+#define BUT2_HIGH_VAL       0
+#define BUT3_LOW_VAL        1
+#define BUT3_HIGH_VAL       0
+#define BUT4_LOW_VAL        1
+#define BUT4_HIGH_VAL       0
+#define BUT5_LOW_VAL        1
+#define BUT5_HIGH_VAL       0
+#define BUT6_LOW_VAL        1
+#define BUT6_HIGH_VAL       0
 
 // active      (is this button populated (available on the enclosure))
-#define BUT1_ACTIVE     true
-#define BUT2_ACTIVE     true
-#define BUT3_ACTIVE     true
-#define BUT4_ACTIVE     true
-#define BUT5_ACTIVE     true
-#define BUT6_ACTIVE     true
+#define BUT1_ACTIVE         true
+#define BUT2_ACTIVE         true
+#define BUT3_ACTIVE         true
+#define BUT4_ACTIVE         true
+#define BUT5_ACTIVE         true
+#define BUT6_ACTIVE         true
 
 // pullup      (should the hardware pull-up be used in the microcontroller)
-#define BUT1_PULLUP     true
-#define BUT2_PULLUP     true
-#define BUT3_PULLUP     true
-#define BUT4_PULLUP     true
-#define BUT5_PULLUP     true
-#define BUT6_PULLUP     true
+#define BUT1_PULLUP         true
+#define BUT2_PULLUP         true
+#define BUT3_PULLUP         true
+#define BUT4_PULLUP         true
+#define BUT5_PULLUP         true
+#define BUT6_PULLUP         true
+
+// TODO properly explain this
+#define BUT1_LOW_CHANGES    true
+#define BUT2_LOW_CHANGES    true
+#define BUT3_LOW_CHANGES    true
+#define BUT4_LOW_CHANGES    true
+#define BUT5_LOW_CHANGES    true
+#define BUT6_LOW_CHANGES    true
 
 // TODO name these properly
 // name        (what is the name for the buttons)
-#define BUT1_NAME       "BUT1"
-#define BUT2_NAME       "BUT2"
-#define BUT3_NAME       "BUT3"
-#define BUT4_NAME       "BUT4"
-#define BUT5_NAME       "BUT5"
-#define BUT6_NAME       "BUT6"
+#define BUT1_NAME           "BUT1"
+#define BUT2_NAME           "BUT2"
+#define BUT3_NAME           "BUT3"
+#define BUT4_NAME           "BUT4"
+#define BUT5_NAME           "BUT5"
+#define BUT6_NAME           "BUT6"
 
 // num pots    (how many pots does the hardware support?)
-#define NUM_POTS          2
+#define NUM_POTS            2
 
 // pins        (what are the A pins associated with the pots?)
-#define POT1_PIN        A3
-#define POT2_PIN        A7
+#define POT1_PIN            A3
+#define POT2_PIN            A7
 
 // reverse     (should the reading be reversed?)
-#define POT1_REVERSE    true
-#define POT2_REVERSE    true
+#define POT1_REVERSE        true
+#define POT2_REVERSE        true
 
 // active      (is this button populated (available on the enclosure))
-#define POT1_ACTIVE     true
-#define POT2_ACTIVE     true
+#define POT1_ACTIVE         true
+#define POT2_ACTIVE         true
 
 // play        (what is the amount of play allowed? 0.002 - 0.005 is usally good
-#define POT1_PLAY       0.004
-#define POT2_PLAY       0.004
+#define POT1_PLAY           0.004
+#define POT2_PLAY           0.004
 
 // name        (what is the name for the pot?)
-#define POT1_NAME       "Brightness"
-#define POT2_NAME       "Amplitude"
+#define POT1_NAME           "Brightness"
+#define POT2_NAME           "Amplitude"
 
 #endif // ARTEFACT_TYPE and HV_MAJOR
 
@@ -634,3 +648,16 @@ double ENC_GAIN_ADJUST =        1.0;
 #define LUX_TEST_DURATION         1000
 
 #endif // __HARDWARE_CONFIGURATION_H__
+
+//////////////////////////////// SD Card Stuff /////////////////////
+#if ARTEFACT_TYPE == LEGATUS
+
+#define SD_PRESENT                            true
+#define SD_MOSI                               7
+#define SD_MISO                               12
+#define SD_CLK                                14
+#define SD_CS                                 10
+
+#else
+#define SD_PRESENT                            false
+#endif// ARTEFACT_TYPE == LEGATUS

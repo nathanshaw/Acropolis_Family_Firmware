@@ -23,6 +23,13 @@
 #include <Wire.h>
 #include <SPI.h>
 
+#if ARTEFACT_TYPE == LEGATUS
+#include <SD.h>
+Sd2Card card;
+SdVolume volume;
+SdFile root;
+#endif // SD card stuff
+
 #if ARTEFACT_TYPE == EXPLORATOR && (BODY_TYPE ==  SHAKER_BODY)
 
 #include "Encoder.h"
@@ -327,7 +334,7 @@ AudioConnection          pc_usb_l(left_amp, 0, output_usb, 0);
 AudioConnection          pc_usb_r(i2s1, 0, output_usb, 1);
 AudioConnection          pc_fft_l(left_amp, left_fft);
 
-#elif (ARTEFACT_TYPE == SPECULATOR) || (ARTEFACT_TYPE == LEGATUS)
+#elif (ARTEFACT_TYPE == SPECULATOR) 
 /*
    #include <Audio.h>
   #include <Wire.h>
@@ -426,6 +433,32 @@ AudioConnection          patchCord7(left_LPF, left_amp);
 AudioConnection          patchCord8(left_amp, left_fft);
 AudioConnection          patchCord9(left_amp, left_peak);
 AudioConnection          patchCord10(left_amp, 0, output_usb, 0);
+
+#elif ARTEFACT_TYPE == LEGATUS
+////////////////////////// Audio Objects //////////////////////////////////////////
+AudioInputI2S            i2s1;           //xy=811.6666030883789,543.3333549499512
+AudioFilterBiquad        left_HPF;       //xy=962.9998664855957,523.3333139419556
+AudioFilterBiquad        right_HPF;        //xy=966.6666641235352,556.6667098999023
+AudioMixer4              mixer1;         //xy=1106.6667137145996,563.3334369659424
+AudioFilterBiquad        left_LPF;       //xy=1243.6665573120117,561.6666469573975
+AudioAmplifier           left_amp;           //xy=1369.9999771118164,559.9999208450317
+AudioAnalyzeFFT1024      left_fft;       //xy=1570.999870300293,563.666654586792
+AudioAnalyzePeak         left_peak;      //xy=1574.999870300293,595.666654586792
+AudioAnalyzeRMS          left_rms;
+AudioOutputUSB           output_usb;     //xy=1581.9999313354492,630.6666469573975
+
+AudioConnection          patchCord1(i2s1, 0, left_HPF, 0);
+AudioConnection          patchCord2(i2s1, 1, right_HPF, 0);
+AudioConnection          patchCord3(left_HPF, 0, mixer1, 0);
+AudioConnection          patchCord4(right_HPF, 0, mixer1, 1);
+AudioConnection          patchCord5(mixer1, 0, output_usb, 1);
+AudioConnection          patchCord6(mixer1, left_LPF);
+AudioConnection          patchCord7(left_LPF, left_amp);
+AudioConnection          patchCord8(left_amp, left_fft);
+AudioConnection          patchCord9(left_amp, left_peak);
+AudioConnection          patchCord10(left_amp, left_rms);
+AudioConnection          patchCord11(left_amp, 0, output_usb, 0);
+
 #endif // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE 
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -597,7 +630,7 @@ void setupAudio() {
 #endif
   }
 
-#if (RMS_FEATURE_ACTIVE)
+#if RMS_FEATURE_ACTIVE
   feature_collector.linkRMS(&left_rms, P_RMS_VALS);
 #if NUM_RMS_ANAS > 1
   feature_collector.linkRMS(&right_rms, P_RMS_VALS);
@@ -1457,14 +1490,82 @@ void legatusLoop() {
   Serial.println("WARNING LEGATUS LOOP IS NOT YET IMPLEMENTED");
 }
 #endif // ARTEFACT_TYPE == LEGATUS
+
+#if SD_PRESENT
+void initSD() {
+  // we'll use the initialization code from the utility libraries
+  // since we're just testing if the card is working!
+  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("* is a card inserted?");
+    Serial.println("* is your wiring correct?");
+    Serial.println("* did you change the chipSelect pin to match your shield or module?");
+    return;
+  } else {
+   Serial.println("Wiring is correct and a card is present.");
+  }
+
+  // print the type of card
+  Serial.print("\nCard type: ");
+  switch(card.type()) {
+    case SD_CARD_TYPE_SD1:
+      Serial.println("SD1");
+      break;
+    case SD_CARD_TYPE_SD2:
+      Serial.println("SD2");
+      break;
+    case SD_CARD_TYPE_SDHC:
+      Serial.println("SDHC");
+      break;
+    default:
+      Serial.println("Unknown");
+  }
+
+  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
+  if (!volume.init(card)) {
+    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+    return;
+  }
+
+
+  // print the type and size of the first FAT-type volume
+  uint32_t volumesize;
+  Serial.print("\nVolume type is FAT");
+  Serial.println(volume.fatType(), DEC);
+  Serial.println();
+  
+  volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
+  volumesize *= volume.clusterCount();       // we'll have a lot of clusters
+  if (volumesize < 8388608ul) {
+    Serial.print("Volume size (bytes): ");
+    Serial.println(volumesize * 512);        // SD card blocks are always 512 bytes
+  }
+  Serial.print("Volume size (Kbytes): ");
+  volumesize /= 2;
+  Serial.println(volumesize);
+  Serial.print("Volume size (Mbytes): ");
+  volumesize /= 1024;
+  Serial.println(volumesize);
+
+  
+  Serial.println("\nFiles found on the card (name, date and size in bytes): ");
+  root.openRoot(volume);
+  
+  // list all files in the card with date and size
+  root.ls(LS_R | LS_DATE | LS_SIZE);
+}
+#endif // SD card related functions
+
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
+
 #if NUM_SOLENOIDS > 0 || NUM_MOTORS > 0
   setOutputs();
 #endif
+
   delay(1000);
   ///////////////// Serial ///////////////////////////////////
   printDivide();
@@ -1527,7 +1628,12 @@ void setup() {
     Serial.print("LED_MAPPING_MODE is set to                        : \t");
     Serial.println(LED_MAPPING_MODE);
 
-#if (ARTEFACT_TYPE == SPECULATOR)
+///////////////////////////// SD Card //////////////////////////////////
+#if SD_PRESENT
+initSD();
+#endif
+
+#if ARTEFACT_TYPE == SPECULATOR
     neos[i].setSongColors(SONG_RED_HIGH, SONG_GREEN_HIGH, SONG_BLUE_HIGH);
     Serial.print("REVERSE_HUE is set to                             : \t");
     Serial.println(REVERSE_HUE);
