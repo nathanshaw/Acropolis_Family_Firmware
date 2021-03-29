@@ -142,6 +142,10 @@ void updateFeedbackLEDs(FFTManager1024 *_fft_manager) {
         neos[i].colorWipe(red, green, blue, current_brightness);
       }
     }
+#elif ARTEFACT_TYPE == LEGATUS
+  neos[0].colorWipe(red, green, blue, current_brightness); 
+#elif ARTEFACT_TYPE == EXPLORATOR 
+  neos[0].colorWipe(red, green, blue, current_brightness); 
 #endif
     last_led_update_tmr = 0;
   }

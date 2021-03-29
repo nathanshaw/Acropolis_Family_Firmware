@@ -66,7 +66,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #if ARTEFACT_TYPE == SPECULATOR
 #define NUM_LUX_SENSORS           2
 #elif ARTEFACT_TYPE == EXPLORATOR
-#define NUM_LUX_SENSORS           1
+#define NUM_LUX_SENSORS           2
 #elif ARTEFACT_TYPE == LEGATUS
 #define NUM_LUX_SENSORS           2
 #endif
@@ -156,7 +156,7 @@ double ENC_GAIN_ADJUST =        1.0;
 ////////////////////////////////////////////////////////////////////////////////
 // now lets set things up for the woodpecker bot
 ////////////////////////////////////////////////////////////////////////////////
-# elif (ARTEFACT_TYPE == EXPLORATOR) && (HV_MAJOR == 1)
+#elif (ARTEFACT_TYPE == EXPLORATOR) && (HV_MAJOR == 1)
 
 ///////////////////// Buttons //////////////////////////////////////////////////
 #define NUM_BUTTONS     4
@@ -229,6 +229,56 @@ double ENC_GAIN_ADJUST =        1.0;
 // what is the name of the button? should reflect what it does
 #define POT1_NAME       "ACTIVITY_LEVEL"
 #define POT2_NAME       "STRIKE_LENGTH"
+
+// For the Explorator MB_BODY
+#elif ARTEFACT_TYPE == EXPLORATOR && HV_MAJOR == 2
+///////////////////// Buttons //////////////////////////////////////////////////
+#define NUM_BUTTONS     2
+
+#define BUT1_PIN        4
+#define BUT2_PIN        6
+
+// should the values received from the buttons be reversed?
+#define BUT1_LOW_VAL    0
+#define BUT1_HIGH_VAL   1
+
+#define BUT2_LOW_VAL    0
+#define BUT2_HIGH_VAL   1
+
+#define BUT1_LOW_CHANGES    false
+#define BUT2_LOW_CHANGES    false
+
+#define BUT1_ACTIVE     true
+#define BUT2_ACTIVE     true
+
+#define BUT1_PULLUP     false
+#define BUT2_PULLUP     false
+
+// what is the name of the button? should reflect what it does
+#define BUT1_NAME       "BUT1"
+#define BUT2_NAME       "BUT2"
+
+///////////////////// Pots /////////////////////////////////////////////////////
+#define NUM_POTS        2
+#define POT1_PIN        A3
+#define POT2_PIN        A1
+
+// should the values received from the pots be reversed?
+#define POT1_REVERSE    false
+#define POT2_REVERSE    false
+
+#define POT1_ACTIVE     true
+#define POT2_ACTIVE     true
+
+// how much play will the pots have before returning a value?
+// good values should range between 0.002 and 0.005
+#define POT1_PLAY       0.004
+#define POT2_PLAY       0.004
+
+// what is the name of the button? should reflect what it does
+#define POT1_NAME       "LED Brightness"
+#define POT2_NAME       "Playback Time"
+
 
 #elif (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2) && (HV_MINOR == 1)
 // num buttons (how many buttons does the hardware support?)
@@ -660,4 +710,15 @@ double ENC_GAIN_ADJUST =        1.0;
 
 #else
 #define SD_PRESENT                            false
-#endif// ARTEFACT_TYPE == LEGATUS
+#endif// ARTEFACT_TYPE == LEGATUS for SD card stuff
+
+/////////////////////////////// DOF Sensors ////////////////////////
+#if ARTEFACT_TYPE == LEGATUS
+
+#define DOF_PRESENT                           true
+
+#else 
+
+#define DOF_PRESENT                           false
+
+#endif // DOF sensor stuff

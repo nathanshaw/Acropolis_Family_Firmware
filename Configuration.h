@@ -19,7 +19,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE             LEGATUS
+#define ARTEFACT_TYPE             EXPLORATOR
 
 // TODO finish integrating this
 float ADDED_SATURATION  = 0.4;
@@ -33,9 +33,10 @@ float ADDED_SATURATION  = 0.4;
 //////////////// Explorator //
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
-// drivers and 9 solenoid drivers
+// drivers and 9 solenoid drivers, revision 2.0 is the small PCB used for the MB_BODY
 // revision 2.0 is the smaller PCB with two solenoid outputs and a single motor driver
 // 0.1.4 = version used for the jan, 2021 southwest installations
+
 //////////////// Legatus //
 // There are three current Legatus firmware revisions:
 // v0.1 - "square PCB"
@@ -43,12 +44,13 @@ float ADDED_SATURATION  = 0.4;
 // v1.1 - second circular PCB with the jellybean audio amplifier and the audio codec
 
 #define HV_MAJOR                  1
-#define HV_MINOR                  1
+#define HV_MINOR                  0
 
 //////////////////// Software Revision ////////////////////////////////
+// 0.1.8 is when the Explorator Shaker is fully supported (more or less)
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               6
+#define SV_REVISION               8
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -60,6 +62,7 @@ float ADDED_SATURATION  = 0.4;
 #define CLAPPER_BODY              2
 #define SHAKER_BODY               3
 #define MB_BODY                   4
+
 #define BODY_TYPE                 SHAKER_BODY
 #endif
 
@@ -289,6 +292,11 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED2_PIN 5
 #define LED3_PIN 10
 
+#elif ARTEFACT_TYPE == EXPLORATOR && HV_MAJOR == 2
+#define LED1_PIN 5
+#define LED2_PIN 10
+#define LED3_PIN 25
+
 #elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
 #define LED1_PIN 5
 #define LED2_PIN 24
@@ -316,8 +324,8 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED2_NAME      "N/A"
 #define LED3_NAME      "N/A"
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == MB_BODY)
-#define LED1_NAME      "Inside Ring"
-#define LED2_NAME      "N/A"
+#define LED1_NAME      "Main PCB"
+#define LED2_NAME      "Sensor Stock"
 #define LED3_NAME      "N/A"
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == SHAKER_BODY)
 #define LED1_NAME      "Bottom Ring"
@@ -361,7 +369,7 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED3_COUNT 0
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == MB_BODY)
 #define LED1_COUNT 10
-#define LED2_COUNT 0
+#define LED2_COUNT 10
 #define LED3_COUNT 0
 #elif ARTEFACT_TYPE == LEGATUS
 #define LED1_COUNT 20
@@ -484,7 +492,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // print lux debug mostly prints info about when extreme lux is entered and
 // other things in the lux manager, it is reccomended to leave this printing on
 #define P_LED_ON_RATIO                  false
-#define P_COLOR                         false
+#define P_COLOR                         true
 #define P_COLOR_WIPE                    false
 
 ////////////////////////////// weather manager ////////////////////////
@@ -684,6 +692,12 @@ int AUTOGAIN_ACTIVE      =                               true;
 #define AUTOGAIN_MIN_GAIN                               (double)1.0
 #define AUTOGAIN_MAX_GAIN                               (double)3000.0
 
+#if ARTEFACT_TYPE == LEGATUS
+const float min_playback_gain = 0.02;
+const float mid_playback_gain = 0.25;
+const float max_playback_gain = 0.5;
+#endif // playback gains for legatus
+
 ////////////////////////////// Dominate Channel /////////////////////
 #define CALCULATE_DOMINATE_CHANNEL                      false
 
@@ -748,7 +762,11 @@ float max_user_brightness_cuttoff           = 1.0;
 // this will determine if the USER will have control over the brightness scaler
 // at this point v2.1 does this via jumpers and v3.0 does this via a pot
 // so the default value is true
+#if ARTEFACT_TYPE == LEGATUS
 #define USER_BS_ACTIVE                        true
+#else
+#define USER_BS_ACTIVE                        true
+#endif
 
 int but_test[NUM_BUTTONS];
 float pot_test[NUM_POTS];
@@ -763,7 +781,7 @@ float pot_test[NUM_POTS];
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
 #define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
-#define NUM_NEOP_MANAGERS                               1
+#define NUM_NEOP_MANAGERS                               2
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define NUM_NEOP_MANAGERS                               3
 #elif ARTEFACT_TYPE == LEGATUS         
@@ -826,8 +844,10 @@ int USE_TARGET_SATURATION = false;
 elapsedMillis last_usage_print =              0;// for keeping track of audio memory usage
 
 // this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
-double USER_CONTROL_GAIN_ADJUST               = 1.0;
-
+float USER_CONTROL_GAIN_ADJUST               = 1.0;
+#if ARTEFACT_TYPE == LEGATUS
+float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
+#endif
 // TODO - implement this
 #define SPH_MICROPHONE                        0
 #define TDK_MICROPHONE                        1
@@ -842,10 +862,14 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
 #define STARTING_GAIN                         20.0
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+#define STARTING_GAIN                         120.0
+
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define STARTING_GAIN                         240.0
+
 #elif ARTEFACT_TYPE == LEGATUS
-#define STARTING_GAIN                         240.0
+#define STARTING_GAIN                         10.0
 #endif
 
 #if ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == CICADA_MODE
@@ -884,6 +908,7 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define RBQ2_THRESH         20000
 #define RBQ2_Q              0.85
 #define RBQ2_DB             -12
+
 //////////////////
 #elif ARTEFACT_TYPE == EXPLORATOR
 // SONG HP
@@ -901,6 +926,26 @@ double USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define RBQ1_DB             -12
 // Should be Inactive
 #define RBQ2_THRESH         20000
+#define RBQ2_Q              1.0
+#define RBQ2_DB             -12
+
+//////////////////
+#elif ARTEFACT_TYPE == LEGATUS
+// Microphone HP
+#define LBQ1_THRESH         400
+#define LBQ1_Q              1.0
+#define LBQ1_DB             -12
+// Microphone LP
+#define LBQ2_THRESH         20000
+#define LBQ2_Q              1.0
+#define LBQ2_DB             -12
+
+// playback HP
+#define RBQ1_THRESH         80
+#define RBQ1_Q              1.0
+#define RBQ1_DB             -12
+// playback LQ
+#define RBQ2_THRESH         18000
 #define RBQ2_Q              1.0
 #define RBQ2_DB             -12
 
@@ -1000,6 +1045,5 @@ int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
 
 // should the centroid value be smoothed?
 #define SMOOTH_CENTROID                       true
-
 
 #endif // __CONFIGURATION_H__

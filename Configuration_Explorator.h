@@ -5,6 +5,9 @@
 ////////////////////////////// H-Bridge Motors  ///////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
+
+// for encoders
+#define COUNTS_PER_REV        12
 /////////////////// for the bell bot which should not use any of the H-bridge motors
 #if HV_MAJOR == 0
 #define NUM_MOTORS            0
@@ -100,15 +103,14 @@
 #define M2_GEAR_RATIO         1
 #define M3_GEAR_RATIO         1
 
-
-#elif HV_MAJOR == 2 && BODY_TYPE  == MB_BODY
+#elif HV_MAJOR == 2 && BODY_TYPE == MB_BODY
 #define NUM_MOTORS            1
 
 #define MOT1_ACTIVE           true
-#define MOT1_DIR_PIN          26
-#define MOT1_PWM_PIN          25
-#define MOT1_EN_PIN           28
-#define MOT1_FAULT_PIN        27
+#define MOT1_DIR_PIN          20
+#define MOT1_PWM_PIN          21
+#define MOT1_EN_PIN           14
+#define MOT1_FAULT_PIN        16
 
 // these are unused pins on the rear of the board
 #define MOT2_ACTIVE           false
@@ -333,8 +335,8 @@ elapsedMillis last_sol_action[2];
 #define S2_MIN                10
 #define S2_MAX                100
 
-const int sol_min[6] = {S1_MIN, S2_MIN};
-const int sol_max[6] = {S1_MAX, S2_MAX};
+const int sol_min[2] = {S1_MIN, S2_MIN};
+const int sol_max[2] = {S1_MAX, S2_MAX};
 
 #endif
 
@@ -383,5 +385,7 @@ void detectOnset() {
 float ACTIVITY_LEVEL = 0.0;
 float MOTOR_MOVEMENT = 0.0;
 float STRIKE_LENGTH  = 30.0;
+
+#define PWR_KILL_PIN              25
 
 #endif // __CONFIGURATION__H__

@@ -9,11 +9,14 @@
 // #include <MemoryFree.h>
 
 // mechanisms needs be be added before the Mode file
-#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE != CLAPPER_BODY
+#if ARTEFACT_TYPE == EXPLORATOR
+#if BODY_TYPE == CLAPPER_BODY || BODY_TYPE == MB_BODY
+// no need for the mechanisms or playback engine for the music box guy
+#else
 #include <Mechanisms.h>
 #include <PlaybackEngine.h>
 #endif
-
+#endif
 ////////////////////////////// Libraries needed for Every Artefact /////////////////////////////////////
 #include <LuxManager.h>
 #include <PrintUtils.h>
@@ -34,17 +37,15 @@ SdFile root;
 
 #include "Encoder.h"
 Encoder enc(20, 21);
-long enc_position = 0;
-#define GEAR_RATIO            67
+long enc_pos = 0;
 
 #elif ARTEFACT_TYPE == EXPLORATOR && (BODY_TYPE ==  MB_BODY)
 
 #include "Encoder.h"
-// Encoder enc(20, 21);
-long enc_position = 0;
-#define GEAR_RATIO            488
+Encoder enc(12, 11);
+long enc_pos = 0;
 
-#endif // encloder library
+#endif // encoder library
 
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 // TODO
@@ -55,30 +56,30 @@ long enc_position = 0;
 ///////////////////////////// Libraries only needed for certain Artefacts ///////////////////////////////
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 #define WEATHER_MANAGER_PRESENT        true
-#include <WeatherManager.h>
+#elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
+#define WEATHER_MANAGER_PRESENT        true
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == WOODPECKER_BODY
 #define WEATHER_MANAGER_PRESENT        true
-#include <WeatherManager.h>
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == BELL_BODY
 #define WEATHER_MANAGER_PRESENT        true
-#include <WeatherManager.h>
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define WEATHER_MANAGER_PRESENT        false
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
 #define WEATHER_MANAGER_PRESENT        true
-#include <WeatherManager.h>
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
 #define WEATHER_MANAGER_PRESENT        true
-#include <WeatherManager.h>
-#elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
+#elif ARTEFACT_TYPE == LEGATUS
 #define WEATHER_MANAGER_PRESENT        true
-#include <WeatherManager.h>
 #else
 #define WEATHER_MANAGER_PRESENT        false
+#endif // if weather manager present?
+
+
+#if WEATHER_MANAGER_PRESENT == true
+#include <WeatherManager.h>
 #endif
 
-#if ARTEFACT_TYPE == EXPLORATOR && ((BODY_TYPE == WOODPECKER_BODY) || (BODY_TYPE == SHAKER_BODY))
-// TODO - update to the way that motors are taken care of in the main_simple program
+#if NUM_MOTORS > 0
 
 //////////////////////////////////////////////////////////////////////////
 ///////////////////// H-Bridge Motor Driver //////////////////////////////
@@ -148,7 +149,7 @@ void rampMotor(int which, int16_t start, int16_t target, int ramp_total_time) {
   Serial.println("Disabled Drivers");
 }
 
-#endif
+#endif // motor stuff
 
 #if DATALOG_ACTIVE == true
 #include <SD.h>
@@ -272,7 +273,7 @@ NeoGroup neos[num_active_led_channels] = {
 
 /////////////////////////////// FFTManager ///////////////////////////////////////
 // all artefacts will have an input FFTManager
-#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
+#if (ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY) || (ARTEFACT_TYPE == LEGATUS) || BODY_TYPE == MB_BODY
 FFTManager1024 fft_manager[1] = {FFTManager1024(FFT_LOWEST_BIN, FFT_HIGHEST_BIN, "FFT")};
 #else
 FFTManager1024 fft_manager[2] = {FFTManager1024(FFT_LOWEST_BIN, FFT_HIGHEST_BIN, "Front FFT"), FFTManager1024(FFT_LOWEST_BIN, FFT_HIGHEST_BIN, "Rear FFT")};
@@ -314,13 +315,13 @@ UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
   AudioConnection          patchCord10(left_amp, 0, usb_output, 0);
   AudioConnection          patchCord11(left_amp, 0, usb_output, 1);
 */
-#if (ARTEFACT_TYPE == EXPLORATOR)// && (BODY_TYPE == CLAPPER_BODY)
+#if (ARTEFACT_TYPE == EXPLORATOR)
 
 AudioInputI2S            i2s1;           //xy=257,388
 
 // only the HPF and AMP, rms and fft
 AudioFilterBiquad        left_HPF;   //xy=412,359
-AudioFilterBiquad        left_LPF;   //xy=578,359
+// AudioFilterBiquad        left_LPF;   //xy=578,359
 AudioAmplifier           left_amp;       //xy=738,360
 AudioAnalyzeFFT1024      left_fft;       //xy=950,295
 AudioAnalyzePeak         left_peak;      //xy=960,327
@@ -334,7 +335,7 @@ AudioConnection          pc_usb_l(left_amp, 0, output_usb, 0);
 AudioConnection          pc_usb_r(i2s1, 0, output_usb, 1);
 AudioConnection          pc_fft_l(left_amp, left_fft);
 
-#elif (ARTEFACT_TYPE == SPECULATOR) 
+#elif (ARTEFACT_TYPE == SPECULATOR)
 /*
    #include <Audio.h>
   #include <Wire.h>
@@ -436,28 +437,44 @@ AudioConnection          patchCord10(left_amp, 0, output_usb, 0);
 
 #elif ARTEFACT_TYPE == LEGATUS
 ////////////////////////// Audio Objects //////////////////////////////////////////
-AudioInputI2S            i2s1;           //xy=811.6666030883789,543.3333549499512
-AudioFilterBiquad        left_HPF;       //xy=962.9998664855957,523.3333139419556
-AudioFilterBiquad        right_HPF;        //xy=966.6666641235352,556.6667098999023
-AudioMixer4              mixer1;         //xy=1106.6667137145996,563.3334369659424
-AudioFilterBiquad        left_LPF;       //xy=1243.6665573120117,561.6666469573975
-AudioAmplifier           left_amp;           //xy=1369.9999771118164,559.9999208450317
-AudioAnalyzeFFT1024      left_fft;       //xy=1570.999870300293,563.666654586792
-AudioAnalyzePeak         left_peak;      //xy=1574.999870300293,595.666654586792
-AudioAnalyzeRMS          left_rms;
-AudioOutputUSB           output_usb;     //xy=1581.9999313354492,630.6666469573975
+AudioInputI2S            i2s1;           //xy=723.2500076293945,775.5000114440918
+AudioPlaySdWav           playWav;       //xy=767.0000267028809,648.750018119812
+AudioMixer4              mic_mixer;         //xy=884.5000114440918,788.0000114440918
+AudioFilterBiquad        playback_biquad_l;        //xy=944.2500305175781,635.000018119812
+AudioFilterBiquad        playback_biquad_r;        //xy=944.7500152587891,667.0000095367432
+AudioFilterBiquad        mic_HPF;       //xy=1025.500015258789,760.5000114440918
+AudioAmplifier           playback_amp_l;           //xy=1130.000015258789,636.0000095367432
+AudioAmplifier           playback_amp_r;           //xy=1132.750015258789,669.0000095367432
+AudioFilterBiquad        mic_LPF;       //xy=1160.250015258789,761.0000133514404
+AudioAmplifier           mic_amp;       //xy=1295.0000190734863,761.5000114440918
+AudioOutputI2S           audioOutput;    //xy=1356.0000190734863,604.5000095367432
+AudioMixer4              mixer2;         //xy=1375.0000190734863,652.5000705718994
+AudioAnalyzeRMS          left_rms;       //xy=1578.5000228881836,682.5000114440918
+AudioAnalyzeFFT1024      left_fft;       //xy=1578.4999885559082,714.2499980926514
+AudioAnalyzePeak         left_peak;      //xy=1582.4999885559082,746.2499980926514
+AudioOutputUSB           output_usb;     //xy=1589.4999885559082,781.2499980926514
 
-AudioConnection          patchCord1(i2s1, 0, left_HPF, 0);
-AudioConnection          patchCord2(i2s1, 1, right_HPF, 0);
-AudioConnection          patchCord3(left_HPF, 0, mixer1, 0);
-AudioConnection          patchCord4(right_HPF, 0, mixer1, 1);
-AudioConnection          patchCord5(mixer1, 0, output_usb, 1);
-AudioConnection          patchCord6(mixer1, left_LPF);
-AudioConnection          patchCord7(left_LPF, left_amp);
-AudioConnection          patchCord8(left_amp, left_fft);
-AudioConnection          patchCord9(left_amp, left_peak);
-AudioConnection          patchCord10(left_amp, left_rms);
-AudioConnection          patchCord11(left_amp, 0, output_usb, 0);
+AudioConnection          patchCord1(i2s1, 0, mic_mixer, 0);
+AudioConnection          patchCord2(mixer2, 0, output_usb, 0);
+AudioConnection          patchCord3(i2s1, 1, mic_mixer, 1);
+AudioConnection          patchCord4(playWav, 0, playback_biquad_l, 0);
+AudioConnection          patchCord5(playWav, 1, playback_biquad_r, 0);
+AudioConnection          patchCord6(mic_mixer, 0, output_usb, 1);
+AudioConnection          patchCord7(mic_mixer, mic_HPF);
+AudioConnection          patchCord8(playback_biquad_l, playback_amp_l);
+AudioConnection          patchCord9(playback_biquad_r, playback_amp_r);
+AudioConnection          patchCord10(mic_HPF, mic_LPF);
+AudioConnection          patchCord11(playback_amp_l, 0, audioOutput, 0);
+AudioConnection          patchCord12(playback_amp_l, 0, mixer2, 0);
+AudioConnection          patchCord13(playback_amp_r, 0, audioOutput, 1);
+AudioConnection          patchCord14(playback_amp_r, 0, mixer2, 1);
+AudioConnection          patchCord15(mic_LPF, mic_amp);
+AudioConnection          patchCord16(mic_amp, 0, mixer2, 2);
+AudioConnection          patchCord17(mixer2, left_rms);
+AudioConnection          patchCord18(mixer2, left_fft);
+AudioConnection          patchCord19(mixer2, left_peak);
+AudioControlSGTL5000     sgtl5000;     //xy=997.7500152587891,513.2500104904175
+// GUItool: end automatically generated code
 
 #endif // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE 
 
@@ -601,6 +618,202 @@ void printArtefactInfo() {
 #endif // SPECULATOR ARTEFACT TYPE
 }
 
+#if ARTEFACT_TYPE == LEGATUS
+
+uint8_t colors[3] = {155, 70, 200};
+float fcolors[3];
+
+void brightnessWipe(double b) {
+  // uses the currently stored color, adjusts the brightness
+  neos[0].colorWipe(constrain((int)(colors[0] * b), 0, 255), constrain((int)(colors[1] * b), 0, 255), constrain((int)(colors[2] * b), 0, 255), user_brightness_scaler);
+}
+
+void updateLegatusPassiveLEDs() {
+  if (left_fft.available()) {
+    fcolors[2] = left_fft.read(1, 8)   * 4;   // 172  - 1536  Hz
+    fcolors[1] = left_fft.read(8, 23)  * 4;  // 1536 - 4416  Hz
+    fcolors[0] = left_fft.read(23, 93) * 4; // 1536 - 15996 Hz
+    for (int i = 0; i < 3; i++) {
+      if (colors[i] > 1.0) {
+        colors[i] = 1.0;
+      }
+    }
+    for (int i  = 0; i < 3; i++) {
+      colors[i] = (uint8_t)(fcolors[i] * 255);
+    }
+    // Serial.print(colors[0]);
+    // Serial.print("\t");
+    // Serial.print(colors[1]);
+    // Serial.print("\t");
+    // Serial.println(colors[2]);
+  }
+  if (left_peak.available()) {
+    int c = (int)(left_peak.read() * 4096) * user_brightness_scaler;
+    float f = (float)constrain(c, 0, 255) / 255.0;
+    brightnessWipe(f);
+    // Serial.println(f);
+  }
+}
+
+void playFile(const char *filename)
+{
+  // change mixer ratio so only the playback is present
+  mixer2.gain(0, 0.5);
+  mixer2.gain(1, 0.5);
+  mixer2.gain(2, 0.0);
+  delay(5);
+
+  Serial.print("Playing file: ");
+  Serial.println(filename);
+  playWav.play(filename);
+  // Start playing the file.  This sketch continues to
+  // run while the file plays.  playWav.play(filename);
+
+  // A brief delay for the library read WAV info
+  delay(5);
+
+  // Simply wait for the file to finish playing.
+  while (playWav.isPlaying()) {
+    // readUserControls();
+    if (uimanager.update()) {
+      if (P_USER_CONTROLS) {
+        uimanager.printAll();
+      }
+      playback_amp_l.gain(USER_CONTROL_PLAYBACK_GAIN);
+      playback_amp_r.gain(USER_CONTROL_PLAYBACK_GAIN);
+    }
+    updateLegatusPassiveLEDs();
+  }
+  // change the mixer levels back so the microphone is dominate
+  mixer2.gain(0, 0.0);
+  mixer2.gain(1, 0.0);
+  mixer2.gain(2, 1.0);
+}
+
+// only for LEGATUS
+void setupAudio() {
+  ////////////// Audio ////////////
+  printMajorDivide("Setting up Audio Parameters");
+  AudioMemory(AUDIO_MEMORY);
+  Serial.print("Audio Memory has been set to: ");
+  Serial.println(AUDIO_MEMORY);
+  delay(500);
+
+  sgtl5000.enable();
+  sgtl5000.volume(0.1);
+  sgtl5000.inputSelect(AUDIO_INPUT_MIC);
+  sgtl5000.micGain(48);
+
+  SPI.setMOSI(SD_MOSI);
+  SPI.setSCK(SD_CLK);
+  if (!(SD.begin(SD_CS))) {
+    // stop here, but print a message repetitively
+    while (1) {
+      Serial.println("Unable to access the SD card");
+      delay(500);
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  // feature_collector 0-1 are for the song front/rear
+  if (PEAK_FEATURE_ACTIVE) {
+    feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
+  } else {
+    Serial.println("ERROR, PEAK_FEATURE_ACTIVE is false, should be set to true!!!");
+    delay(10000);
+  }
+
+  if (RMS_FEATURE_ACTIVE) {
+    feature_collector.linkRMS(&left_rms, P_RMS_VALS);
+  } else {
+    Serial.println("ERROR, RMS_FEATURE_ACTIVE should be set to true, is currently false!!!");
+    delay(10000);
+  }
+
+  if (FFT_FEATURES_ACTIVE) {
+    fft_manager[0].linkFFT(&left_fft, "Front");
+
+    Serial.print("Linked FFT to FFTManager mumber");
+    Serial.println(0);
+    fft_manager[0].setupCentroid(true, CENTROID_FEATURE_MIN, CENTROID_FEATURE_MAX);
+    fft_manager[0].setPrintFFTValues(P_FFT_VALS);
+    fft_manager[0].setPrintCentroidValues(P_CENTROID_VALS);
+    Serial.print("Started calculating Centroid in the FFTManager with a min/max of : ");
+    Serial.print(CENTROID_FEATURE_MIN);
+    Serial.print("\t");
+    Serial.println(CENTROID_FEATURE_MAX);
+
+    fft_manager[0].setCalculateFlux(true);
+    fft_manager[0].setPrintFluxValues(P_FLUX_VALS);
+    Serial.println("Started calculating FLUX in the FFTManager");
+
+    Serial.println("Feature collectors have been linked");
+  } else {
+    Serial.println("ERROR, FFT_FEATURES_ACTIVE should be set to true, is currently false!!!");
+    delay(10000);
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  mic_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
+  // left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
+  // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+  // left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+  Serial.print("mic HPF has been configured (thresh/Q/dB): ");
+  Serial.print(LBQ1_THRESH);
+  Serial.print("\t");
+  Serial.print(LBQ1_Q);
+  Serial.print("\t");
+  Serial.println(LBQ1_DB);
+
+  mic_LPF.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
+  // left_LPF.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
+  // left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+  // left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+  Serial.print("mic LPF has been configured (thresh/Q/dB): ");
+  Serial.print(LBQ2_THRESH);
+  Serial.print("\t");
+  Serial.print(LBQ2_Q);
+  Serial.print("\t");
+  Serial.println(LBQ2_DB);
+
+  playback_biquad_l.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+  playback_biquad_l.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
+  // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+  // left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+  Serial.println("playback left filters have been configured");
+
+  playback_biquad_r.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+  playback_biquad_r.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
+  // left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+  // left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+  Serial.println("playback right Filters have been configured ");
+
+  printMinorDivide();
+
+  //////////////////////////////////////////////////////////////////////////////////
+  playback_amp_l.gain(USER_CONTROL_PLAYBACK_GAIN);
+  playback_amp_r.gain(USER_CONTROL_PLAYBACK_GAIN);
+  Serial.print("playback gains are set to : ");
+  Serial.println(USER_CONTROL_PLAYBACK_GAIN);
+
+  //////////////////////////////////////////////////////////////////////////////////
+  // TODO - make sure ENC_GAIN_ADJ exists for all bots
+  Serial.print("Starting gain is now set to: ");
+  Serial.println(STARTING_GAIN);
+  mic_mixer.gain(0, STARTING_GAIN * 0.5);
+  mic_mixer.gain(1, STARTING_GAIN * 0.5);
+  mic_amp.gain(STARTING_GAIN);
+
+  mixer2.gain(0, 0.33);
+  mixer2.gain(1, 0.33);
+  mixer2.gain(2, 0.5);
+  // Serial.println("Setting up the FFTManager to track the first channel");
+  // fft_manager.addInput(&patchCord_fft_input1);
+  // patchCord_fft_input2.disconnect();
+}
+
+#else // all other species other than Legatus
+
 void setupAudio() {
 #if AUDIO_USB == false
   Serial.println("Disconnecting usb patch cords");
@@ -661,6 +874,7 @@ void setupAudio() {
   }
   Serial.println("Feature collectors have been linked");
 
+  #if ARTEFACT_TYPE != EXPLORATOR
   /////////////////////////////////////////////////////////////////////
   left_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
   // left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
@@ -684,92 +898,13 @@ void setupAudio() {
   Serial.print("\t");
   Serial.println(LBQ2_DB);
 
-#if NUM_CHANNELS > 1
-  right_HPF.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
-  right_HPF.setHighpass(1, RBQ1_THRESH, RBQ1_Q);
-  right_HPF.setHighpass(2, RBQ1_THRESH, RBQ1_Q);
-  right_HPF.setLowShelf(3, RBQ1_THRESH, RBQ1_DB);
-  Serial.print("Right HPF has been configured (thresh/Q/dB): ");
-  Serial.print(RBQ1_THRESH);
-  Serial.print("\t");
-  Serial.print(RBQ1_Q);
-  Serial.print("\t");
-  Serial.println(RBQ1_DB);
-
-  right_LPF.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
-  right_LPF.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
-  right_LPF.setLowpass(2, RBQ2_THRESH, RBQ2_Q);
-  right_LPF.setHighShelf(3, RBQ2_THRESH, RBQ2_DB);
-  Serial.print("Right LPF has been configured (thresh/Q/dB): ");
-  Serial.print(RBQ2_THRESH);
-  Serial.print("\t");
-  Serial.print(RBQ2_Q);
-  Serial.print("\t");
-  Serial.println(RBQ2_DB);
-#else
-  Serial.print("Skipping setup of 'right' channel as it does not exist");
-#endif
-  printMinorDivide();
-
-  //////////////////////////////////////////////////////////////////////////////////
-  // TODO - make sure ENC_GAIN_ADJ exists for all bots
-  Serial.print("Starting gain is now set to: ");
-  Serial.println(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST);
-  feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 0);
-  // feature_collector.setGain(STARTING_GAIN * ENC_GAIN_ADJUST * USER_CONTROL_GAIN_ADJUST, 1);
-  Serial.print("Set amp1 and amp2 gains to: ");
-
-  // set gain level? automatically?
-  // todo make this adapt to when microphones are broken on one or more side...
-
-#if ARTEFACT_TYPE == SPECULATOR || ARTEFACT_TYPE == LEGATUS
-  mixer1.gain(0, STARTING_GAIN);
-  mixer1.gain(0, STARTING_GAIN);
-  // Serial.println("Setting up the FFTManager to track the first channel");
-  // fft_manager.addInput(&patchCord_fft_input1);
-  // patchCord_fft_input2.disconnect();
-#endif
-
-  if (P_DOMINATE_CHANNEL) {
-    Serial.print("setting the feature collector to print the dominate channel debug info");
-  };
-  feature_collector.setPrintDominateChannel(P_DOMINATE_CHANNEL);
-  if (P_AUTOGAIN) {
-    Serial.print("setting the feature collector to print autogain debug info");
-  };
-  feature_collector.setPrintAutogain(P_AUTOGAIN);
-
-#if AUTOGAIN_ACTIVE == true
-  /////////////////////////////////////////////////////////////////////////////////
-  feature_collector.activateAutogain(AUTOGAIN_UPDATE_RATE, AUTOGAIN_INITIAL_DELAY);
-  Serial.print("Setting autogain's update rate to: ");
-  Serial.println(AUTOGAIN_UPDATE_RATE);
-  Serial.print("Setting autogain's start delay to : ");
-  Serial.println(AUTOGAIN_INITIAL_DELAY);
-#if AUTOGAIN_TRACK_ON_RATIO == true
-  Serial.println("Setting autogain to track ON RATIO");
-  feature_collector.autogainTrackOnRatio(AUTOGAIN_ON_RATIO_TARGET, AUTOGAIN_ON_RATIO_TOLERANCE, AUTOGAIN_ON_RATIO_MIN, AUTOGAIN_ON_RATIO_MAX, &neos);
-#endif
-
-#if AUTOGAIN_TRACK_RMS == true
-  Serial.println("Setting autogain to track RMS AVG");
-  // target value, tolerance, min_thresh, max_thresh
-  feature_collector.autogainTrackAvgRMS(AUTOGAIN_RMS_TARGET, AUTOGAIN_RMS_TOLERANCE, AUTOGAIN_RMS_MIN, AUTOGAIN_RMS_MAX);
-#endif
-
-#if AUTOGAIN_TRACK_PEAK == true
-  Serial.println("Setting autogain to track PEAK AVG");
-  feature_collector.autogainTrackAvgPeak(AUTOGAIN_PEAK_TARGET, AUTOGAIN_PEAK_TOLERANCE, AUTOGAIN_PEAK_MIN, AUTOGAIN_PEAK_MAX);
-#endif
-
-#endif // AUTOGAIN_ACTIVE
-  feature_collector.testMicrophone();
-#if CALCULATE_DOMINATE_CHANNEL
-  feature_collector.calculateDominateChannel(fft_manager);
-#endif
+  #endif
+  
+  // feature_collector.testMicrophone();
   Serial.println("Exiting setupAudio()");
   printDivide();
 }
+#endif // for setupAudio()
 
 #if ARTEFACT_TYPE == SPECULATOR
 void speculatorSetup() {
@@ -843,12 +978,16 @@ void legatusSetup() {
   uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, BUT6_LOW_CHANGES, &but_test[5], BUT6_NAME);
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
-  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD,  POT2_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &USER_CONTROL_PLAYBACK_GAIN, POT2_NAME);
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
-  uimanager.addPotRange(1, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
+  uimanager.addPotRange(1, min_playback_gain, mid_playback_gain, max_playback_gain);
 
   uimanager.setup();
   uimanager.printAll();
+  //////////////////// power control ///////////////////////
+  pinMode(PWR_KILL_PIN, OUTPUT);
+  digitalWrite(PWR_KILL_PIN, HIGH);
+
   ///////////////////////// Audio //////////////////////////
   setupAudio();
 }
@@ -885,7 +1024,83 @@ void speculatorLoop() {
 }
 #endif // ARTEFACT_TYPE == SPECULATOR
 
-#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+
+int motor_speed = 0;
+int target_motor_speed = 0;
+int next_motor_speed = 0;
+int motor_time  = 0;
+int next_motor_time =  0;
+const int max_motor_speed = 150;
+const int min_motor_speed = 0;
+
+elapsedMillis last_winding;
+const long winding_interval = 15000;
+float rotations = 0;
+
+void windBox() {
+  // slowly wind the motor up
+
+  if (last_winding > winding_interval) {
+    Serial.println("Time to wind up the music box");
+    motors.enableDrivers();
+    //motors.setM1Speed(-20);
+    motors.setM1Speed(23);
+    // TODO determine how far to wind the box
+    rotations = 0.5;
+    enc.write(0);
+    enc_pos = 0;
+    while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) && enc_pos >= (rotations * -1 * M1_GEAR_RATIO * COUNTS_PER_REV)) {
+      enc_pos = enc.read();
+      Serial.print("enc pos: ");
+      Serial.println(enc_pos);
+      updateFeedbackLEDs(&fft_manager[dominate_channel]);
+    }
+    motors.setM1Speed(0);
+    enc.write(0);
+    enc_pos = 0;
+    delay(500);    
+    //motors.setM1Speed(2);
+    motors.setM1Speed(-23);
+    while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV *0.95) && enc_pos >= (COUNTS_PER_REV* rotations * -1 * M1_GEAR_RATIO * 0.95)) {
+      enc_pos = enc.read();
+      Serial.print("enc pos: ");
+      Serial.println(enc_pos);
+      updateFeedbackLEDs(&fft_manager[dominate_channel]);
+    }
+    motors.disableDrivers();
+    // (in terms of the encoder)
+    last_winding = 0;
+  } else {
+    Serial.println("Not winding music box, last winding was too soon");
+  }
+}
+
+// for the MB Body
+void exploratorLoop() {
+
+  ///////////////// Passive Visual Feedback ///////////
+  updateFeedbackLEDs(&fft_manager[0]);
+
+  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
+  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
+  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
+  // activity level adds a base of up to five minutes
+  ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
+  // uint16_t t = random(45, 150);
+
+  // TODO
+  ACTUATION_DELAY = ACTUATION_DELAY * 0.25;
+
+  if (last_playback_tmr > ACTUATION_DELAY) {
+    Serial.print("ACTUATION_DELAY is : ");
+    Serial.println(ACTUATION_DELAY);
+    windBox();
+    last_playback_tmr = 0;
+  }
+}
+
+#elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
 
 int motor_speed = 0;
 int target_motor_speed = 0;
@@ -894,15 +1109,17 @@ int motor_time  = 0;
 int next_motor_time =  0;
 const int max_motor_speed = 450;
 const int min_motor_speed = -450;
-int enc_pos = 0;
 
 void shake(int on_speed, int on_time, int rev_speed, int rev_time) {
+  if (rev_speed > 0) {
+    rev_speed *= -1;
+  }
   target_motor_speed = on_speed;
   next_motor_speed = rev_speed;
   motor_time = on_time;
   next_motor_time = rev_time;
 
-  Serial.print("shaking with the following parameters: ");
+  Serial.print("shaking (onspeed, ontime, revspeed, revtime): ");
   Serial.print(on_speed);
   Serial.print("\t");
   Serial.print(on_time);
@@ -910,34 +1127,77 @@ void shake(int on_speed, int on_time, int rev_speed, int rev_time) {
   Serial.print(rev_speed);
   Serial.print("\t");
   Serial.println(rev_time);
-  neos[0].colorWipe(0, 255,  0, 1.0);
-  motors.enableDrivers();
-  motors.setM1Speed(on_speed);
-  Serial.print("starting / ending pos: ");
-  enc_pos = enc.read();
-  Serial.print(enc_position);
   
-  delay(on_time);
-  neos[0].colorWipe(255, 0, 0, 1.0);
-  if (rev_speed > 0) {
-    rev_speed *= -1;
-  }
-  motors.setM1Speed(rev_speed);
-  delay(rev_time);
-  motors.setM1Speed(0);
-  motors.disableDrivers();
-  enc_position = enc.read();
-  Serial.print(enc_position);
+  neos[0].colorWipe(0, 40,  125, 1.0);
+  
+  // rev the motor up
+  rampShakerMotor(0, on_speed, on_time*0.05);
+  
+  // Serial.print("starting / ending pos: ");
+  // enc_pos = enc.read();
+  // Serial.print(enc_pos);
+
+  // let motor spin, with new color
+  neos[0].colorWipe(200, 200, 255, 1.0);
+  delay(on_time * 0.95);
+
+
+  // ramp up motor to it's reverse speed
+  neos[0].colorWipe(125, 40, 0, 1.0);
+  rampShakerMotor(on_speed, rev_speed, rev_time*0.1);
+  
+  neos[0].colorWipe(50, 40, 0, 1.0);
+  // let things rotate for a bit
+  delay(rev_time  * 0.75);
+  // rev down to off
+    neos[0].colorWipe(25, 20, 0, 1.0);
+  rampShakerMotor(rev_speed, 0, rev_time*0.15);
+ 
+  // enc_pos = enc.read();
+  // Serial.print(enc_pos);
   neos[0].colorWipe(0, 0, 0, 1.0);
 }
 
-void updateMotor() {
-  // turn off motor, ramp motor speed, and so on
+void rampShakerMotor(int16_t start, int16_t target, int ramp_total_time) {
+  Serial.print("Ramping Motor (start, target, time) - ");
+  Serial.print(start);
+  Serial.print("\t");
+  Serial.print(target);
+  Serial.print("\t");
+  Serial.println(ramp_total_time);
 
+  int difference = target - start;
+  float step_delay = abs(difference / ramp_total_time) * 1.0;
+
+  Serial.print(" dif: ");
+  Serial.print(difference);
+  Serial.print(" stepd: ");
+  Serial.print(step_delay);
+  motors.enableDrivers(0);
+
+  if (difference > 0) {
+    for (int16_t i = start; i <= target; i++) {
+      motors.setM1Speed(i);
+      // Serial.println(i);
+      delayMicroseconds(step_delay);
+    }
+  } else {
+    for (int16_t i = start; i > target; i--) {
+      motors.setM1Speed(i);
+      delayMicroseconds(step_delay);
+      // Serial.println(i);
+    }
+  }
+  
+  if (target == 0) {
+    motors.setM1Speed(0);
+    motors.disableDrivers(0);
+  }
+  Serial.println("Disabled Drivers");
 }
 
+// for the shaker
 void exploratorLoop()  {
-  updateMotor();
 
   ///////////////// Passive Visual Feedback ///////////
   updateFeedbackLEDs(&fft_manager[dominate_channel]);
@@ -955,9 +1215,29 @@ void exploratorLoop()  {
   if (last_playback_tmr > ACTUATION_DELAY) {
     Serial.print("ACTUATION_DELAY is : ");
     Serial.println(ACTUATION_DELAY);
-    shake(250, 40, 200, 20);
+    
+    int option = random(0,2);
+
+    if (option ==  0) {
+      // on speed, on time, reverse speed, reverse time
+      int on_speed =      200 + (weather_manager.getTemperature() * 10);
+      int on_time =       250  + (weather_manager.getTemperature() * 20);
+      int reverse_speed = 200  + (weather_manager.getTemperature() * 10);
+      int reverse_time = -250 - (weather_manager.getTemperature() * 10);
+      shake(on_speed, on_time, reverse_speed, reverse_time);
+    } else if (option > 0) {
+      int times = random(2, 12); 
+      for (int i = 0; i < times; i++) {
+        int d_time  = random(5, 50);
+        int ot = random(20, 100);
+        int d_factor = random(0,3);
+        delay(d_time * d_factor);
+        shake(400, ot, -250, ot/2);
+      }    
+    }
     last_playback_tmr = 0;
   }
+  
 }
 
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == WOODPECKER_BODY
@@ -976,7 +1256,7 @@ void exploratorLoop() {
   ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
   // uint16_t t = random(45, 150);
   // TODO
-  ACTUATION_DELAY = ACTUATION_DELAY * 0.5;
+  ACTUATION_DELAY = ACTUATION_DELAY * 25.5;
   if (last_playback_tmr > ACTUATION_DELAY) {
     Serial.print("ACTUATION_DELAY is : ");
     Serial.println(ACTUATION_DELAY);
@@ -1134,6 +1414,16 @@ void exploratorSetup() {
 
   uimanager.setup();
   uimanager.printAll();
+
+#elif BODY_TYPE == MB_BODY
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
+
+  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &STRIKE_LENGTH,  POT2_NAME);
+
+  uimanager.setup();
+  uimanager.printAll();
 #endif // UI controls for the woodpecker and bellbot
 
   ////////////////////// Audio
@@ -1145,7 +1435,7 @@ void exploratorSetup() {
   uint32_t hpf = 200;
   double q = 0.8;
 
-  left_amp.gain(60.0);
+  left_amp.gain(STARTING_GAIN);
 
   left_HPF.setLowpass(0, lpf, q);
   left_HPF.setLowpass(1, lpf, q);
@@ -1164,14 +1454,11 @@ void exploratorSetup() {
   fft_manager[0].setCalculateFlux(true);
 
   feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
-
-  Serial.println("Finished starting the LED strips");
-  printMinorDivide();
+  // feature_collector.linkRMS(&left_rms, P_PEAK_VALS);
 
   printMinorDivide();
   Serial.println("Finished setup Loop");
   colorWipeAll(0, 120, 30, 0.25);
-  delay(3000);
   printMinorDivide();
 }
 
@@ -1289,11 +1576,7 @@ void setupLuxManager() {
 #if WEATHER_MANAGER_PRESENT == true
 void extremeHumidityShutdown() {
   colorWipeAll(0, 0, 0);
-  while (true) {
-    Serial.println("HUMIDTY SHUTDOWN INITALISED!!!!!!");
-    delay(10000);
-  }
-  // TODO
+  digitalWrite(PWR_KILL_PIN, LOW);
 }
 
 void extremeTemperatureShutdown() {
@@ -1485,29 +1768,49 @@ void buildPeckRhythm(int idx, uint32_t quarter) {
 #endif // BODY_TYPE == WOODPECKER_BODY
 #endif // ARTEFACT_TYPE == EXPLORATOR
 
+elapsedMillis loop_tmr;
+const int loop_print_delay = 1000;
+
 #if ARTEFACT_TYPE == LEGATUS
 void legatusLoop() {
-  Serial.println("WARNING LEGATUS LOOP IS NOT YET IMPLEMENTED");
+  updateLegatusPassiveLEDs();
+  int avg_time = 1000 * 60 * 1;
+  PLAYBACK_INTERVAL = avg_time - (weather_manager.getTemperature() * (avg_time / 40)) + (weather_manager.getHumidity() * (avg_time / 100));  // uint16_t t = random(45, 150);
+  if (loop_tmr > loop_print_delay) {
+    Serial.print("Awaiting playback (recording is TODO) : ");
+    Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
+    loop_tmr = 0;
+  }
+  if (last_playback_tmr > PLAYBACK_INTERVAL) {
+    Serial.print("PLAYBACK_INTERVAL is : ");
+    Serial.println(PLAYBACK_INTERVAL);
+    playFile(audio_file_names[random(0, NUM_AUDIO_FILES)]);
+    // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
+    last_playback_tmr = 0;
+    Serial.println("last_playback_tmr is reset now to 0");
+  }
 }
 #endif // ARTEFACT_TYPE == LEGATUS
 
 #if SD_PRESENT
 void initSD() {
+  SPI.setMOSI(SD_MOSI);  // Audio shield has MOSI on pin 7
+  SPI.setSCK(SD_CLK);  // Audio shield has SCK on pin 14
   // we'll use the initialization code from the utility libraries
   // since we're just testing if the card is working!
-  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+  if (!card.init(SPI_HALF_SPEED, SD_CS)) {
     Serial.println("initialization failed. Things to check:");
     Serial.println("* is a card inserted?");
     Serial.println("* is your wiring correct?");
     Serial.println("* did you change the chipSelect pin to match your shield or module?");
     return;
   } else {
-   Serial.println("Wiring is correct and a card is present.");
+    Serial.println("Wiring is correct and a card is present.");
   }
 
   // print the type of card
   Serial.print("\nCard type: ");
-  switch(card.type()) {
+  switch (card.type()) {
     case SD_CARD_TYPE_SD1:
       Serial.println("SD1");
       break;
@@ -1527,13 +1830,12 @@ void initSD() {
     return;
   }
 
-
   // print the type and size of the first FAT-type volume
   uint32_t volumesize;
   Serial.print("\nVolume type is FAT");
   Serial.println(volume.fatType(), DEC);
   Serial.println();
-  
+
   volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
   volumesize *= volume.clusterCount();       // we'll have a lot of clusters
   if (volumesize < 8388608ul) {
@@ -1547,10 +1849,9 @@ void initSD() {
   volumesize /= 1024;
   Serial.println(volumesize);
 
-  
   Serial.println("\nFiles found on the card (name, date and size in bytes): ");
   root.openRoot(volume);
-  
+
   // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
 }
@@ -1628,9 +1929,10 @@ void setup() {
     Serial.print("LED_MAPPING_MODE is set to                        : \t");
     Serial.println(LED_MAPPING_MODE);
 
-///////////////////////////// SD Card //////////////////////////////////
+    ///////////////////////////// SD Card //////////////////////////////////
 #if SD_PRESENT
-initSD();
+    neos[i].colorWipe(12, 0, 0, 1.0);
+    initSD();
 #endif
 
 #if ARTEFACT_TYPE == SPECULATOR
@@ -1650,12 +1952,13 @@ initSD();
   ///////////////////////// Weather Manager /////////////////////
   // nothing is needed =P
 #if WEATHER_MANAGER_PRESENT == true
+  neos[0].colorWipe(12, 12, 0, 1.0);
   printMinorDivide();
   Serial.println("initalising the weather manager");
   weather_manager.init();
   weather_manager.setPrintReadings(P_WEATHER_MANAGER_READINGS);
   Serial.println("finished initalising the weather manager");
-  Serial.print("WeatherManager HUMID_EdXTREME_THRESH  : \t");
+  Serial.print("WeatherManager HUMID_EXTREME_THRESH  : \t");
   Serial.println(HUMID_EXTREME_THRESH);
   Serial.print("WeatherManager TEMP_EXTREME_THRESH   : \t");
   Serial.println(TEMP_EXTREME_THRESH);
@@ -1669,7 +1972,9 @@ initSD();
 #endif
 
   //////////////////////////// Lux Sensors //////////////////////////////
+  neos[0].colorWipe(0, 0, 0, 1.0);
   setupLuxManager();
+  neos[0].colorWipe(0, 0, 12, 1.0);
 
   ///////////////////////// Artefact Specific Logic ////////////////////////////
 #if ARTEFACT_TYPE == SPECULATOR
