@@ -3,15 +3,28 @@
 
 #define AUDIO_MEMORY              24
 
-#define NUM_AUDIO_FILES           6
+#define NUM_AUDIO_FILES           19
 
 const char *audio_file_names[] = {
-  "SDTEST1.WAV",
-  "SDTEST2.WAV",
-  "SDTEST3.WAV",
-  "SDTEST4.WAV",
-  "SDTEST5.WAV",
-  "SDTEST6.WAV"
+  "CHAIN1.WAV",
+  "CICADA1.WAV",
+  "CICADA2.WAV",
+  "CICADA3.WAV",
+  "CICADA4.WAV",
+  "CICADA5.WAV",
+  "FROGS1.WAV",
+  "FROGS2.WAV",
+  "FROGS3.WAV",
+  "CHICK1.WAV",
+  "CODE1.WAV",
+  "PRESS1.WAV",
+  "PRESS2.WAV",
+  "FIRE1.WAV",
+  "FIRE2.WAV",
+  "FIRE3.WAV",
+  "SEWING1.WAV",
+  "SEWING2.WAV",
+  "SEWING3.WAV"
 };
 
 // This value is used to calculate how long between unit actuations

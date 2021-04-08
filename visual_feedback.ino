@@ -204,8 +204,8 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft) {
   dprint(P_BRIGHTNESS, "brightness is: ");
   dprint(P_BRIGHTNESS, b);
   brightness = b;
-  brightness_tracker.update();
-  brightness = brightness_tracker.getRAvg();
+  // brightness_tracker.update();
+  // brightness = brightness_tracker.getRAvg();
   dprint(P_BRIGHTNESS, "\t"); dprintln(P_BRIGHTNESS, brightness);
   ////////////////////////// When using target_brightness
   if (USE_TARGET_BRIGHTNESS == true) {

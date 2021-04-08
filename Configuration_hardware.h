@@ -700,7 +700,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #endif // __HARDWARE_CONFIGURATION_H__
 
 //////////////////////////////// SD Card Stuff /////////////////////
-#if ARTEFACT_TYPE == LEGATUS
+#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
 
 #define SD_PRESENT                            true
 #define SD_MOSI                               7

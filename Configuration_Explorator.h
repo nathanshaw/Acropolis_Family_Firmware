@@ -132,7 +132,7 @@
 #define M3_POLARITY           false
 
 // this value can be used to determine how long and how fast to spin each motor...
-#define M1_GEAR_RATIO         488
+#define M1_GEAR_RATIO         125.
 #define M2_GEAR_RATIO         1
 #define M3_GEAR_RATIO         1
 

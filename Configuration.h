@@ -19,8 +19,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE             EXPLORATOR
-
+#define ARTEFACT_TYPE            LEGATUS
 // TODO finish integrating this
 float ADDED_SATURATION  = 0.4;
 
@@ -30,6 +29,7 @@ float ADDED_SATURATION  = 0.4;
 // Starting with the Speculator the 2.0, 2.1 and 3.0 are the primary revisions
 // where the 2.0 and 2.1 are 10 LED 100 mm units, where the 2.1 has 6 jumpers and
 // the 2.0 has no user controls. The 3.0 is the 80 mm units with 40 LEDs
+
 //////////////// Explorator //
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
@@ -44,13 +44,17 @@ float ADDED_SATURATION  = 0.4;
 // v1.1 - second circular PCB with the jellybean audio amplifier and the audio codec
 
 #define HV_MAJOR                  1
-#define HV_MINOR                  0
+#define HV_MINOR                  1
 
 //////////////////// Software Revision ////////////////////////////////
 // 0.1.8 is when the Explorator Shaker is fully supported (more or less)
+// 0.1.9 improved support for the Legatus, adding in more balenced color balencinig between
+// audio clip playback and the microphone feedback. Also increased in time between playback events.
+// added a fade-in period of one second for clips so ensure tehy do not clip when initially played
+// lastly added several more audio clips
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               8
+#define SV_REVISION               9
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -74,11 +78,12 @@ float ADDED_SATURATION  = 0.4;
 #define PLAYBACK_MODE             99
 #define REACTIVE_MODE             100
 #define ECHO_FEEDBACK_MODE        101
+#define MATCH_PITCH_MODE          102
 
 #if ARTEFACT_TYPE == SPECULATOR
 #define FIRMWARE_MODE             PITCH_MODE
 #elif ARTEFACT_TYPE == LEGATUS
-#define FIRMWRE_MORE              PLAYBACK_MODE
+#define FIRMWRE_MODE              MATCH_PITCH_MODE
 #else
 #define FIRMWARE_MODE             ECHO_FEEDBACK_MODE
 #endif
@@ -869,7 +874,7 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #define STARTING_GAIN                         240.0
 
 #elif ARTEFACT_TYPE == LEGATUS
-#define STARTING_GAIN                         10.0
+#define STARTING_GAIN                         6.0
 #endif
 
 #if ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == CICADA_MODE

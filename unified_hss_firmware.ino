@@ -435,7 +435,7 @@ AudioConnection          patchCord8(left_amp, left_fft);
 AudioConnection          patchCord9(left_amp, left_peak);
 AudioConnection          patchCord10(left_amp, 0, output_usb, 0);
 
-#elif ARTEFACT_TYPE == LEGATUS
+#elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
 ////////////////////////// Audio Objects //////////////////////////////////////////
 AudioInputI2S            i2s1;           //xy=723.2500076293945,775.5000114440918
 AudioPlaySdWav           playWav;       //xy=767.0000267028809,648.750018119812
@@ -476,6 +476,34 @@ AudioConnection          patchCord19(mixer2, left_peak);
 AudioControlSGTL5000     sgtl5000;     //xy=997.7500152587891,513.2500104904175
 // GUItool: end automatically generated code
 
+#elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MATCH_PITCH_MODE
+// GUItool: begin automatically generated code
+AudioInputI2S            i2s1;           //xy=306.42859649658203,2330.7142791748047
+AudioMixer4              mic_mixer;      //xy=467.42859649658203,2343.7142791748047
+AudioFilterBiquad        mic_HPF;        //xy=608.428596496582,2315.7142791748047
+AudioFilterBiquad        mic_LPF;        //xy=743.428596496582,2316.7142791748047
+AudioAmplifier           mic_amp;        //xy=878.428596496582,2316.7142791748047
+AudioSynthWaveformSineModulated sine_fm;       //xy=1054.285743713379,2268.5713901519775
+AudioAnalyzeRMS          left_rms;       //xy=1210,2342
+AudioAnalyzeFFT1024      left_fft;       //xy=1210,2374
+AudioAnalyzePeak         left_peak;      //xy=1214,2406
+AudioOutputUSB           output_usb;     //xy=1221,2441
+AudioOutputI2S           audioOutput;    //xy=1222.285659790039,2303.9999618530273
+
+AudioConnection          patchCord1(i2s1, 0, mic_mixer, 0);
+AudioConnection          patchCord2(i2s1, 1, mic_mixer, 1);
+AudioConnection          patchCord3(mic_mixer, 0, output_usb, 1);
+AudioConnection          patchCord4(mic_mixer, mic_HPF);
+AudioConnection          patchCord5(mic_HPF, mic_LPF);
+AudioConnection          patchCord6(mic_LPF, mic_amp);
+AudioConnection          patchCord7(mic_amp, left_rms);
+AudioConnection          patchCord8(mic_amp, left_fft);
+AudioConnection          patchCord9(mic_amp, left_peak);
+AudioConnection          patchCord10(mic_amp, 0, output_usb, 0);
+AudioConnection          patchCord11(mic_amp, sine_fm);
+AudioConnection          patchCord12(sine_fm, 0, audioOutput, 0);
+AudioConnection          patchCord13(sine_fm, 0, audioOutput, 1);
+AudioControlSGTL5000     sgtl5000;       //xy=1770,75
 #endif // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE 
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -655,22 +683,38 @@ void updateLegatusPassiveLEDs() {
   }
 }
 
+float mix_gains[3] = {0.0, 0.0, 0.0};
+
+void fadeMixer(float c1_current, float c2_current, float c1_target, float c2_target) {
+  float slice1 = (c1_target - c1_current) * 0.01;
+  float slice2 = (c2_target - c2_current) * 0.01;
+  
+  for (int i = 0; i < 100; i++) {
+    
+    c1_current = c1_current + slice1;
+    c2_current = c2_current + slice2;
+    
+    mixer2.gain(0, c1_current);
+    mixer2.gain(1, c1_current);
+    mixer2.gain(2, c2_current);
+    delay(10);
+  }
+}
+
+#if FIRMWARE_MODE == PLAYBACK_MODE
 void playFile(const char *filename)
 {
-  // change mixer ratio so only the playback is present
-  mixer2.gain(0, 0.5);
-  mixer2.gain(1, 0.5);
-  mixer2.gain(2, 0.0);
-  delay(5);
-
   Serial.print("Playing file: ");
   Serial.println(filename);
   playWav.play(filename);
+  fadeMixer(0, 0.5, 0.5, 0.3);
+  Serial.print("file length : ");
+  Serial.println(playWav.lengthMillis());
   // Start playing the file.  This sketch continues to
   // run while the file plays.  playWav.play(filename);
 
   // A brief delay for the library read WAV info
-  delay(5);
+  delay(15);
 
   // Simply wait for the file to finish playing.
   while (playWav.isPlaying()) {
@@ -685,10 +729,10 @@ void playFile(const char *filename)
     updateLegatusPassiveLEDs();
   }
   // change the mixer levels back so the microphone is dominate
-  mixer2.gain(0, 0.0);
-  mixer2.gain(1, 0.0);
-  mixer2.gain(2, 1.0);
+  fadeMixer(0.5, 0.0, 0.3, 1.0);
+  
 }
+#endif // playback mode
 
 // only for LEGATUS
 void setupAudio() {
@@ -776,6 +820,7 @@ void setupAudio() {
   Serial.print("\t");
   Serial.println(LBQ2_DB);
 
+#if FIRMWARE_MODE == PLAYBACK_MODE
   playback_biquad_l.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
   playback_biquad_l.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
   // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
@@ -810,6 +855,13 @@ void setupAudio() {
   // Serial.println("Setting up the FFTManager to track the first channel");
   // fft_manager.addInput(&patchCord_fft_input1);
   // patchCord_fft_input2.disconnect();
+  #endif // playback mode
+
+  #if FIRMWARE_MODE == MATCH_PITCH_MODE
+  sine_fm.amplitude(0.0);
+  sine_fm.frquency(200);
+
+  #endif // match pitch mode
 }
 
 #else // all other species other than Legatus
@@ -1006,6 +1058,11 @@ void speculatorLoop() {
     double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
     printHSB();
     printRGB();
+
+    s = s * 2;
+    if (s > 1.0){
+      s = 1.0;
+    }
 
     // if (feature_collector.isActive() == true) {
     neos[0].colorWipeHSB(h, s, b);// now colorWipe the LEDs with the HSB value
@@ -1771,10 +1828,10 @@ void buildPeckRhythm(int idx, uint32_t quarter) {
 elapsedMillis loop_tmr;
 const int loop_print_delay = 1000;
 
-#if ARTEFACT_TYPE == LEGATUS
-void legatusLoop() {
+#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
+void legatusLoopSamplePlayback() {
   updateLegatusPassiveLEDs();
-  int avg_time = 1000 * 60 * 1;
+  int avg_time = 1000 * 60 * 2.5;
   PLAYBACK_INTERVAL = avg_time - (weather_manager.getTemperature() * (avg_time / 40)) + (weather_manager.getHumidity() * (avg_time / 100));  // uint16_t t = random(45, 150);
   if (loop_tmr > loop_print_delay) {
     Serial.print("Awaiting playback (recording is TODO) : ");
@@ -1790,7 +1847,46 @@ void legatusLoop() {
     Serial.println("last_playback_tmr is reset now to 0");
   }
 }
-#endif // ARTEFACT_TYPE == LEGATUS
+#endif // ARTEFACT_TYPE == LEGATUS (sample playback)
+
+#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MATCH_PITCH_MODE
+
+void activateFM(int t) {
+  for (float i = 0.01; i < 1.0; i = i + 0.01 {
+    sine_fm.amplitude(i);
+  }
+  delay(t);
+  for (float i = 1.00; i > 0.0; i = i - 0.01 {
+    sine_fm.amplitude(i);
+  }
+  sine_fm.amplitude(0.0);
+}
+
+void legatusLoopMatchPitch() {
+  updateLegatusPassiveLEDs();
+  int avg_time = 1000 * 60 * 2.5;
+  PLAYBACK_INTERVAL = avg_time - (weather_manager.getTemperature() * (avg_time / 40)) + (weather_manager.getHumidity() * (avg_time / 100));  // uint16_t t = random(45, 150);
+  if (loop_tmr > loop_print_delay) {
+    Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
+    loop_tmr = 0;
+  }
+  if (last_playback_tmr > PLAYBACK_INTERVAL) {
+    Serial.print("PLAYBACK_INTERVAL is : ");
+    Serial.println(PLAYBACK_INTERVAL);
+
+    activateFM(2000);
+
+    // turn on oscillator
+    // let it run for a period of time
+    // turn off oscillator
+
+    // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
+    last_playback_tmr = 0;
+    Serial.println("last_playback_tmr is reset now to 0");
+  }
+}
+
+#endif // ARTEFACT_TYPE == LEGATUS (match pitch)
 
 #if SD_PRESENT
 void initSD() {
@@ -1854,6 +1950,9 @@ void initSD() {
 
   // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
+
+  // list the length of all audio files
+
 }
 #endif // SD card related functions
 
@@ -2065,8 +2164,10 @@ void loop() {
     speculatorLoop();
 #elif ARTEFACT_TYPE == EXPLORATOR
     exploratorLoop();
-#elif ARTEFACT_TYPE == LEGATUS
-    legatusLoop();
+#elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
+    legatusLoopSamplePlayback();
+    #elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MATCH_PITCH_MODE
+legatusLoopMatchPitch();
 #endif
     // Serial.println("Artefact Specific update function finished running");
     // delay(1000);
