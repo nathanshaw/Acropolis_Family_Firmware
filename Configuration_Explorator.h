@@ -5,9 +5,9 @@
 ////////////////////////////// H-Bridge Motors  ///////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
-
 // for encoders
 #define COUNTS_PER_REV        12
+
 /////////////////// for the bell bot which should not use any of the H-bridge motors
 #if HV_MAJOR == 0
 #define NUM_MOTORS            0
@@ -132,7 +132,7 @@
 #define M3_POLARITY           false
 
 // this value can be used to determine how long and how fast to spin each motor...
-#define M1_GEAR_RATIO         125.
+#define M1_GEAR_RATIO         125
 #define M2_GEAR_RATIO         1
 #define M3_GEAR_RATIO         1
 
@@ -373,6 +373,25 @@ elapsedMillis last_vocalisation; // how long it has been since the bot vocalised
 unsigned long min_inter_note_rhythm = 100; // the shortest amount of time between onsets
 unsigned long max_inter_note_rhythm = 1000; // the longest amount of time between onsets
 
+float WINDING_RATE =              1.0;
+#define MAX_WINDING_RATE          2.0
+#define MID_WINDING_RATE          1.0
+#define MIN_WINDING_RATE          0.5
+
+#define BASE_FORWARD_RATE         90
+#define BASE_BACKWARD_RATE        -35
+
+#define MIN_FORWARD_RATE          BASE_FORWARD_RATE - 10
+#define MAX_FORWARD_RATE          BASE_FORWARD_RATE + 10
+
+#define MIN_BACKWARD_RATE         (BASE_BACKWARD_RATE + 10)
+#define MAX_BACKWARD_RATE         (BASE_BACKWARD_RATE - 10)
+
+// when set to true through the user interface theses bools
+// trigger manual winding of the motor
+int WIND_FORWARD = 0;
+int WIND_BACKWARD = 0;
+
 void detectOnset() {
   // given the current audio features determine if an onset has occured
 }
@@ -382,7 +401,13 @@ void detectOnset() {
 // int but_test[4];
 // float pot_test[4];
 
-float ACTIVITY_LEVEL = 0.0;
+
+#define MIN_ACTIVITY_LEVEL    0.25
+#define MID_ACTIVITY_LEVEL    1.0
+#define MAX_ACTIVITY_LEVEL    3.0
+// the user control scaler to determine how often the artefact with actuate
+float ACTIVITY_LEVEL        = MID_ACTIVITY_LEVEL;
+
 float MOTOR_MOVEMENT = 0.0;
 float STRIKE_LENGTH  = 30.0;
 

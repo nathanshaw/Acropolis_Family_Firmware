@@ -19,7 +19,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE            LEGATUS
+#define ARTEFACT_TYPE            EXPLORATOR
 // TODO finish integrating this
 float ADDED_SATURATION  = 0.4;
 
@@ -43,8 +43,8 @@ float ADDED_SATURATION  = 0.4;
 // v1.0 - first circular PCB with the modular audio codecs and amplifiers
 // v1.1 - second circular PCB with the jellybean audio amplifier and the audio codec
 
-#define HV_MAJOR                  1
-#define HV_MINOR                  1
+#define HV_MAJOR                  2
+#define HV_MINOR                  0
 
 //////////////////// Software Revision ////////////////////////////////
 // 0.1.8 is when the Explorator Shaker is fully supported (more or less)
@@ -52,9 +52,10 @@ float ADDED_SATURATION  = 0.4;
 // audio clip playback and the microphone feedback. Also increased in time between playback events.
 // added a fade-in period of one second for clips so ensure tehy do not clip when initially played
 // lastly added several more audio clips
+// 0.1.10 adds support for the Explorator MB
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               9
+#define SV_REVISION               10
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -67,7 +68,7 @@ float ADDED_SATURATION  = 0.4;
 #define SHAKER_BODY               3
 #define MB_BODY                   4
 
-#define BODY_TYPE                 SHAKER_BODY
+#define BODY_TYPE                 MB_BODY
 #endif
 
 ////////////////////// Firmware Mode //////////////////////////////////////////////////////
@@ -79,13 +80,14 @@ float ADDED_SATURATION  = 0.4;
 #define REACTIVE_MODE             100
 #define ECHO_FEEDBACK_MODE        101
 #define MATCH_PITCH_MODE          102
+#define FEEDBACK_MODE             103
 
 #if ARTEFACT_TYPE == SPECULATOR
 #define FIRMWARE_MODE             PITCH_MODE
 #elif ARTEFACT_TYPE == LEGATUS
-#define FIRMWRE_MODE              MATCH_PITCH_MODE
+#define FIRMWARE_MODE             FEEDBACK_MODE
 #else
-#define FIRMWARE_MODE             ECHO_FEEDBACK_MODE
+#define FIRMWARE_MODE             PLAYBACK_MODE
 #endif
 
 //////////////////////////////////////////////////////////
@@ -373,8 +375,8 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED2_COUNT 0
 #define LED3_COUNT 0
 #elif (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == MB_BODY)
-#define LED1_COUNT 10
-#define LED2_COUNT 10
+#define LED1_COUNT 20
+#define LED2_COUNT 0
 #define LED3_COUNT 0
 #elif ARTEFACT_TYPE == LEGATUS
 #define LED1_COUNT 20
@@ -497,7 +499,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // print lux debug mostly prints info about when extreme lux is entered and
 // other things in the lux manager, it is reccomended to leave this printing on
 #define P_LED_ON_RATIO                  false
-#define P_COLOR                         true
+#define P_COLOR                         false
 #define P_COLOR_WIPE                    false
 
 ////////////////////////////// weather manager ////////////////////////
@@ -594,10 +596,10 @@ elapsedMillis last_audio_usage_print;
 ////////////////////////////////////////////////////////////////////////////
 
 // will print readings from jumpers and pots
-#define P_USER_CONTROLS                           false
+#define P_USER_CONTROLS                           true
 
 ///////////////////////// Solenoids //////////////////////////////////////////
-#define P_SOLENOID_DEBUG                          true
+#define P_SOLENOID_DEBUG                          false
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// GLOBAL VARIABLES ////////////////////////////////
@@ -754,7 +756,11 @@ uint8_t num_fft_managers =                              2;
 // if USER_BS_ACTIVE is set to true the user will scale the natural
 // brightness levels (in pitch mode only) before being sent to the neopixel
 // manager (which then might constrain according to Lux levels)
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+float user_brightness_scaler               = 0.05;
+#else
 float user_brightness_scaler               = 1.0;
+#endif
 
 float min_user_brightness_scaler           = 0.05;
 float mid_user_brightness_scaler           = 1.0;
@@ -786,7 +792,7 @@ float pot_test[NUM_POTS];
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
 #define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
-#define NUM_NEOP_MANAGERS                               2
+#define NUM_NEOP_MANAGERS                               1
 #elif ARTEFACT_TYPE == EXPLORATOR
 #define NUM_NEOP_MANAGERS                               3
 #elif ARTEFACT_TYPE == LEGATUS         
@@ -920,6 +926,7 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #define LBQ1_THRESH         400
 #define LBQ1_Q              1.0
 #define LBQ1_DB             -12
+
 // SONG LP
 #define LBQ2_THRESH         20000
 #define LBQ2_Q              1.0
@@ -929,6 +936,7 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #define RBQ1_THRESH         400
 #define RBQ1_Q              1.0
 #define RBQ1_DB             -12
+
 // Should be Inactive
 #define RBQ2_THRESH         20000
 #define RBQ2_Q              1.0

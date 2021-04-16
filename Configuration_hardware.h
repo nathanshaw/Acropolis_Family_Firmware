@@ -90,7 +90,11 @@ double ENC_GAIN_ADJUST =        1.0;
 //////////////////////////////////////////////////////////////////////
 // how much play will the pots have before returning a value?
 // good values should range between 0.002 and 0.005
+#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+#define POT_PLAY        0.05
+#else
 #define POT_PLAY        0.006
+#endif
 
 // for the bell bot basically
 #if (ARTEFACT_TYPE == EXPLORATOR) &&  (HV_MAJOR == 0)
@@ -251,12 +255,12 @@ double ENC_GAIN_ADJUST =        1.0;
 #define BUT1_ACTIVE     true
 #define BUT2_ACTIVE     true
 
-#define BUT1_PULLUP     false
-#define BUT2_PULLUP     false
+#define BUT1_PULLUP     true
+#define BUT2_PULLUP     true
 
 // what is the name of the button? should reflect what it does
-#define BUT1_NAME       "BUT1"
-#define BUT2_NAME       "BUT2"
+#define BUT1_NAME       "Wind Forward"
+#define BUT2_NAME       "Wind Backward"
 
 ///////////////////// Pots /////////////////////////////////////////////////////
 #define NUM_POTS        2
@@ -276,9 +280,8 @@ double ENC_GAIN_ADJUST =        1.0;
 #define POT2_PLAY       0.004
 
 // what is the name of the button? should reflect what it does
-#define POT1_NAME       "LED Brightness"
-#define POT2_NAME       "Playback Time"
-
+#define POT1_NAME       "Activity Level"
+#define POT2_NAME       "Winding Rate"
 
 #elif (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2) && (HV_MINOR == 1)
 // num buttons (how many buttons does the hardware support?)

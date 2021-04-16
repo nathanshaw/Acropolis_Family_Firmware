@@ -1,7 +1,12 @@
 #ifndef __LEGATUS_CONFIGURATION_H__
 #define __LEGATUS_CONFIGURATION_H__
 
-#define AUDIO_MEMORY              24
+#if FIRMWARE_MODE == FEEDBACK_MODE
+#define AUDIO_MEMORY              90
+#else
+#define AUDIO_MEMORY              32
+#endif
+
 
 #define NUM_AUDIO_FILES           19
 
