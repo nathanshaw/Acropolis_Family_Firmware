@@ -505,10 +505,10 @@ double ENC_GAIN_ADJUST =        1.0;
 */
 
 // reverse     (should the reading be reversed?)
-#define POT1_REVERSE    true
-#define POT2_REVERSE    true
+#define POT1_REVERSE    true 
+#define POT2_REVERSE    true 
 #define POT3_REVERSE    true
-#define POT4_REVERSE    true
+#define POT4_REVERSE    true 
 
 // active      (is this button populated (available on the enclosure))
 #define POT1_ACTIVE     true
@@ -526,7 +526,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #define POT1_NAME       "user_brightness_scaler"
 #define POT2_NAME       "ADDED_SATURATION"
 #define POT3_NAME       "POT3"
-#define POT4_NAME       "BRIGHTNESS_CUTTOFF_THRESHOLD"
+#define POT4_NAME       "user_brightness_cuttoff"
 
 #elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 0
 
@@ -610,7 +610,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #define POT1_NAME         "POT1"
 #define POT2_NAME         "POT2"
 
-#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
+#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR > 0
 
 // num buttons (how many buttons does the hardware support?)
 #define NUM_BUTTONS         6
@@ -703,7 +703,7 @@ double ENC_GAIN_ADJUST =        1.0;
 #endif // __HARDWARE_CONFIGURATION_H__
 
 //////////////////////////////// SD Card Stuff /////////////////////
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
+#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MODULAR_LEGATUS_MODE
 
 #define SD_PRESENT                            true
 #define SD_MOSI                               7

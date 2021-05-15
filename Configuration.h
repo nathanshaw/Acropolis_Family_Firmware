@@ -14,12 +14,14 @@
 #define TEST_TEMP                false
 #define TEST_DOF                 false
 
+#define DISABLE_USER_CONTROLS    false
+
 /////////////////////// Artefact Type ////////////////////////////////
 // There are three artefact types currently availible
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_TYPE to one of these types
 /////////////////// TODO
-#define ARTEFACT_TYPE            EXPLORATOR
+#define ARTEFACT_TYPE            SPECULATOR
 // TODO finish integrating this
 float ADDED_SATURATION  = 0.4;
 
@@ -42,8 +44,9 @@ float ADDED_SATURATION  = 0.4;
 // v0.1 - "square PCB"
 // v1.0 - first circular PCB with the modular audio codecs and amplifiers
 // v1.1 - second circular PCB with the jellybean audio amplifier and the audio codec
+// v1.2 - second circular PCB which addressed shortcomings with first iteration
 
-#define HV_MAJOR                  2
+#define HV_MAJOR                  3
 #define HV_MINOR                  0
 
 //////////////////// Software Revision ////////////////////////////////
@@ -53,9 +56,15 @@ float ADDED_SATURATION  = 0.4;
 // added a fade-in period of one second for clips so ensure tehy do not clip when initially played
 // lastly added several more audio clips
 // 0.1.10 adds support for the Explorator MB
+// 0.1.11 revisited the Speculator code. USer controls were added back to the main loop. 
+// HSB is used to map the data from FFT for the frequency specific feedback.
+// scaled the FFT bins according to frequncy 
+// 0.1.12 contains a few minor changes to optimize the performance of Speculator, primarally by expanding
+// the range of the user brightness scaler, adding a saturation control, and moving the
+// brightness cuttoff pot to pos 2 from pos 4 which is now occupied by the new saturation pot
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
-#define SV_REVISION               10
+#define SV_REVISION               11
 
 ////////////////////// Body Type //////////////////////////////////////
 // for the explorator there are two currently available body types
@@ -76,16 +85,29 @@ float ADDED_SATURATION  = 0.4;
 // FIRMWARE MODE should be set to  CICADA_MODE, PITCH_MODE, or TEST_MODE
 // depending on what functionality you want
 // For the Explorator......
-#define PLAYBACK_MODE             99
 #define REACTIVE_MODE             100
-#define ECHO_FEEDBACK_MODE        101
-#define MATCH_PITCH_MODE          102
-#define FEEDBACK_MODE             103
+#define MODULAR_LEGATUS_MODE      98
+
+#define ECHO_FEEDBACK_MODE        1
+#define MATCH_PITCH_MODE          2
+#define FEEDBACK_MODE             3
+#define FM_FEEDBACK_MODE          4
+#define PLAYBACK_MODE             5
+
+int MATCH_PITCH_ACTIVE = false;
+int FEEDBACK_ACTIVE = false;
+int FM_FEEDBACK_ACTIVE = true;
+int PLAYBACK_ACTIVE = false;
 
 #if ARTEFACT_TYPE == SPECULATOR
 #define FIRMWARE_MODE             PITCH_MODE
 #elif ARTEFACT_TYPE == LEGATUS
-#define FIRMWARE_MODE             FEEDBACK_MODE
+#define FIRMWARE_MODE             MODULAR_LEGATUS_MODE
+// uses incomming audio as the carrier for a FM synthesis patch
+
+int ARTEFACT_BEHAVIOUR =          FM_FEEDBACK_MODE;
+// this needs to be a number which does not correspond to a mode so the audio system connects properly when needed.
+int LAST_ARTEFACT_BEHAVIOR =      -1;
 #else
 #define FIRMWARE_MODE             PLAYBACK_MODE
 #endif
@@ -146,11 +168,15 @@ int BOOT_DELAY_ACTIVE    =           false;
 #define AUDIO_USB                       true
 
 // Which Audio features will be activated?
-#define PEAK_FEATURE_ACTIVE                 1
 #if ARTEFACT_TYPE == EXPLORATOR
-#define RMS_FEATURE_ACTIVE                  0
+#define PEAK_FEATURE_ACTIVE                    true
+#define RMS_FEATURE_ACTIVE                     false
+#elif ARTEFACT_TYPE == SPECULATOR
+#define PEAK_FEATURE_ACTIVE                    true
+#define RMS_FEATURE_ACTIVE                     false
 #else
-#define RMS_FEATURE_ACTIVE                  1
+#define PEAK_FEATURE_ACTIVE                    true
+#define RMS_FEATURE_ACTIVE                     true
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -253,13 +279,13 @@ uint32_t lux_min_reading_delay =        1000 * 10;       // ten seconds
 #endif//HV_MAJOR
 
 #if FIRMWARE_MODE == CICADA_MODE
-float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.15;
+float user_brightness_cuttoff = 0.15;
 #elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 2
-float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.01;
+float user_brightness_cuttoff = 0.01;
 #elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 3
-float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
+float user_brightness_cuttoff = 0.3;
 #else 
-float BRIGHTNESS_CUTTOFF_THRESHOLD = 0.0;
+float user_brightness_cuttoff = 0.0;
 #endif//FIRMWARE_MODE
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -287,7 +313,7 @@ double ONSET_THRESH =                   1.20;
 #define LED_MAPPING_CUSTOM        7
 
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
-int LED_MAPPING_MODE = LED_MAPPING_CENTER_OUT;
+int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #else
 int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
@@ -515,12 +541,12 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_NEO_COLORS                    false
 
 //////////////////////// LuxManager and Ambiant Lighting ///////////////
-#define P_LUX_MANAGER_READINGS          true
-#define P_EXTREME_LUX                   true
+#define P_LUX_MANAGER_READINGS          false
+#define P_EXTREME_LUX                   false
 // sets p_lux_readings within the lux_manager but also the NeoPixelManager
-#define P_LUMIN                         true
+#define P_LUMIN                         false
 // sets p_lux within the lux_manager
-#define P_LUX_READINGS                  true
+#define P_LUX_READINGS                  false
 // sets general debug printing for the lux_manager class
 #define P_LUX_MANAGER_DEBUG             false
 // sets print_brightness_scaler within the lux_manager
@@ -699,10 +725,15 @@ int AUTOGAIN_ACTIVE      =                               true;
 #define AUTOGAIN_MIN_GAIN                               (double)1.0
 #define AUTOGAIN_MAX_GAIN                               (double)3000.0
 
-#if ARTEFACT_TYPE == LEGATUS
+
+#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == FM_FEEDBACK_MODE
+const float min_playback_gain = 0.0001;
+const float mid_playback_gain = 0.15;
+const float max_playback_gain = 1.0;
+#elif ARTEFACT_TYPE == LEGATUS
 const float min_playback_gain = 0.02;
 const float mid_playback_gain = 0.25;
-const float max_playback_gain = 0.5;
+const float max_playback_gain = 1.0;
 #endif // playback gains for legatus
 
 ////////////////////////////// Dominate Channel /////////////////////
@@ -762,13 +793,13 @@ float user_brightness_scaler               = 0.05;
 float user_brightness_scaler               = 1.0;
 #endif
 
-float min_user_brightness_scaler           = 0.05;
-float mid_user_brightness_scaler           = 1.0;
-float max_user_brightness_scaler           = 3.0;
+const float min_user_brightness_scaler           = 0.01;
+const float mid_user_brightness_scaler           = 0.7;
+const float max_user_brightness_scaler           = 2.0;
 
-float min_user_brightness_cuttoff           = 0.0;
-float mid_user_brightness_cuttoff           = 0.5;
-float max_user_brightness_cuttoff           = 1.0;
+const float min_user_brightness_cuttoff           = 0.0;
+const float mid_user_brightness_cuttoff           = 0.3;
+const float max_user_brightness_cuttoff           = 1.3;
 
 // this will determine if the USER will have control over the brightness scaler
 // at this point v2.1 does this via jumpers and v3.0 does this via a pot
@@ -868,7 +899,8 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #define STARTING_GAIN                         12.0
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
-#define STARTING_GAIN                         240.0
+// 240.00 is good for the better mics?
+#define STARTING_GAIN                         (240.0 * 1.0)
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
@@ -1038,10 +1070,13 @@ int REVERSE_HUE            =               false;
 #define COLOR_MAPPING_HSB                     0
 // the simple but effective explorator mapping strategy
 #define COLOR_MAPPING_EXPLORATOR              1
+// a RGB based color mapping which delegates the energy in a frequency
+// range as determining the brightness of the red, green, and blue elements
+#define COLOR_MAPPING_RGB                     2
 
 // For the neopixels will the color mapping exist within the RGB or HSB domain?
 #if ARTEFACT_TYPE == SPECULATOR
-int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+#define COLOR_MAP_MODE                       COLOR_MAPPING_RGB
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
@@ -1051,6 +1086,14 @@ int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
 #else
 int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
 #endif
+
+// for the COLOR_MAPPING_RGB mode
+#define RED_LOW_FREQ                          100
+#define RED_HIGH_FREQ                         400
+#define GREEN_LOW_FREQ                        600
+#define GREEN_HIGH_FREQ                       2400
+#define BLUE_LOW_FREQ                         2000
+#define BLUE_HIGH_FREQ                        8000
 
 #define  MODE_SINGLE_RANGE                    0
 #define  MODE_ALL_BINS                        1

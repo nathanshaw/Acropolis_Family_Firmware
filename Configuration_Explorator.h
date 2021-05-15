@@ -413,4 +413,19 @@ float STRIKE_LENGTH  = 30.0;
 
 #define PWR_KILL_PIN              25
 
+#if BODY_TYPE == MB_BODY
+int motor_speed = 0;
+int target_motor_speed = 0;
+int next_motor_speed = 0;
+int motor_time = 0;
+int next_motor_time = 0;
+const int max_motor_speed = 150;
+const int min_motor_speed = 0;
+
+elapsedMillis last_winding;
+elapsedMillis last_enc_change;
+const long winding_interval = 15000;
+int last_pos = 0;
+#endif
+
 #endif // __CONFIGURATION__H__

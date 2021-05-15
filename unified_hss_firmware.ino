@@ -1,3 +1,4 @@
+
 /**
   Moth Sonic Art Framework Firmware
   Written by Nathan Villicana-Shaw in 2020
@@ -41,9 +42,9 @@ Encoder enc(20, 21);
 long enc_pos = 0;
 
 #elif ARTEFACT_TYPE == EXPLORATOR && (BODY_TYPE == MB_BODY)
-
+min_playback_gain100
 #include "Encoder.h"
-Encoder enc(12, 11);
+    Encoder enc(12, 11);
 long enc_pos = 0;
 
 #endif // encoder library
@@ -306,15 +307,15 @@ WeatherManager weather_manager = WeatherManager(HUMID_EXTREME_THRESH, TEMP_EXTRE
 
 #if (ARTEFACT_TYPE == SPECULATOR)
 ////////////////////////// Audio Objects //////////////////////////////////////////
-AudioInputI2S i2s1;           //xy=811.6666030883789,543.3333549499512
-AudioFilterBiquad left_HPF;   //xy=962.9998664855957,523.3333139419556
-AudioFilterBiquad right_HPF;  //xy=966.6666641235352,556.6667098999023
-AudioMixer4 mixer1;           //xy=1106.6667137145996,563.3334369659424
-AudioFilterBiquad left_LPF;   //xy=1243.6665573120117,561.6666469573975
-AudioAmplifier left_amp;      //xy=1369.9999771118164,559.9999208450317
-AudioAnalyzeFFT1024 left_fft; //xy=1570.999870300293,563.666654586792
-AudioAnalyzePeak left_peak;   //xy=1574.999870300293,595.666654586792
-AudioOutputUSB output_usb;    //xy=1581.9999313354492,630.6666469573975
+AudioInputI2S i2s1;          //xy=811.6666030883789,543.3333549499512
+AudioFilterBiquad left_HPF;  //xy=962.9998664855957,523.3333139419556
+AudioFilterBiquad right_HPF; //xy=966.6666641235352,556.6667098999023
+AudioMixer4 mixer1;          //xy=1106.6667137145996,563.3334369659424
+AudioFilterBiquad left_LPF;  //xy=1243.6665573120117,561.6666469573975
+AudioAmplifier left_amp;     //xy=1369.9999771118164,559.9999208450317
+AudioAnalyzeFFT1024 fft1;    //xy=1570.999870300293,563.666654586792
+AudioAnalyzePeak peak1;      //xy=1574.999870300293,595.666654586792
+AudioOutputUSB output_usb;   //xy=1581.9999313354492,630.6666469573975
 
 AudioConnection patchCord1(i2s1, 0, left_HPF, 0);
 AudioConnection patchCord2(i2s1, 1, right_HPF, 0);
@@ -323,154 +324,71 @@ AudioConnection patchCord4(right_HPF, 0, mixer1, 1);
 AudioConnection patchCord5(mixer1, 0, output_usb, 1);
 AudioConnection patchCord6(mixer1, left_LPF);
 AudioConnection patchCord7(left_LPF, left_amp);
-AudioConnection patchCord8(left_amp, left_fft);
-AudioConnection patchCord9(left_amp, left_peak);
+AudioConnection patchCord8(left_amp, fft1);
+AudioConnection patchCord9(left_amp, peak1);
 AudioConnection patchCord10(left_amp, 0, output_usb, 0);
 #endif
 
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
+#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MODULAR_LEGATUS_MODE
+// NOTE, the default configuration is for playback mode
 ////////////////////////// Audio Objects //////////////////////////////////////////
-AudioInputI2S i2s1;                  //xy=723.2500076293945,775.5000114440918
-AudioPlaySdWav playWav;              //xy=767.0000267028809,648.750018119812
-AudioMixer4 mic_mixer;               //xy=884.5000114440918,788.0000114440918
-AudioFilterBiquad playback_biquad_l; //xy=944.2500305175781,635.000018119812
-AudioFilterBiquad playback_biquad_r; //xy=944.7500152587891,667.0000095367432
-AudioFilterBiquad mic_HPF;           //xy=1025.500015258789,760.5000114440918
-AudioAmplifier playback_amp_l;       //xy=1130.000015258789,636.0000095367432
-AudioAmplifier playback_amp_r;       //xy=1132.750015258789,669.0000095367432
-AudioFilterBiquad mic_LPF;           //xy=1160.250015258789,761.0000133514404
-AudioAmplifier mic_amp;              //xy=1295.0000190734863,761.5000114440918
-AudioOutputI2S audioOutput;          //xy=1356.0000190734863,604.5000095367432
-AudioMixer4 mixer2;                  //xy=1375.0000190734863,652.5000705718994
-AudioAnalyzeRMS left_rms;            //xy=1578.5000228881836,682.5000114440918
-AudioAnalyzeFFT1024 left_fft;        //xy=1578.4999885559082,714.2499980926514
-AudioAnalyzePeak left_peak;          //xy=1582.4999885559082,746.2499980926514
-AudioOutputUSB output_usb;           //xy=1589.4999885559082,781.2499980926514
+AudioInputI2S i2s1; //xy=723.2500076293945,775.5000114440918
 
-AudioConnection patchCord1(i2s1, 0, mic_mixer, 0);
-AudioConnection patchCord2(mixer2, 0, output_usb, 0);
-AudioConnection patchCord3(i2s1, 1, mic_mixer, 1);
-AudioConnection patchCord4(playWav, 0, playback_biquad_l, 0);
-AudioConnection patchCord5(playWav, 1, playback_biquad_r, 0);
-AudioConnection patchCord6(mic_mixer, 0, output_usb, 1);
-AudioConnection patchCord7(mic_mixer, mic_HPF);
-AudioConnection patchCord8(playback_biquad_l, playback_amp_l);
-AudioConnection patchCord9(playback_biquad_r, playback_amp_r);
-AudioConnection patchCord10(mic_HPF, mic_LPF);
-AudioConnection patchCord11(playback_amp_l, 0, audioOutput, 0);
-AudioConnection patchCord12(playback_amp_l, 0, mixer2, 0);
-AudioConnection patchCord13(playback_amp_r, 0, audioOutput, 1);
-AudioConnection patchCord14(playback_amp_r, 0, mixer2, 1);
-AudioConnection patchCord15(mic_LPF, mic_amp);
-AudioConnection patchCord16(mic_amp, 0, mixer2, 2);
-AudioConnection patchCord17(mixer2, left_rms);
-AudioConnection patchCord18(mixer2, left_fft);
-AudioConnection patchCord19(mixer2, left_peak);
-AudioControlSGTL5000 sgtl5000; //xy=997.7500152587891,513.2500104904175
-// GUItool: end automatically generated code
+AudioMixer4 mixer1; //xy=884.5000114440918,788.0000114440918
+AudioMixer4 mixer2; //xy=1375.0000190734863,652.5000705718994
+
+AudioFilterBiquad biquad1; //xy=944.2500305175781,635.000018119812
+AudioFilterBiquad biquad2; //xy=944.7500152587891,667.0000095367432
+AudioFilterBiquad biquad3; //xy=1025.500015258789,760.5000114440918
+AudioFilterBiquad biquad4; //xy=1160.250015258789,761.0000133514404
+
+AudioAmplifier amp1; //xy=1130.000015258789,636.0000095367432
+AudioAmplifier amp2; //xy=1132.750015258789,669.0000095367432
+AudioAmplifier amp3; //xy=1295.0000190734863,761.5000114440918
+
+AudioOutputI2S audioOutput; //xy=1356.0000190734863,604.5000095367432
+
+AudioAnalyzeRMS rms1;     //xy=1578.5000228881836,682.5000114440918
+AudioAnalyzeFFT1024 fft1; //xy=1578.4999885559082,714.2499980926514
+AudioAnalyzePeak peak1;   //xy=1582.4999885559082,746.2499980926514
+
+AudioEffectDelay audio_delay1;
+
+AudioOutputUSB output_usb; //xy=1589.4999885559082,781.2499980926514
+
+#if USE_RAW_AUDIO_PLAYER == true
+AudioPlaySdRaw audio_player; //xy=767.0000267028809,648.750018119812
+#else
+AudioPlaySdWav audio_player; //xy=767.0000267028809,648.750018119812
 #endif
 
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == FEEDBACK_MODE
-
-// GUItool: begin automatically generated code
-AudioInputI2S i2s1;           //xy=306.42859649658203,2330.7142791748047
-AudioMixer4 mic_mixer;        //xy=467.42859649658203,2343.7142791748047
-AudioFilterBiquad mic_HPF;    //xy=608.428596496582,2315.7142791748047
-AudioFilterBiquad mic_LPF;    //xy=743.428596496582,2316.7142791748047
-AudioAmplifier mic_amp;       //xy=878.428596496582,2316.7142791748047
-AudioAnalyzeRMS left_rms;     //xy=1210,2342
-AudioAnalyzeFFT1024 left_fft; //xy=1210,2374
-AudioAnalyzePeak left_peak;   //xy=1214,2406
-AudioOutputUSB output_usb;    //xy=1221,2441
-AudioEffectDelay audio_delay;
-AudioOutputI2S audioOutput; //xy=1222.285659790039,2303.9999618530273
-
-AudioConnection patchCord1(i2s1, 0, mic_mixer, 0);
-AudioConnection patchCord2(i2s1, 1, mic_mixer, 1);
-AudioConnection patchCord3(mic_mixer, 0, output_usb, 1);
-AudioConnection patchCord4(mic_mixer, mic_HPF);
-AudioConnection patchCord5(mic_HPF, mic_LPF);
-AudioConnection patchCord6(mic_LPF, mic_amp);
-AudioConnection patchCord7(mic_amp, left_rms);
-AudioConnection patchCord8(mic_amp, left_fft);
-AudioConnection patchCord9(mic_amp, left_peak);
-AudioConnection patchCord10(mic_amp, 0, output_usb, 0);
-
-AudioConnection patchCord11(audio_delay, 0, audioOutput, 0);
-AudioConnection patchCord12(audio_delay, 0, audioOutput, 1);
-AudioConnection patchCord13(mic_amp, 0, audio_delay, 0);
-AudioControlSGTL5000 sgtl5000; //xy=1770,75
-#endif
-
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MATCH_PITCH_MODE
-// GUItool: begin automatically generated code
-AudioInputI2S i2s1;                      //xy=306.42859649658203,2330.7142791748047
-AudioMixer4 mic_mixer;                   //xy=467.42859649658203,2343.7142791748047
-AudioFilterBiquad mic_HPF;               //xy=608.428596496582,2315.7142791748047
-AudioFilterBiquad mic_LPF;               //xy=743.428596496582,2316.7142791748047
-AudioAmplifier mic_amp;                  //xy=878.428596496582,2316.7142791748047
 AudioSynthWaveformSineModulated sine_fm; //xy=1054.285743713379,2268.5713901519775
-AudioAnalyzeRMS left_rms;                //xy=1210,2342
-AudioAnalyzeFFT1024 left_fft;            //xy=1210,2374
-AudioAnalyzePeak left_peak;              //xy=1214,2406
-AudioOutputUSB output_usb;               //xy=1221,2441
-AudioOutputI2S audioOutput;              //xy=1222.285659790039,2303.9999618530273
 
-AudioConnection patchCord1(i2s1, 0, mic_mixer, 0);
-AudioConnection patchCord2(i2s1, 1, mic_mixer, 1);
-AudioConnection patchCord3(mic_mixer, 0, output_usb, 1);
-AudioConnection patchCord4(mic_mixer, mic_HPF);
-AudioConnection patchCord5(mic_HPF, mic_LPF);
-AudioConnection patchCord6(mic_LPF, mic_amp);
-AudioConnection patchCord7(mic_amp, left_rms);
-AudioConnection patchCord8(mic_amp, left_fft);
-AudioConnection patchCord9(mic_amp, left_peak);
-AudioConnection patchCord10(mic_amp, 0, output_usb, 0);
-AudioConnection patchCord11(mic_amp, sine_fm);
-AudioConnection patchCord12(sine_fm, 0, audioOutput, 0);
-AudioConnection patchCord13(sine_fm, 0, audioOutput, 1);
-AudioControlSGTL5000 sgtl5000; //xy=1770,75
-#endif                         // ARTEFACT_TYPE and BODY_TYPE and FIRMWARE_MODE
+AudioControlSGTL5000 sgtl5000; //xy=997.7500152587891,513.2500104904175
+#endif                         // audio system for legatus modular firmware
 
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #else
 UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 #endif
-////////////////////////////// Audio System ///////////////////////////////////////
-/*#if (ARTEFACT_TYPE == EXPLORATOR) && (BODY_TYPE == WOODPECKER_BODY || BODY_TYPE == BELL_BODY)
-  AudioInputI2S            i2s;              //xy=634,246
-  AudioAmplifier           left_amp;      //xy=777.1429023742676,277.14284896850586
-  AudioFilterBiquad        biquad1;
-  AudioAnalyzePeak         left_peak;             //xy=1139.4286575317383,258.42859840393066
-  AudioAnalyzeFFT1024      left_fft;           //xy=1145.4286575317383,290.42859840393066
-  AudioAnalyzeClipCounter  clip_counter;
-  AudioOutputUSB           usb_output;       //xy=1147.4286575317383,194.42859840393066
-  AudioConnection          patchCord1(i2s, 0, biquad1, 0);
-  AudioConnection          patchCord2(biquad1, left_amp);
-  AudioConnection          patchCord3(left_amp, clip_counter);
-  AudioConnection          patchCord6(left_amp, left_peak);
-  AudioConnection          patchCord7(left_amp, left_fft);
-  AudioConnection          patchCord10(left_amp, 0, usb_output, 0);
-  AudioConnection          patchCord11(left_amp, 0, usb_output, 1);
-*/
+
 #if (ARTEFACT_TYPE == EXPLORATOR)
-AudioInputI2S i2s1;           //xy=1203.3333854675293,1356.3334693908691
-AudioMixer4 mixer1;           //xy=1373.3333549499512,1335.0000076293945
-AudioAmplifier left_amp;      //xy=1519.3333206176758,1330.0000114440918
-AudioFilterBiquad left_HPF;   //xy=1651.6667022705078,1330.6666841506958
-AudioAnalyzeFFT1024 left_fft; //xy=1846.3333740234375,1254.9999675750732
-AudioAnalyzePeak left_peak;   //xy=1851.3332901000977,1288.6667175292969
-AudioOutputUSB output_usb;    //xy=1857.0000457763672,1368.666639328003
+AudioInputI2S i2s1;         //xy=1203.3333854675293,1356.3334693908691
+AudioMixer4 mixer1;         //xy=1373.3333549499512,1335.0000076293945
+AudioAmplifier left_amp;    //xy=1519.3333206176758,1330.0000114440918
+AudioFilterBiquad left_HPF; //xy=1651.6667022705078,1330.6666841506958
+AudioAnalyzeFFT1024 fft1;   //xy=1846.3333740234375,1254.9999675750732
+AudioAnalyzePeak peak1;     //xy=1851.3332901000977,1288.6667175292969
+AudioOutputUSB output_usb;  //xy=1857.0000457763672,1368.666639328003
 
 AudioConnection patchCord1(i2s1, 0, mixer1, 0);
 AudioConnection patchCord2(i2s1, 1, mixer1, 1);
 AudioConnection patchCord3(mixer1, left_amp);
 AudioConnection patchCord4(mixer1, 0, output_usb, 1);
 AudioConnection patchCord5(left_amp, left_HPF);
-AudioConnection patchCord6(left_HPF, left_peak);
+AudioConnection patchCord6(left_HPF, peak1);
 AudioConnection patchCord7(left_HPF, 0, output_usb, 0);
-AudioConnection patchCord8(left_HPF, left_fft);
-
+AudioConnection patchCord8(left_HPF, fft1);
 #endif
 
 // #if ARTEFACT_TYPE == EXPLORATOR
@@ -628,7 +546,7 @@ void updateFeedbackLEDs(FFTManager1024 *_fft_manager)
       Serial.println(blue);
     }
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
-    if (current_brightness < BRIGHTNESS_CUTTOFF_THRESHOLD)
+    if (current_brightness < user_brightness_cuttoff)
     {
       for (int i = 0; i < NUM_NEOP_MANAGERS; i++)
       {
@@ -668,6 +586,8 @@ bool getColorFromFFTSingleRange(FFTManager1024 *f, uint8_t s, uint8_t e)
   // RGBConverter::HsvToRgb(frac, 0.5, 1, 0, red, green, blue);
   return 1;
 }
+
+#if COLOR_MAPPING == COLOR_MAPPING_HSB
 
 double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft)
 {
@@ -771,14 +691,14 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft)
     dprintln(P_BS + P_BRIGHTNESS, brightness, 4);
   }
   /////////////////////// Make sure that it is within bounds ////////////////////
-  if (brightness < BRIGHTNESS_CUTTOFF_THRESHOLD)
+  if (brightness < user_brightness_cuttoff)
   {
-    dprint(P_BS + P_BRIGHTNESS, "brightness lower than BRIGHTNESS_CUTTOFF_THRESHOLD of ");
-    dprint(P_BS + P_BRIGHTNESS, BRIGHTNESS_CUTTOFF_THRESHOLD);
+    dprint(P_BS + P_BRIGHTNESS, "brightness lower than user_brightness_cuttoff of ");
+    dprint(P_BS + P_BRIGHTNESS, user_brightness_cuttoff);
     dprintln(P_BS + P_BRIGHTNESS, " changing to 0.0");
     brightness = 0;
   }
-  else if (brightness > 1.0 + BRIGHTNESS_CUTTOFF_THRESHOLD)
+  else if (brightness > 1.0 + user_brightness_cuttoff)
   {
     dprint(P_BS + P_BRIGHTNESS, "brightness higher than 1.0 (");
     dprint(P_BS + P_BRIGHTNESS, brightness);
@@ -787,7 +707,7 @@ double calculateBrightness(FeatureCollector *f, FFTManager1024 *_fft)
   }
   else
   {
-    brightness = brightness - BRIGHTNESS_CUTTOFF_THRESHOLD;
+    brightness = brightness - user_brightness_cuttoff;
   }
   dprintMinorDivide(P_BRIGHTNESS);
   return brightness;
@@ -915,15 +835,6 @@ double calculateHue(FeatureCollector *f, FFTManager1024 *_fft)
   return hue;
 }
 
-void printRGB()
-{
-  // fft_manager.printFFTVals();
-  if (P_NEO_COLORS)
-  {
-    neos[0].printColors();
-  }
-}
-
 void printHSB()
 {
   if (P_HSB)
@@ -936,28 +847,188 @@ void printHSB()
     Serial.println(brightness);
   }
 }
+
+#endif // if color mapping is HSB
+
+void printRGB()
+{
+  // fft_manager.printFFTVals();
+  if (P_NEO_COLORS)
+  {
+    neos[0].printColors();
+  }
+}
+
 // #endif // ARTEFACT_TYPE == EXPLORATOR
 
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
 
-int motor_speed = 0;
-int target_motor_speed = 0;
-int next_motor_speed = 0;
-int motor_time = 0;
-int next_motor_time = 0;
-const int max_motor_speed = 150;
-const int min_motor_speed = 0;
+void windBack(float rotations, int backward_rate)
+{
+  Serial.println("starting windBack()");
+  motors.enableDrivers();
+  delay(10);
+  enc.write(0);
+  enc_pos = 0;
+  int target = 20;
+  if (M1_POLARITY == false)
+  {
+    Serial.println("M1_POLARITY is set to false, reversing backward_rate and reversing target");
+    backward_rate *= -1;
+    // start winding slowly
+    for (int i = backward_rate * 0.5; i < backward_rate; i++)
+    {
+      motors.setM1Speed(i);
+      enc_pos = enc.read();
+      delay(15);
+      updateFeedbackLEDs(&fft_manager[0]);
+    }
+    motors.setM1Speed(backward_rate);
+  }
+  else
+  {
+    for (int i = backward_rate * 0.5; i > backward_rate; i--)
+    {
+      motors.setM1Speed(i);
+      enc_pos = enc.read();
+      delay(25);
+      updateFeedbackLEDs(&fft_manager[0]);
+    }
+    motors.setM1Speed(backward_rate);
+  }
 
-elapsedMillis last_winding;
-elapsedMillis last_enc_change;
-const long winding_interval = 15000;
-int last_pos = 0;
+  // TODO determine how far to wind the box
+  while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) && enc_pos >= (rotations * -1 * M1_GEAR_RATIO * COUNTS_PER_REV))
+  {
+    enc_pos = enc.read();
+    if (last_pos != enc_pos)
+    {
+      Serial.print(last_enc_change);
+      Serial.print("\tenc pos: ");
+      Serial.print((float)enc_pos / 1500.00);
+      Serial.print(" / ");
+      Serial.println(rotations);
+      last_pos = enc_pos;
+      last_enc_change = 0;
+    }
+    // if 15 seconds pass without being able to get to the target position, then move on to unwinding
+    if (last_enc_change > 300)
+    {
+      Serial.println("Winding taking too, long, breaking from loop");
+      motors.setM1Speed(0);
+      break;
+    }
+    else if (last_enc_change > 150)
+    {
+      motors.setM1Speed(backward_rate * 1.5);
+      Serial.print("1.50 - ");
+    }
+    else if (last_enc_change > 50)
+    {
+      motors.setM1Speed(backward_rate * 1.25);
+      Serial.print("1.25 - ");
+    }
 
-void windBox(float rotations)
+    if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 100) && M1_POLARITY == false)
+    {
+      if (enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 50)
+      {
+        motors.setM1Speed(10);
+        Serial.print((float)enc_pos / 1500.00);
+        Serial.println("\t Bringing speed down to 10");
+      }
+      else
+      {
+        Serial.print((float)enc_pos / 1500.00);
+        Serial.println("Bringing speed down to 20");
+        motors.setM1Speed(20);
+      }
+    }
+    else if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 100) && M1_POLARITY == true)
+    {
+      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 50)
+      {
+        motors.setM1Speed(-10);
+        Serial.print((float)enc_pos / 1500.00);
+        Serial.println("Bringing speed down to -10");
+      }
+      else
+      {
+        motors.setM1Speed(-20);
+        Serial.print((float)enc_pos / 1500.00);
+        Serial.println("Bringing speed down to -20");
+      }
+    }
+    updateFeedbackLEDs(&fft_manager[0]);
+  }
+  last_enc_change = 0;
+  Serial.print("enc pos: ");
+  Serial.println(enc_pos);
+  motors.setM1Speed(0);
+  enc.write(0);
+  enc_pos = 0;
+  Serial.println("----- exiting windBack -------");
+}
+
+void windForward(float rotations, int forward_rate)
+{
+  if (M1_POLARITY == false)
+  {
+    motors.setM1Speed(forward_rate);
+  }
+  else
+  {
+    motors.setM1Speed(forward_rate);
+  }
+
+  float EXTRA_REWIND = 0.80;
+
+  while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) && enc_pos >= (COUNTS_PER_REV * rotations * -1 * M1_GEAR_RATIO * EXTRA_REWIND))
+  {
+    enc_pos = enc.read();
+    if (last_pos != enc_pos)
+    {
+      Serial.print("enc pos: ");
+      Serial.println((float)enc_pos / 1500.00);
+      last_pos = enc_pos;
+      last_enc_change = 0;
+    }
+    updateFeedbackLEDs(&fft_manager[0]);
+    if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 100) && M1_POLARITY == true)
+    {
+      motors.setM1Speed(20);
+      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 50)
+      {
+        motors.setM1Speed(10);
+      }
+    }
+    else if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 100) && M1_POLARITY == false)
+    {
+      motors.setM1Speed(-20);
+      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 50)
+      {
+        motors.setM1Speed(-10);
+      }
+    }
+    updateFeedbackLEDs(&fft_manager[0]);
+    if (last_enc_change > 250)
+    {
+      Serial.println("Unwininding taking too, long, breaking from loop");
+      motors.setM1Speed(0);
+      break;
+    }
+  }
+  Serial.print("enc pos: ");
+  Serial.println((float)enc_pos / 1500.00);
+  motors.disableDrivers();
+  // (in terms of the encoder)
+  last_winding = 0;
+}
+
+void windBox(float rotations, int between_delay)
 {
   if (last_winding > winding_interval)
   {
-    Serial.println("Time to wind up the music box");
     // slowly wind the motor up
     rotations *= 1.0;
     int forward_rate = constrain((float)BASE_FORWARD_RATE * WINDING_RATE, MIN_FORWARD_RATE, MAX_FORWARD_RATE);
@@ -968,159 +1039,22 @@ void windBox(float rotations)
       forward_rate *= -1;
       backward_rate *= -1;
     }
+    Serial.println("----------------------");
+    Serial.print("windBox(rotations): ");
+    Serial.println(rotations);
+    Serial.print("between_delay: ");
+    Serial.println(between_delay);
+    Serial.print("forward_rate: ");
+    Serial.println(forward_rate);
+    Serial.print("backward_rate: ");
+    Serial.println(backward_rate);
+    Serial.println("----------------------");
 
-    motors.enableDrivers();
-    delay(10);
-    //motors.setM1Speed(-20);
-    enc.write(0);
-    enc_pos = 0;
-    if (M1_POLARITY == false)
-    {
-      for (int i = 20; i < forward_rate; i = i + 2)
-      {
-        motors.setM1Speed(i);
-        enc_pos = enc.read();
-        delay(25);
-        updateFeedbackLEDs(&fft_manager[0]);
-      }
-      motors.setM1Speed(forward_rate);
-    }
-    else
-    {
-      for (int i = -20; i > forward_rate; i = i - 2)
-      {
-        motors.setM1Speed(i);
-        enc_pos = enc.read();
-        delay(25);
-        updateFeedbackLEDs(&fft_manager[0]);
-      }
-      motors.setM1Speed(forward_rate);
-    }
+    windBack(rotations, backward_rate);
 
-    // TODO determine how far to wind the box
-
-    while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) && enc_pos >= (rotations * -1 * M1_GEAR_RATIO * COUNTS_PER_REV))
-    {
-      enc_pos = enc.read();
-      if (last_pos != enc_pos)
-      {
-        Serial.print(last_enc_change);
-        Serial.print("\tenc pos: ");
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.print(" / ");
-        Serial.println(rotations);
-        last_pos = enc_pos;
-        last_enc_change = 0;
-      }
-      // if 15 seconds pass without being able to get to the target position, then move on to unwinding
-      if (last_enc_change > 300)
-      {
-        Serial.println("Winding taking too, long, breaking from loop");
-        motors.setM1Speed(0);
-        break;
-      }
-      else if (last_enc_change > 150)
-      {
-        motors.setM1Speed(forward_rate * 1.5);
-        Serial.print("1.50 - ");
-      }
-      else if (last_enc_change > 50)
-      {
-        motors.setM1Speed(forward_rate * 1.25);
-        Serial.print("1.25 - ");
-      }
-
-      if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 100) && M1_POLARITY == false)
-      {
-        if (enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 50)
-        {
-          motors.setM1Speed(10);
-          Serial.print((float)enc_pos / 1500.00);
-          Serial.println("\t Bringing speed down to 10");
-        }
-        else
-        {
-          Serial.print((float)enc_pos / 1500.00);
-          Serial.println("Bringing speed down to 20");
-          motors.setM1Speed(20);
-        }
-      }
-      else if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 100) && M1_POLARITY == true)
-      {
-        if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 50)
-        {
-          motors.setM1Speed(-10);
-          Serial.print((float)enc_pos / 1500.00);
-          Serial.println("Bringing speed down to -10");
-        }
-        else
-        {
-          motors.setM1Speed(-20);
-          Serial.print((float)enc_pos / 1500.00);
-          Serial.println("Bringing speed down to -20");
-        }
-      }
-      updateFeedbackLEDs(&fft_manager[0]);
-    }
-    last_enc_change = 0;
-    Serial.print("enc pos: ");
-    Serial.println(enc_pos);
-    motors.setM1Speed(0);
-    enc.write(0);
-    enc_pos = 0;
-    delay(2000);
+    delay(between_delay);
     //motors.setM1Speed(2);
-    if (M1_POLARITY == false)
-    {
-      motors.setM1Speed(backward_rate);
-    }
-    else
-    {
-      motors.setM1Speed(backward_rate);
-    }
-
-    float EXTRA_REWIND = 0.80;
-
-    while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) && enc_pos >= (COUNTS_PER_REV * rotations * -1 * M1_GEAR_RATIO * EXTRA_REWIND))
-    {
-      enc_pos = enc.read();
-      if (last_pos != enc_pos)
-      {
-        Serial.print("enc pos: ");
-        Serial.println((float)enc_pos / 1500.00);
-        last_pos = enc_pos;
-        last_enc_change = 0;
-      }
-      updateFeedbackLEDs(&fft_manager[0]);
-      if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 100) && M1_POLARITY == true)
-      {
-        motors.setM1Speed(20);
-        if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 50)
-        {
-          motors.setM1Speed(10);
-        }
-      }
-      else if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 100) && M1_POLARITY == false)
-      {
-        motors.setM1Speed(-20);
-        if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 50)
-        {
-          motors.setM1Speed(-10);
-        }
-      }
-      updateFeedbackLEDs(&fft_manager[0]);
-      if (last_enc_change > 250)
-      {
-        Serial.println("Unwininding taking too, long, breaking from loop");
-        motors.setM1Speed(0);
-        break;
-      }
-    }
-    Serial.print("enc pos: ");
-    Serial.println((float)enc_pos / 1500.00);
-    motors.disableDrivers();
-    // (in terms of the encoder)
-    last_winding = 0;
+    windForward(rotations, forward_rate);
   }
   else
   {
@@ -1173,20 +1107,20 @@ void exploratorMBLoop()
   // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
   // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
   // activity level adds a base of up to five minutes
-  ACTUATION_DELAY = ACTIVITY_LEVEL * 0.5 * 60000;
+  ACTUATION_DELAY = ACTIVITY_LEVEL * 1.0 * 60000;
   ACTUATION_DELAY += weather_manager.getTemperature() * -250;
   ACTUATION_DELAY += weather_manager.getHumidity() * 1000;
   ACTUATION_DELAY += 5000 - lux_manager.getGlobalLux();
-  if (millis() % 5000 == 0)
+  if (millis() % 30000 == 0)
   {
     Serial.print("ACTUATION_DELAY is : ");
     Serial.println(ACTUATION_DELAY);
   }
   if (last_playback_tmr > ACTUATION_DELAY)
   {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
-    windBox(1.0);
+    float wind_amount = 0.33;
+    int between_time = 500;
+    windBox(wind_amount, between_time);
     last_playback_tmr = 0;
   }
   manualWinding();
@@ -1606,12 +1540,13 @@ void updateAudioAnalysis()
   }
 #if P_AUDIO_MEMORY_MAX > 0
   // so the printing is not crazy
-  if (last_jumper_read > 99500)
+  if (last_audio_use_print > AUDIO_USE_RESET_RATE)
   {
     Serial.print("audio memory max: ");
     Serial.print(AudioMemoryUsageMax());
     Serial.print(" of ");
     Serial.println(AUDIO_MEMORY);
+    last_audio_use_print = 0;
   }
 #endif
 }
@@ -1712,11 +1647,11 @@ void brightnessWipe(double b)
 
 void updateLegatusPassiveLEDs()
 {
-  if (left_fft.available())
+  if (fft1.available())
   {
-    fcolors[2] = left_fft.read(1, 8) * 4;   // 172  - 1536  Hz
-    fcolors[1] = left_fft.read(8, 23) * 4;  // 1536 - 4416  Hz
-    fcolors[0] = left_fft.read(23, 93) * 4; // 1536 - 15996 Hz
+    fcolors[2] = fft1.read(1, 8) * 4;   // 172  - 1536  Hz
+    fcolors[1] = fft1.read(8, 23) * 4;  // 1536 - 4416  Hz
+    fcolors[0] = fft1.read(23, 93) * 4; // 1536 - 15996 Hz
     for (int i = 0; i < 3; i++)
     {
       if (colors[i] > 1.0)
@@ -1734,16 +1669,16 @@ void updateLegatusPassiveLEDs()
     // Serial.print("\t");
     // Serial.println(colors[2]);
   }
-  if (left_peak.available())
+  if (peak1.available())
   {
-    int c = (int)(left_peak.read() * 4096) * user_brightness_scaler;
+    int c = (int)(peak1.read() * 4096) * user_brightness_scaler;
     float f = (float)constrain(c, 0, 255) / 255.0;
     brightnessWipe(f);
     // Serial.println(f);
   }
 }
 
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
+#if ARTEFACT_TYPE == LEGATUS
 float mix_gains[3] = {0.0, 0.0, 0.0};
 
 void fadeMixer(float c1_current, float c2_current, float c1_target, float c2_target)
@@ -1764,22 +1699,27 @@ void fadeMixer(float c1_current, float c2_current, float c1_target, float c2_tar
   }
 }
 
-void playFile(const char *filename)
+void playFile(const char *filename, float rate)
 {
   Serial.print("Playing file: ");
   Serial.println(filename);
-  playWav.play(filename);
+  audio_player.play(filename);
+#if USE_RAW_AUDIO_PLAYER == true
+  audio_player.setPlaybackRate(rate);
+#endif
   fadeMixer(0, 0.5, 0.5, 0.3);
   Serial.print("file length : ");
-  Serial.println(playWav.lengthMillis());
+  Serial.println(audio_player.lengthMillis());
+  Serial.print("Playback Rate : ");
+  Serial.println(rate);
   // Start playing the file.  This sketch continues to
-  // run while the file plays.  playWav.play(filename);
+  // run while the file plays.  audio_player.play(filename);
 
   // A brief delay for the library read WAV info
   delay(15);
 
   // Simply wait for the file to finish playing.
-  while (playWav.isPlaying())
+  while (audio_player.isPlaying())
   {
     // readUserControls();
     if (uimanager.update())
@@ -1788,13 +1728,16 @@ void playFile(const char *filename)
       {
         uimanager.printAll();
       }
-      playback_amp_l.gain(USER_CONTROL_PLAYBACK_GAIN);
-      playback_amp_r.gain(USER_CONTROL_PLAYBACK_GAIN);
+      amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
+      amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
+      Serial.print("Updated the user control playback gain: ");
+      Serial.println(USER_CONTROL_PLAYBACK_GAIN);
     }
     updateLegatusPassiveLEDs();
   }
   // change the mixer levels back so the microphone is dominate
   fadeMixer(0.5, 0.0, 0.3, 1.0);
+  Serial.println("Finished playing back file...");
 }
 #endif // playback mode
 
@@ -1809,9 +1752,9 @@ void setupAudio()
   delay(500);
 
   sgtl5000.enable();
-  sgtl5000.volume(0.05);
+  sgtl5000.volume(0.0);
   sgtl5000.inputSelect(AUDIO_INPUT_MIC);
-  sgtl5000.micGain(48);
+  sgtl5000.micGain(54);
 
 #if SD_PRESENT
   SPI.setMOSI(SD_MOSI);
@@ -1831,7 +1774,7 @@ void setupAudio()
   // feature_collector 0-1 are for the song front/rear
   if (PEAK_FEATURE_ACTIVE)
   {
-    feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
+    feature_collector.linkPeak(&peak1, P_PEAK_VALS);
   }
   else
   {
@@ -1841,7 +1784,7 @@ void setupAudio()
 
   if (RMS_FEATURE_ACTIVE)
   {
-    feature_collector.linkRMS(&left_rms, P_RMS_VALS);
+    feature_collector.linkRMS(&rms1, P_RMS_VALS);
   }
   else
   {
@@ -1851,7 +1794,7 @@ void setupAudio()
 
   if (FFT_FEATURES_ACTIVE)
   {
-    fft_manager[0].linkFFT(&left_fft, "Front");
+    fft_manager[0].linkFFT(&fft1, "Front");
 
     Serial.print("Linked FFT to FFTManager mumber");
     Serial.println(0);
@@ -1876,7 +1819,7 @@ void setupAudio()
   }
 
   /////////////////////////////////////////////////////////////////////
-  mic_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
+  biquad3.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
   // left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
   // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
   // left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
@@ -1887,7 +1830,7 @@ void setupAudio()
   Serial.print("\t");
   Serial.println(LBQ1_DB);
 
-  mic_LPF.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
+  biquad4.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
   // left_LPF.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
   // left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
   // left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
@@ -1898,56 +1841,57 @@ void setupAudio()
   Serial.print("\t");
   Serial.println(LBQ2_DB);
 
-#if FIRMWARE_MODE == PLAYBACK_MODE
-  playback_biquad_l.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
-  playback_biquad_l.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
-  // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
-  // left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
-  Serial.println("playback left filters have been configured");
+  if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
+  {
+    audio_player.begin();
+    biquad1.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+    biquad1.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
+    // left_HPF.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+    // left_HPF.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+    Serial.println("playback left filters have been configured");
 
-  playback_biquad_r.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
-  playback_biquad_r.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
-  // left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
-  // left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
-  Serial.println("playback right Filters have been configured ");
+    biquad2.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+    biquad2.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
+    // left_LPF.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+    // left_LPF.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+    Serial.println("playback right Filters have been configured ");
 
-  printMinorDivide();
+    printMinorDivide();
 
-  //////////////////////////////////////////////////////////////////////////////////
-  playback_amp_l.gain(USER_CONTROL_PLAYBACK_GAIN);
-  playback_amp_r.gain(USER_CONTROL_PLAYBACK_GAIN);
-  Serial.print("playback gains are set to : ");
-  Serial.println(USER_CONTROL_PLAYBACK_GAIN);
+    //////////////////////////////////////////////////////////////////////////////////
+    amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
+    amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
+    Serial.print("playback gains are set to : ");
+    Serial.println(USER_CONTROL_PLAYBACK_GAIN);
 
-  //////////////////////////////////////////////////////////////////////////////////
-  // TODO - make sure ENC_GAIN_ADJ exists for all bots
-  Serial.print("Starting gain is now set to: ");
-  Serial.println(STARTING_GAIN);
-  mic_mixer.gain(0, STARTING_GAIN * 0.5);
-  mic_mixer.gain(1, STARTING_GAIN * 0.5);
-  mic_amp.gain(STARTING_GAIN);
+    //////////////////////////////////////////////////////////////////////////////////
+    // TODO - make sure ENC_GAIN_ADJ exists for all bots
+    Serial.print("Starting gain is now set to: ");
+    Serial.println(STARTING_GAIN);
+    mixer1.gain(0, STARTING_GAIN * 0.5);
+    mixer1.gain(1, STARTING_GAIN * 0.5);
+    amp3.gain(STARTING_GAIN);
 
-  mixer2.gain(0, 0.33);
-  mixer2.gain(1, 0.33);
-  mixer2.gain(2, 0.5);
-  // Serial.println("Setting up the FFTManager to track the first channel");
-  // fft_manager.addInput(&patchCord_fft_input1);
-  // patchCord_fft_input2.disconnect();
-#endif // playback mode
-
-#if FIRMWARE_MODE == MATCH_PITCH_MODE
-  mic_mixer.gain(0, STARTING_GAIN * 4);
-  mic_mixer.gain(1, STARTING_GAIN * 4);
-  sine_fm.amplitude(0.0);
-  sine_fm.frequency(200);
-
-#endif // match pitch mode
-
-#if FIRMWARE_MODE == FEEDBACK_MODE
-  audio_delay.delay(0, 25);
-  mic_mixer.gain(0, STARTING_GAIN);
-  mic_mixer.gain(1, STARTING_GAIN);
-#endif
+    mixer2.gain(0, 0.33);
+    mixer2.gain(1, 0.33);
+    mixer2.gain(2, 0.5);
+    // Serial.println("Setting up the FFTManager to track the first channel");
+    // fft_manager.addInput(&patchCord_fft_input1);
+    // patchCord_fft_input2.disconnect();
+  }
+  else if (ARTEFACT_BEHAVIOUR == MATCH_PITCH_MODE)
+  {
+    mixer1.gain(0, STARTING_GAIN * 4);
+    mixer1.gain(1, STARTING_GAIN * 4);
+    sine_fm.amplitude(0.0);
+    sine_fm.frequency(200);
+  }
+  else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
+  {
+    audio_delay1.delay(0, 0);
+    mixer1.gain(0, STARTING_GAIN);
+    mixer1.gain(1, STARTING_GAIN);
+  }
 }
 
 #else // all other species other than Legatus
@@ -1977,22 +1921,22 @@ void setupAudio()
   // feature_collector 0-1 are for the song front/rear
   if (PEAK_FEATURE_ACTIVE)
   {
-    feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
+    feature_collector.linkPeak(&peak1, P_PEAK_VALS);
 #if NUM_PEAK_ANAS > 1
     feature_collector.linkPeak(&right_peak, P_PEAK_VALS);
 #endif
   }
 
 #if RMS_FEATURE_ACTIVE
-  feature_collector.linkRMS(&left_rms, P_RMS_VALS);
+  feature_collector.linkRMS(&rms1, P_RMS_VALS);
 #if NUM_RMS_ANAS > 1
-  feature_collector.linkRMS(&right_rms, P_RMS_VALS);
+  feature_collector.linkRMS(&rms2, P_RMS_VALS);
 #endif
 #endif
 
   if (FFT_FEATURES_ACTIVE)
   {
-    fft_manager[0].linkFFT(&left_fft, "Front");
+    fft_manager[0].linkFFT(&fft1, "Front");
 #if NUM_FFT > 1
     fft_manager[1].linkFFT(&right_fft, "Rear");
 #endif
@@ -2017,6 +1961,7 @@ void setupAudio()
   Serial.println("Feature collectors have been linked");
 
 #if ARTEFACT_TYPE != EXPLORATOR
+  left_amp.gain(STARTING_GAIN);
   /////////////////////////////////////////////////////////////////////
   left_HPF.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
   // left_HPF.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
@@ -2055,10 +2000,12 @@ void setupAudio()
 #if ARTEFACT_TYPE == SPECULATOR
 void speculatorSetup()
 {
-  // setup up some value tracker stuff
+// setup up some value tracker stuff
+#if COLOR_MAP_MODE == COLOR_MAPPING_HSB
   brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
   hue_tracker.setMinMaxUpdateFactor(HUE_MIN_UPDATE_FACTOR, HUE_MAX_UPDATE_FACTOR);
   saturation_tracker.setMinMaxUpdateFactor(SAT_MIN_UPDATE_FACTOR, SAT_MAX_UPDATE_FACTOR);
+#endif
 
   //////////////// User Controls /////////////////////////////
   explainSerialCommands(true);
@@ -2066,7 +2013,20 @@ void speculatorSetup()
 
   /////////////// User Controls ////////////////////////////////////////////
   // TODO make buttons do something for the speculators again
+#if DISABLE_USER_CONTROLS == false
 #if HV_MAJOR == 3
+
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &but_test[2], BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &but_test[3], BUT4_NAME);
+  uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, BUT5_LOW_CHANGES, &but_test[4], BUT5_NAME);
+  uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, BUT6_LOW_CHANGES, &but_test[5], BUT6_NAME);
+  uimanager.addBut(BUT7_PIN, BUT7_PULLUP, BUT7_LOW_VAL, BUT7_HIGH_VAL, BUT7_LOW_CHANGES, &but_test[6], BUT7_NAME);
+  uimanager.addBut(BUT8_PIN, BUT8_PULLUP, BUT8_LOW_VAL, BUT8_HIGH_VAL, BUT8_LOW_CHANGES, &but_test[7], BUT8_NAME);
+  uimanager.addBut(BUT9_PIN, BUT9_PULLUP, BUT9_LOW_VAL, BUT9_HIGH_VAL, BUT9_LOW_CHANGES, &but_test[8], BUT9_NAME);
+  uimanager.addBut(BUT10_PIN, BUT10_PULLUP, BUT10_LOW_VAL, BUT10_HIGH_VAL, BUT10_LOW_CHANGES, &but_test[9], BUT10_NAME);
+  /*
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &USE_TARGET_HUE, BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &SQUARE_BRIGHTNESS, BUT2_NAME);
   uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
@@ -2077,12 +2037,13 @@ void speculatorSetup()
   uimanager.addBut(BUT8_PIN, BUT8_PULLUP, BUT8_LOW_VAL, BUT8_HIGH_VAL, BUT8_LOW_CHANGES, &LED_MAPPING_MODE, BUT8_NAME);
   uimanager.addBut(BUT9_PIN, BUT9_PULLUP, BUT9_LOW_VAL, BUT9_HIGH_VAL, BUT9_LOW_CHANGES, &LED_MAPPING_MODE, BUT9_NAME);
   uimanager.addBut(BUT10_PIN, BUT10_PULLUP, BUT10_LOW_VAL, BUT10_HIGH_VAL, BUT10_LOW_CHANGES, &BOOT_DELAY_ACTIVE, BUT10_NAME);
+  */
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
-  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &ADDED_SATURATION, POT2_NAME);
-  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &BRIGHTNESS_CUTTOFF_THRESHOLD, POT4_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &user_brightness_cuttoff, POT2_NAME);
+  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &ADDED_SATURATION, POT4_NAME);
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
-  uimanager.addPotRange(1, 0.0, 0.2, 0.6);
+  uimanager.addPotRange(1, 0.0, 0.5, 1.0);
   uimanager.addPotRange(2, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
 #elif HV_MAJOR == 2
@@ -2093,21 +2054,73 @@ void speculatorSetup()
   uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, BUT5_LOW_CHANGES, &REVERSE_HUE, BUT5_NAME);
   uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, BUT6_LOW_CHANGES, &BOOT_DELAY_ACTIVE, BUT6_NAME);
 #endif
+  delay(50);
   uimanager.setup();
   uimanager.printAll();
+#endif
   ///////////////////////// Audio //////////////////////////
   setupAudio();
-
-  ///////////////////////// DL Manager //////////////////////////
-  // TODO
-  // setupDLManagerCicada();
-  // printMinorDivide();
 }
 #endif
+
+AudioConnection *audio_connections[20];
 
 #if ARTEFACT_TYPE == LEGATUS
 void legatusSetup()
 {
+  if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(mixer2, 0, output_usb, 0);
+    audio_connections[2] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[3] = new AudioConnection(audio_player, 0, biquad1, 0);
+    audio_connections[4] = new AudioConnection(audio_player, 1, biquad2, 0);
+    audio_connections[5] = new AudioConnection(mixer1, 0, output_usb, 1);
+    audio_connections[6] = new AudioConnection(mixer1, biquad3);
+    audio_connections[7] = new AudioConnection(biquad1, amp1);
+    audio_connections[8] = new AudioConnection(biquad2, amp2);
+    audio_connections[9] = new AudioConnection(biquad3, biquad4);
+    audio_connections[10] = new AudioConnection(amp1, 0, audioOutput, 0);
+    audio_connections[11] = new AudioConnection(amp1, 0, mixer2, 0);
+    audio_connections[12] = new AudioConnection(amp2, 0, audioOutput, 1);
+    audio_connections[13] = new AudioConnection(amp2, 0, mixer2, 1);
+    audio_connections[14] = new AudioConnection(biquad4, amp3);
+    audio_connections[15] = new AudioConnection(amp3, 0, mixer2, 2);
+    audio_connections[16] = new AudioConnection(mixer2, rms1);
+    audio_connections[17] = new AudioConnection(mixer2, fft1);
+    audio_connections[18] = new AudioConnection(mixer2, peak1);
+  }
+  else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
+    audio_connections[3] = new AudioConnection(mixer1, biquad3);
+    audio_connections[4] = new AudioConnection(biquad3, biquad4);
+    audio_connections[5] = new AudioConnection(biquad4, amp3);
+    audio_connections[6] = new AudioConnection(amp3, rms1);
+    audio_connections[7] = new AudioConnection(amp3, fft1);
+    audio_connections[8] = new AudioConnection(amp3, peak1);
+    audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
+    audio_connections[10] = new AudioConnection(audio_delay1, 0, audioOutput, 0);
+    audio_connections[11] = new AudioConnection(audio_delay1, 0, audioOutput, 1);
+    audio_connections[12] = new AudioConnection(amp3, 0, audio_delay1, 0);
+  }
+  else if (ARTEFACT_BEHAVIOUR == FM_FEEDBACK_MODE)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
+    audio_connections[3] = new AudioConnection(mixer1, biquad3);
+    audio_connections[4] = new AudioConnection(biquad3, biquad4);
+    audio_connections[5] = new AudioConnection(biquad4, amp3);
+    audio_connections[6] = new AudioConnection(amp3, rms1);
+    audio_connections[7] = new AudioConnection(amp3, fft1);
+    audio_connections[8] = new AudioConnection(amp3, peak1);
+    audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
+    audio_connections[10] = new AudioConnection(amp3, sine_fm);
+    audio_connections[1] = new AudioConnection(sine_fm, 0, audioOutput, 0);
+  }
   // setup up some value tracker stuff
   brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
   hue_tracker.setMinMaxUpdateFactor(HUE_MIN_UPDATE_FACTOR, HUE_MAX_UPDATE_FACTOR);
@@ -2119,9 +2132,9 @@ void legatusSetup()
 
   /////////////// User Controls ////////////////////////////////////////////
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
-  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
-  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &but_test[2], BUT3_NAME);
-  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &but_test[3], BUT4_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &PLAYBACK_ACTIVE, BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &FM_FEEDBACK_ACTIVE, BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &FEEDBACK_ACTIVE, BUT4_NAME);
   uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, BUT5_LOW_CHANGES, &but_test[4], BUT5_NAME);
   uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, BUT6_LOW_CHANGES, &but_test[5], BUT6_NAME);
 
@@ -2149,36 +2162,133 @@ void speculatorLoop()
   // Serial.print("dominate channel is : ");
   // Serial.println(dominate_channel);
 #endif
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB)
-  {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
-    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-    printHSB();
-    printRGB();
+#if COLOR_MAP_MODE == COLOR_MAPPING_HSB
 
-    s = s * 2;
-    if (s > 1.0)
-    {
-      s = 1.0;
+  double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
+  double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
+  double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
+  printHSB();
+  printRGB();
+
+  s = s * 2;
+  if (s > 1.0)
+  {
+    s = 1.0;
+  }
+
+  // if (feature_collector.isActive() == true) {
+  neos[0].colorWipeHSB(h, s, b); // now colorWipe the LEDs with the HSB value
+  // } else {
+  // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
+  // }
+
+#elif COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR
+  updateFeedbackLEDs(&fft_manager[dominate_channel]);
+  // Serial.println("Finished running updateFeedbackLEDs()");
+  // delay(2000);
+#elif COLOR_MAP_MODE == COLOR_MAPPING_RGB
+  // determine the amount of energy contained in each of the three bands
+  float total_energy = fft_manager[0].getFFTTotalEnergy() * 0.25;
+  int front_inside_out_order[20] = {16, 17, 18, 19, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  int rear_inside_out_order[20] = {36, 37, 38, 39, 30, 31, 32, 33, 34, 35, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+  Serial.print("total energy : ");
+  Serial.print(total_energy, 6);
+  total_energy = constrainf(total_energy, 0.0, 1.0);
+  Serial.print("\t");
+  Serial.println(total_energy, 6);
+
+  // map each individual LED to a range of four bins
+  for (int i = 0; i < 20; i++)
+  {
+    int idx_start = (i * 6) + 10;
+
+    // amount of energy contained in the bin multiplied by the number of bins (ignoring the second half)
+    double r = pow((idx_start * (fft_manager[0].getFFTRangeByIdx(idx_start, idx_start + 18))), 0.5) * (user_brightness_scaler - user_brightness_scaler * 0.5);
+    idx_start += 2;
+    double g = pow((idx_start * (fft_manager[0].getFFTRangeByIdx(idx_start, idx_start + 18))), 0.5) * (user_brightness_scaler - user_brightness_scaler * 0.5);
+    idx_start += 2;
+    double b = pow((idx_start * (fft_manager[0].getFFTRangeByIdx(idx_start, idx_start + 18))), 0.5) * (user_brightness_scaler - user_brightness_scaler * 0.5);
+
+    // scale up the values between 0.0 and 255 for NeoPixel color values
+    Serial.print("r: ");
+    Serial.print(r);
+    Serial.print("\t");
+    r = constrainf(r/3, 0.0, 0.75);
+    r = r - user_brightness_cuttoff;
+    r = constrainf(r, 0.0, 0.75);
+    Serial.print(r);
+    Serial.print("\t");
+    Serial.println(user_brightness_cuttoff);
+
+    g = constrainf(g/3, 0.0, 0.75);
+    g = g - user_brightness_cuttoff;
+    g = constrainf(g, 0.0, 0.75);
+
+    b = constrainf(b/3, 0.0, 0.75);
+    b = b - user_brightness_cuttoff;
+    b = constrainf(b, 0.0, 0.75);
+
+    g = (r + g + b)/2.25;
+    g = constrainf(g, 0.0, 1.0);
+
+    double h = pow(g, 0.5);
+    double s = 1.0 - pow((g), 0.5);
+    s = s + ADDED_SATURATION;
+    if (s < 1.0){
+      s = 1.0 - s;
+    } else if (s > 1.0) {
+      s = s - 1.0;
     }
+    double br = pow(g, 2);
 
-    // if (feature_collector.isActive() == true) {
-    neos[0].colorWipeHSB(h, s, b); // now colorWipe the LEDs with the HSB value
-    // } else {
-    // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
-    // }
+  if ( i == 10) {
+    Serial.print(" h,s,b : ");
+    Serial.print(h);
+    Serial.print("\t");
+    Serial.print(s);
+    Serial.print("\t");
+    Serial.println(br);
   }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR)
-  {
-    updateFeedbackLEDs(&fft_manager[dominate_channel]);
-    // Serial.println("Finished running updateFeedbackLEDs()");
-    // delay(2000);
+    neos[0].colorWipeHSB(h, s, br, user_brightness_scaler, front_inside_out_order[i], front_inside_out_order[i]);
+    neos[0].colorWipeHSB(h, s, br, user_brightness_scaler, rear_inside_out_order[i], rear_inside_out_order[i]);
   }
-  else
+  // use the total energy to influence the brightness
+  /*
+  total_energy = constrainf((total_energy - 0.02) * 20, 0.0, 1.0);
+
+  Serial.print("\t");
+  Serial.println(total_energy, 6);
+  Serial.print("total energy : ");
+  Serial.print(total_energy, 6);
+  // use the total energy to influence the brightness
+  total_energy = constrainf((total_energy - 0.02) * 20, 0.0, 1.0);
+
+  Serial.print("\t");
+  Serial.println(total_energy, 6);
+
+  Serial.print("r,g,b : ");
+  Serial.print(r);
+  Serial.print("\t");
+  Serial.print(g);
+  Serial.print("\t");
+  Serial.print(b);
+
+  // inner rings
+  neos[0].colorWipe(r, 255 - r, 255 - r, total_energy, 16, 19);
+  neos[0].colorWipe(r, 255 - r, 255 - r, total_energy, 36, 39);
+  // middle rings
+  neos[0].colorWipe(255 - g, g, 255 - g, total_energy, 10, 15);
+  neos[0].colorWipe(255 - g, g, 255 - g, total_energy, 30, 35);
+  // outer rings
+  neos[0].colorWipe(255 - b, 255 - b, b, total_energy, 0, 9);
+  neos[0].colorWipe(255 - b, 255 - b, b, total_energy, 20, 29);
+  */
+
+#else
   {
     Serial.println("ERROR = that color mode is not implemented in update neos");
   }
+#endif // visual feedback
 }
 #endif // ARTEFACT_TYPE == SPECULATOR
 
@@ -2248,12 +2358,12 @@ void exploratorSetup()
 
   configurePlaybackEngine();
 
-  fft_manager[0].linkFFT(&left_fft, "All");
+  fft_manager[0].linkFFT(&fft1, "All");
   fft_manager[0].setCalculateCent(true);
   fft_manager[0].setCalculateFlux(false);
 
-  feature_collector.linkPeak(&left_peak, P_PEAK_VALS);
-  // feature_collector.linkRMS(&left_rms, P_PEAK_VALS);
+  feature_collector.linkPeak(&peak1, P_PEAK_VALS);
+  // feature_collector.linkRMS(&rms1, P_PEAK_VALS);
 
   printMinorDivide();
   Serial.println("Finished setup Loop");
@@ -2393,7 +2503,9 @@ void setupLuxManager()
 void extremeHumidityShutdown()
 {
   colorWipeAll(0, 0, 0);
+#if ARTEFACT_TYPE == LEGATUS
   digitalWrite(PWR_KILL_PIN, LOW);
+#endif
 }
 
 void extremeTemperatureShutdown()
@@ -2615,7 +2727,7 @@ void buildPeckRhythm(int idx, uint32_t quarter)
 elapsedMillis loop_tmr;
 const int loop_print_delay = 1000;
 
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
+#if ARTEFACT_TYPE == LEGATUS
 void legatusLoopSamplePlayback()
 {
   updateLegatusPassiveLEDs();
@@ -2631,15 +2743,12 @@ void legatusLoopSamplePlayback()
   {
     Serial.print("PLAYBACK_INTERVAL is : ");
     Serial.println(PLAYBACK_INTERVAL);
-    playFile(audio_file_names[random(0, NUM_AUDIO_FILES)]);
+    playFile(audio_file_names[random(0, NUM_AUDIO_FILES)], 0.5);
     // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
     last_playback_tmr = 0;
     Serial.println("last_playback_tmr is reset now to 0");
   }
 }
-#endif // ARTEFACT_TYPE == LEGATUS (sample playback)
-
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == FEEDBACK_MODE
 
 void activateFeedback(float amp, float dur)
 {
@@ -2663,7 +2772,7 @@ void activateFeedback(float amp, float dur)
     updateLegatusPassiveLEDs();
     Serial.print("gain is : ");
     Serial.println(i);
-    mic_amp.gain(i);
+    amp3.gain(i);
     delay(10);
   }
 
@@ -2678,7 +2787,7 @@ void activateFeedback(float amp, float dur)
       amp = 0.04;
     }
     uimanager.update();
-    mic_amp.gain(amp);
+    amp3.gain(amp);
     */
     updateLegatusPassiveLEDs();
     delay(10);
@@ -2689,19 +2798,19 @@ void activateFeedback(float amp, float dur)
   for (float i = amp; i > 0.0; i = i - 0.001)
   {
     updateLegatusPassiveLEDs();
-    mic_amp.gain(i);
+    amp3.gain(i);
     delay(10);
     Serial.print("gain is : ");
     Serial.println(i);
   }
-  mic_amp.gain(0.0);
+  amp3.gain(0.0);
 }
 
 void legatusLoopFeedback()
 {
   updateLegatusPassiveLEDs();
   uimanager.update();
-  int avg_time = 1000 * 60 * 0.5;
+  int avg_time = 1000 * 60 * 2.0;
   float temp = weather_manager.getTemperature();
   float humid = weather_manager.getHumidity();
   PLAYBACK_INTERVAL = avg_time - (temp * (avg_time / 40)) + (humid * (avg_time / 100)); // uint16_t t = random(45, 150);
@@ -2727,10 +2836,6 @@ void legatusLoopFeedback()
   }
 }
 
-#endif
-
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MATCH_PITCH_MODE
-
 void activateFM(int t, float freq, float amp)
 {
   if (amp > 1.0)
@@ -2744,9 +2849,9 @@ void activateFM(int t, float freq, float amp)
   Serial.print("\t");
   Serial.println(amp);
 
-  mic_amp.gain(STARTING_GAIN * amp);
+  amp3.gain(STARTING_GAIN * amp * USER_CONTROL_PLAYBACK_GAIN);
   sine_fm.frequency(freq);
-  for (float i = 0.0; i < amp * 0.1; i = i + 0.0001)
+  for (float i = 0.0; i < 1.0; i = i + 0.0001)
   {
     // make sure we dont pass an amp over 1.0
     if (i > 1.0)
@@ -2754,8 +2859,9 @@ void activateFM(int t, float freq, float amp)
       i = 1.0;
     }
     updateLegatusPassiveLEDs();
-    sine_fm.amplitude(i);
-    delay(10);
+    uimanager.update();
+    sine_fm.amplitude(i * USER_CONTROL_PLAYBACK_GAIN);
+    delay(5);
   }
   for (float i = 0; i < 20; i++)
   {
@@ -2768,25 +2874,29 @@ void activateFM(int t, float freq, float amp)
     elapsedMillis m;
     while (m < d_time)
     {
+      uimanager.update();
+      sine_fm.amplitude(USER_CONTROL_PLAYBACK_GAIN);
+      // amp3.gain(STARTING_GAIN * amp * USER_CONTROL_PLAYBACK_GAIN);
       updateLegatusPassiveLEDs();
       delay(20);
     }
   }
-  for (float i = amp * 0.1; i > 0.0; i = i - 0.0001)
+  for (float i = 1.0; i > 0.0; i = i - 0.0001)
   {
     updateLegatusPassiveLEDs();
-    sine_fm.amplitude(i);
+    uimanager.update();
+    sine_fm.amplitude(i * USER_CONTROL_PLAYBACK_GAIN);
     delay(10);
   }
   sine_fm.amplitude(0.0);
-  mic_amp.gain(STARTING_GAIN);
+  amp3.gain(STARTING_GAIN);
 }
 
-void legatusLoopMatchPitch()
+int avg_time = 1000 * 60 * 2.0;
+void legatusLoopFM()
 {
   updateLegatusPassiveLEDs();
   uimanager.update();
-  int avg_time = 1000 * 60 * 0.5;
   float temp = weather_manager.getTemperature();
   float humid = weather_manager.getHumidity();
   PLAYBACK_INTERVAL = avg_time - (temp * (avg_time / 40)) + (humid * (avg_time / 100)); // uint16_t t = random(45, 150);
@@ -2797,11 +2907,13 @@ void legatusLoopMatchPitch()
   }
   if (last_playback_tmr > PLAYBACK_INTERVAL)
   {
+    avg_time = 1000 * 60 * random(1, 4);
     Serial.print("PLAYBACK_INTERVAL is : ");
     Serial.println(PLAYBACK_INTERVAL);
-    float factor = random(1, 8);
+    float factor = random(1, 16);
     float base_freq = factor * ((temp * 2) + (humid * 2));
-    activateFM(PLAYBACK_INTERVAL, base_freq, 0.5);
+    float amp = 0.5 + random(0, 1000) / 1000;
+    activateFM(PLAYBACK_INTERVAL, base_freq, amp);
     // turn on oscillator
     // let it run for a period of time
     // turn off oscillator
@@ -2812,7 +2924,7 @@ void legatusLoopMatchPitch()
   }
 }
 
-#endif // ARTEFACT_TYPE == LEGATUS (match pitch)
+#endif // ARTEFACT_TYPE == LEGATUS (for all types)
 
 #if SD_PRESENT
 void initSD()
@@ -3055,6 +3167,27 @@ void setup()
   printMajorDivide("Now starting main() loop");
 }
 
+int determineLegatusBehavior()
+{
+  if (FM_FEEDBACK_ACTIVE == true)
+  {
+    return FM_FEEDBACK_MODE;
+  }
+  else if (FEEDBACK_ACTIVE == true)
+  {
+    return FEEDBACK_MODE;
+  }
+  else if (PLAYBACK_ACTIVE == true)
+  {
+    return PLAYBACK_MODE;
+  }
+  else if (MATCH_PITCH_ACTIVE == true)
+  {
+    return MATCH_PITCH_MODE;
+  }
+  return 0;
+}
+
 void loop()
 {
   //////////////// Testing ///////////////////////////////////
@@ -3083,12 +3216,15 @@ void loop()
   ///////////////// User Controls ////////////////////////////
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #else
-  if (uimanager.update() && P_USER_CONTROLS)
+  if (uimanager.update())
   {
-    uimanager.printAll();
-    for (int i = 0; i < NUM_NEOP_MANAGERS; i++)
+    if (P_USER_CONTROLS)
     {
-      neos[i].changeMapping(LED_MAPPING_MODE);
+      uimanager.printAll();
+      for (int i = 0; i < NUM_NEOP_MANAGERS; i++)
+      {
+        neos[i].changeMapping(LED_MAPPING_MODE);
+      }
     }
   }
 #endif
@@ -3121,15 +3257,24 @@ void loop()
 #if ARTEFACT_TYPE == SPECULATOR
     speculatorLoop();
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
-  exploratorMBLoop();
+    exploratorMBLoop();
 #elif ARTEFACT_TYPE == EXPLORATOR
   exploratorLoop();
-#elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == PLAYBACK_MODE
-  legatusLoopSamplePlayback();
-#elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MATCH_PITCH_MODE
-  legatusLoopMatchPitch();
-#elif ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == FEEDBACK_MODE
-  legatusLoopFeedback();
+#elif ARTEFACT_TYPE == LEGATUS
+  uimanager.update();
+  ARTEFACT_BEHAVIOUR = determineLegatusBehavior();
+  if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
+  {
+    legatusLoopSamplePlayback();
+  }
+  else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
+  {
+    legatusLoopFeedback();
+  }
+  else if (ARTEFACT_BEHAVIOUR == FM_FEEDBACK_MODE)
+  {
+    legatusLoopFM();
+  }
 #endif
     // Serial.println("Artefact Specific update function finished running");
     // delay(1000);

@@ -10,6 +10,9 @@
 
 #define NUM_AUDIO_FILES           19
 
+#define USE_RAW_AUDIO_PLAYER      false
+
+#if USE_RAW_AUDIO_PLAYER == false
 const char *audio_file_names[] = {
   "CHAIN1.WAV",
   "CICADA1.WAV",
@@ -31,6 +34,29 @@ const char *audio_file_names[] = {
   "SEWING2.WAV",
   "SEWING3.WAV"
 };
+#else
+const char *audio_file_names[] = {
+  "CHAIN1.raw",
+  "CICADA1.raw",
+  "CICADA2.raw",
+  "CICADA3.raw",
+  "CICADA4.raw",
+  "CICADA5.raw",
+  "FROGS1.raw",
+  "FROGS2.raw",
+  "FROGS3.raw",
+  "CHICK1.raw",
+  "CODE1.raw",
+  "PRESS1.raw",
+  "PRESS2.raw",
+  "FIRE1.raw",
+  "FIRE2.raw",
+  "FIRE3.raw",
+  "SEWING1.raw",
+  "SEWING2.raw",
+  "SEWING3.raw"
+};
+#endif
 
 // This value is used to calculate how long between unit actuations
 uint32_t      PLAYBACK_INTERVAL = 0;

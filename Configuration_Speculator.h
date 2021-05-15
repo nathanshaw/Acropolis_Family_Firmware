@@ -1,4 +1,4 @@
-/* This is the main configuration file for the Moth Framework
+                   /* This is the main configuration file for the Moth Framework
    Using this file, along with the other configuration files you
    Can cistomise how the firmware performs.
 */
@@ -51,7 +51,7 @@
 /////////////////////////// System Performance /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 #define MAX_FPS                         60.0
-elapsedMillis loop_tmr = 0;
+
 uint32_t loop_length = (uint32_t)((double)1000.0 / (double)MAX_FPS);
 
 ////////////////////////////////////////////////////////////////////////////
@@ -149,9 +149,6 @@ bool stereo_audio =                           true;
 #define PEAK_LOG_RESET_MIN                    2000
 #define RMS_LOG_RESET_MIN                     2000
 
-// Which Audio features will be activated?
-#define PEAK_FEATURE_ACTIVE                    1
-#define RMS_FEATURE_ACTIVE                     0
 // these features are not currently implemented
 // #define TONE_FEATURE_ACTIVE                 1
 // #define FREQ_FEATURE_ACTIVE                 1
@@ -225,7 +222,9 @@ double onset_cent = 0.0;
 
 ////////////////////////////////// RANDOM stuff ///////////////////////////////////
 // this is a high value to force jumper readings in the setup() loop
-elapsedMillis last_jumper_read = 100000;
+elapsedMillis last_audio_use_print = 0;
+#define AUDIO_USE_RESET_RATE         20000
+
 #if P_FUNCTION_TIMES == true
 elapsedMillis function_times = 0;
 #endif // P_FUNCTION_TIMES
