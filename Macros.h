@@ -23,6 +23,13 @@
 #define MACROS_H
 
 ////////////////////////////////////////////////////////////////////////////
+///////////////////////// Scaling Modes ////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+#define LINEAR_SCALING                  0
+#define EXP_SCALING                     1
+#define LOG_SCALING                     2
+
+////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Operating Modes //////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 // artefact family
@@ -33,15 +40,35 @@
 // the current modes, or software driven functionality in which 
 // the firmware should use.
 #define TEST_MODE                       0
+// speculator modes
 #define CICADA_MODE                     1
 #define PITCH_MODE                      2
 #define CICADA_MODE_NEW                 3
 
+// Explorator modes
+#define CLAP_BACK_MODE            101
+
+// Legatus modes
+
+#define ECHO_FEEDBACK_MODE        200
+#define MATCH_PITCH_MODE          201
+#define FEEDBACK_MODE             202
+#define FM_FEEDBACK_MODE          203
+#define PLAYBACK_MODE             204
+#define REACTIVE_MODE             205
+#define MODULAR_LEGATUS_MODE      206
+
 ///////////////////// ENCLOSURE_TYPES /////////////////////
 #define ORB_ENCLOSURE_WITH_HOLE         0
-#define ORB_ENCLOSURE_WITHOUT_HOLE      1
+#define ORB_ENCLOSURE                   1
 #define GROUND_ENCLOSURE                2
 #define NO_ENCLOSURE                    3
+#define LEGATUS_ENCLOSURE               10
+#define EXPLORATOR_MB_ENCLOSURE         20
+#define EXPLORATOR_CLAPPER_ENCLOSURE    21
+#define EXPLORATOR_PECKER_ENCLOSURE     22
+#define EXPLORATOR_CHURPER_ENCLOSURE    23
+#define EXPLORATOR_SHAKER_ENCLOSURE     24
 
 ///////////////////// Audio Features //////////////////////
 // Some macros to make it easier to set some software settings

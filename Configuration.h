@@ -84,15 +84,6 @@ float ADDED_SATURATION  = 0.4;
 // For the Speculator.....
 // FIRMWARE MODE should be set to  CICADA_MODE, PITCH_MODE, or TEST_MODE
 // depending on what functionality you want
-// For the Explorator......
-#define REACTIVE_MODE             100
-#define MODULAR_LEGATUS_MODE      98
-
-#define ECHO_FEEDBACK_MODE        1
-#define MATCH_PITCH_MODE          2
-#define FEEDBACK_MODE             3
-#define FM_FEEDBACK_MODE          4
-#define PLAYBACK_MODE             5
 
 int MATCH_PITCH_ACTIVE = false;
 int FEEDBACK_ACTIVE = false;
@@ -104,7 +95,6 @@ int PLAYBACK_ACTIVE = false;
 #elif ARTEFACT_TYPE == LEGATUS
 #define FIRMWARE_MODE             MODULAR_LEGATUS_MODE
 // uses incomming audio as the carrier for a FM synthesis patch
-
 int ARTEFACT_BEHAVIOUR =          FM_FEEDBACK_MODE;
 // this needs to be a number which does not correspond to a mode so the audio system connects properly when needed.
 int LAST_ARTEFACT_BEHAVIOR =      -1;
@@ -234,6 +224,52 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 
 #endif // ARTEFACT_TYPE for Lux thresholds
 
+
+///////////////////////////////////////////////////////////
+////////////////// Weather Manager Effecting Feedback /////
+///////////////////////////////////////////////////////////
+bool HUMID_OFFSETS_FEEDBACK                  =  false;
+#define HUMID_OFFSETS_HUE                       true
+#define HUMID_OFFSETS_SAT                       true
+#define HUMID_OFFSETS_BGT                       true
+#define HUMID_OFFSET_MIN_VAL                    0.2
+#define HUMID_OFFSET_MAX_VAL                    0.8
+#define MIN_HUMID_OFFSET                        -0.1
+#define MAX_HUMID_OFFSET                        0.1
+#define HUMID_FEEDBACK_SCALING                  LINEAR_SCALING
+
+bool TEMP_OFFSETS_FEEDBACK                   =  true;
+#define TEMP_OFFSETS_HUE                       true
+#define TEMP_OFFSETS_SAT                       true
+#define TEMP_OFFSETS_BGT                       false
+#define TEMP_OFFSET_MIN_VAL                     5
+#define TEMP_OFFSET_MAX_VAL                     25
+#define MIN_TEMP_OFFSET                         -0.3
+#define MAX_TEMP_OFFSET                         0.3
+#define TEMP_FEEDBACK_SCALING                  LINEAR_SCALING
+
+bool HUMID_SCALES_FEEDBACK               =  true;
+// these are the fo;r the humidity values, not the constraining
+#define HUMID_SCALES_HUE                    true
+#define HUMID_SCALES_SAT                    false
+#define HUMID_SCALES_BGT                    false
+#define HUMID_SCALE_MIN_THRESH              0.2
+#define HUMID_SCALE_MAX_THRESH                0.8
+#define HUMID_SCALE_AMOUNT                  0.5
+// where the contrain will focus it's center
+#define HUMID_SCALE_CENTER                  0.5
+
+bool TEMP_SCALES_FEEDBACK               =  false;
+// these are the fo;r the humidity values, not the constraining
+#define TEMP_SCALES_HUE                    false
+#define TEMP_SCALES_SAT                    false
+#define TEMP_SCALES_BGT                    false
+#define TEMP_SCALE_MIN_THRESH              0.2
+#define TEMP_SCALE_MAX_THRESH                0.8
+#define TEMP_SCALE_AMOUNT                  0.5
+// where the contrain will focus it's center
+#define TEMP_SCALE_CENTER                  0.5
+
 /////////////////////////////// Lighting Conditions ///////////////////////////////////
 // TODO this should be triggered by the light sensor and then determine the mapping
 #define LC_NIIGHT                       0
@@ -262,15 +298,15 @@ uint16_t  MAX_BRIGHTNESS =              765;
 // on scale of 0-1.0 what is the min multiplier for the user defined brightness scaler
 // 0.05 was too low, did not provide good enough feedback for the night time
 #if (ARTEFACT_TYPE == SPECULATOR) || (ARTEFACT_TYPE == LEGATUS)
-#define LUX_BS_MIN                      0.75
-#define LUX_BS_MAX                      2.50
+#define LUX_BS_MIN                      0.25
+#define LUX_BS_MAX                      1.50
 #else
 #define LUX_BS_MIN                      0.75
 #define LUX_BS_MAX                      1.50
 #endif
 /////////////////////////////// Update Regularity //////////////////////////
-uint32_t lux_max_reading_delay =        1000 * 60 * 3;   // every 3 minute
-uint32_t lux_min_reading_delay =        1000 * 10;       // ten seconds
+uint32_t lux_max_reading_delay =        1000 * 60 * 1;   // every 3 minute
+uint32_t lux_min_reading_delay =        1000 * 2;       // ten seconds
 
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR > 2
 #define USER_BRIGHT_THRESH_OVERRIDE            true
@@ -283,7 +319,7 @@ float user_brightness_cuttoff = 0.15;
 #elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 2
 float user_brightness_cuttoff = 0.01;
 #elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 3
-float user_brightness_cuttoff = 0.3;
+float user_brightness_cuttoff = 0.01;
 #else 
 float user_brightness_cuttoff = 0.0;
 #endif//FIRMWARE_MODE
@@ -294,6 +330,16 @@ float user_brightness_cuttoff = 0.0;
 // this is needed for the forced lux
 #define UPDATE_ON_OFF_RATIOS            false
 
+/////////////////////////// Onsets //////////////////////
+#if ARTEFACT_TYPE == SPECULATOR
+#if FIRMWARE_MODE == CICADA_MODE
+bool onset_detection_active      =   true;
+#elif FIRMWARE_MODE == PITCH_MODE
+bool onset_detection_active      =   false;
+#endif// FIRMWARE_MODE
+#else 
+bool onset_detection_active      =   false;
+#endif // ARTEFACT_TYPE
 // when onset detection is active, this will be the threshold
 double ONSET_THRESH =                   1.20;
 
@@ -313,7 +359,7 @@ double ONSET_THRESH =                   1.20;
 #define LED_MAPPING_CUSTOM        7
 
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
-int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
+int LED_MAPPING_MODE = LED_MAPPING_CLOCK_FILL;
 #else
 int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
@@ -430,14 +476,17 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 
 // if false, a onset detected on either side results in a LED flash on both sides
 // if true, a onset detected on one side will only result in a flash on that side
-int INDEPENDENT_FLASHES =              false; // WARNING NOT IMPLEMENTED - TODO
-
+int INDEPENDENT_ONSETS =               false; // WARNING NOT IMPLEMENTED - TODO
 int FLASH_DOMINATES =                  false;
 
 // if this is true then the brightness will b = (b + b) * b; in order to reduce its value, and make loud events even more noticable
 int SQUARE_BRIGHTNESS =                false;
 
-int SATURATED_COLORS =                 true;
+#if FIRMWARE_MODE == CICADA_MODE
+bool SATURATED_COLORS =                 false;
+#else
+bool SATURATED_COLORS =                 true;
+#endif
 
 // how high the onset flash timer will go up to
 #define MAX_FLASH_TIME                  60
@@ -541,16 +590,16 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_NEO_COLORS                    false
 
 //////////////////////// LuxManager and Ambiant Lighting ///////////////
-#define P_LUX_MANAGER_READINGS          false
-#define P_EXTREME_LUX                   false
+#define P_LUX_MANAGER_READINGS          true
+#define P_EXTREME_LUX                   true
 // sets p_lux_readings within the lux_manager but also the NeoPixelManager
-#define P_LUMIN                         false
+#define P_LUMIN                         true
 // sets p_lux within the lux_manager
-#define P_LUX_READINGS                  false
+#define P_LUX_READINGS                  true
 // sets general debug printing for the lux_manager class
-#define P_LUX_MANAGER_DEBUG             false
+#define P_LUX_MANAGER_DEBUG             true
 // sets print_brightness_scaler within the lux_manager
-#define P_BS                            false
+#define P_BS                            true
 
 //
 #define P_CALCULATE_BRIGHTNESS_LENGTH   false
@@ -622,7 +671,7 @@ elapsedMillis last_audio_usage_print;
 ////////////////////////////////////////////////////////////////////////////
 
 // will print readings from jumpers and pots
-#define P_USER_CONTROLS                           true
+#define P_USER_CONTROLS                           false
 
 ///////////////////////// Solenoids //////////////////////////////////////////
 #define P_SOLENOID_DEBUG                          false
@@ -900,7 +949,7 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #elif ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 // 240.00 is good for the better mics?
-#define STARTING_GAIN                         (240.0 * 1.0)
+#define STARTING_GAIN                         240.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY
@@ -934,15 +983,14 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #define RBQ2_DB             -12
 
 #elif ARTEFACT_TYPE == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
-// SONG HP
+// Mix HP
 #define LBQ1_THRESH         400
 #define LBQ1_Q              1.0
 #define LBQ1_DB             -12
-// SONG LP
+// Mix LP
 #define LBQ2_THRESH         20000
 #define LBQ2_Q              1.0
 #define LBQ2_DB             -12
-
 // Should be Inactive
 #define RBQ1_THRESH         400
 #define RBQ1_Q              1.0
@@ -951,7 +999,6 @@ float USER_CONTROL_PLAYBACK_GAIN                     = 0.5;
 #define RBQ2_THRESH         20000
 #define RBQ2_Q              0.85
 #define RBQ2_DB             -12
-
 //////////////////
 #elif ARTEFACT_TYPE == EXPLORATOR
 // SONG HP
@@ -1052,7 +1099,7 @@ double hue_max =                                0.0;
 // When the color mapping is using HSB, this will be where the features used are determined
 #if ARTEFACT_TYPE == SPECULATOR
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
-uint8_t SATURATION_FEATURE  =               FEATURE_PEAK_AVG;
+uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
 uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_ENERGY;
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
@@ -1076,7 +1123,7 @@ int REVERSE_HUE            =               false;
 
 // For the neopixels will the color mapping exist within the RGB or HSB domain?
 #if ARTEFACT_TYPE == SPECULATOR
-#define COLOR_MAP_MODE                       COLOR_MAPPING_RGB
+#define COLOR_MAP_MODE                       COLOR_MAPPING_HSB
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == CLAPPER_BODY
 int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == SHAKER_BODY

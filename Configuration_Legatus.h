@@ -1,6 +1,12 @@
 #ifndef __LEGATUS_CONFIGURATION_H__
 #define __LEGATUS_CONFIGURATION_H__
 
+#ifndef __MACROS_H__
+#include "Macros.h"
+#endif
+
+ENCLOSURE_TYPE = LEGATUS_ENCLOSURE;
+
 #if FIRMWARE_MODE == FEEDBACK_MODE
 #define AUDIO_MEMORY              90
 #else

@@ -11,26 +11,27 @@
 // ORB_ENCLOSURE_WITHOUT_HOLE, and NO_ENCLOSURE
 // if it is unknown what enclosure will be paired with the PCB
 // it is recommended to map ENCLOSURE_TYPE to a physical switch
-uint8_t ENCLOSURE_TYPE =          ORB_ENCLOSURE_WITHOUT_HOLE;
+uint8_t ENCLOSURE_TYPE =          ORB_ENCLOSURE;
 
-///////////////////// TODO - double check that is does something ////////////////////
-// different enclosures result in varying attenuation levels
-// ENC_GAIN_ADJUST is automatically calculated based on
+////////////////////////////////////////////////////////////
+// different enclosures result in varying gain levels
+// ENCLOSURE_GAIN_FACTOR is automatically calculated based on
 // the ARTEFACT_TYPE and ENCLOSURE_TYPE
 #if ARTEFACT_TYPE == SPECULATOR
 #if ENCLOSURE_TYPE == ORB_ENCLOSURE_WITH_HOLE
-double ENC_GAIN_ADJUST =        1.0;
+double ENCLOSURE_GAIN_FACTOR =        1.0;
 #elif ENCLOSURE_TYPE == ORB_ENCLOSURE_WITHOUT_HOLE
-double ENC_GAIN_ADJUST =        2.0;
+double ENCLOSURE_GAIN_FACTOR =        2.0;
 #elif ENCLOSURE_TYPE == GROUND_ENCLOSURE
-double ENC_GAIN_ADJUST =        3.0;
+double ENCLOSURE_GAIN_FACTOR =        3.0;
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
-double ENC_GAIN_ADJUST =        0.75;
+double ENCLOSURE_GAIN_FACTOR =        0.75;
 #endif // ENCLOSURE_TYPE
+
 #elif ARTEFACT_TYPE == EXPLORATOR
-double ENC_GAIN_ADJUST =        1.0;
+double ENCLOSURE_GAIN_FACTOR =        1.0;
 #elif ARTEFACT_TYPE == LEGATUS
-double ENC_GAIN_ADJUST =        1.0;
+double ENCLOSURE_GAIN_FACTOR =        1.0;
 #endif // ARTEFACT_TYPE
 
 //////////////////////////////////////////////////////////////////
