@@ -211,9 +211,13 @@ void rampMotor(int which, int16_t start, int16_t target, int ramp_total_time)
 #endif // motor stuff
 
 #if DATALOG_ACTIVE == true
-#include <SD.h>
-#include <SerialFlash.h>
-#include <EEPROM.h>
+#include <DLManager.h>
+//#include <SerialFlash.h>
+//#include <EEPROM.h>
+DLManager datalog_manager = DLManager();
+#if LOG_RUNTIME
+datalog_manager.addAutolog("runtime", runtime);
+#endif // log runtime
 #endif // DATALOG_ACTIVE
 
 #if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == BELL_BODY
@@ -783,9 +787,9 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
   }
 
   /////////////////////////// Apply user brightness scaler ////////////////////////
-  if (USER_BS_ACTIVE > 0)
+  if (USER_BS_ACTIVE > 0 && (user_brightness_scaler > 1.001 || user_brightness_scaler < 0.999))
   {
-    dprint(P_BS + P_BRIGHTNESS, "changing brightness due to user_brightness_scaler (scaler is: ");
+    dprint(P_BS + P_BRIGHTNESS, "brightness adj due to user_bs (scaler is: ");
     dprint(P_BS + P_BRIGHTNESS, user_brightness_scaler, 4);
     dprint(P_BS + P_BRIGHTNESS, ") | before: ");
     dprint(P_BS + P_BRIGHTNESS, brightness, 4);
@@ -2190,11 +2194,13 @@ void speculatorSetup()
   */
 
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
-  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &user_brightness_cuttoff, POT2_NAME);
-  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &ADDED_SATURATION, POT4_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &ADDED_SATURATION, POT2_NAME);
+
+  uimanager.addPot(POT4_PIN, POT4_REVERSE, POT4_PLAY, &user_brightness_cuttoff, POT4_NAME);
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
   uimanager.addPotRange(1, 0.0, 0.5, 1.0);
-  uimanager.addPotRange(2, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
+  uimanager.addPotRange(2, 0.0, 0.5, 1.0);
+  uimanager.addPotRange(3, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
 #elif HV_MAJOR == 2
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &COLOR_MAP_MODE, BUT1_NAME);
@@ -2205,7 +2211,7 @@ void speculatorSetup()
   uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, BUT6_LOW_CHANGES, &BOOT_DELAY_ACTIVE, BUT6_NAME);
 #endif
   delay(50);
-  uimanager.setup();
+  uimanager.setup(false);
   uimanager.printAll();
 #endif
   ///////////////////////// Audio //////////////////////////
@@ -2293,7 +2299,7 @@ void legatusSetup()
   uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
   uimanager.addPotRange(1, min_playback_gain, mid_playback_gain, max_playback_gain);
 
-  uimanager.setup();
+  uimanager.setup(false);
   uimanager.printAll();
   //////////////////// power control ///////////////////////
   pinMode(PWR_KILL_PIN, OUTPUT);
@@ -2328,7 +2334,7 @@ void exploratorSetup()
   uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
   uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &STRIKE_LENGTH, POT2_NAME);
 
-  uimanager.setup();
+  uimanager.setup(false);
   uimanager.printAll();
 
 #elif BODY_TYPE == MB_BODY
@@ -2340,7 +2346,7 @@ void exploratorSetup()
   uimanager.addPotRange(0, MIN_ACTIVITY_LEVEL, MID_ACTIVITY_LEVEL, MAX_ACTIVITY_LEVEL);
   uimanager.addPotRange(1, MIN_WINDING_RATE, MID_WINDING_RATE, MAX_WINDING_RATE);
 
-  uimanager.setup();
+  uimanager.setup(false);
   // uimanager.printAll();
 #endif // UI controls for the woodpecker and bellbot
 
@@ -3181,6 +3187,10 @@ void setup()
 #endif // only update UIManager if it exists
     }
   }
+  // start datalogging if active
+  if (data_logging_active == true) {
+    setupDLManager();
+  }
   neos[0].colorWipe(0, 5, 0, 1.0);
   printMajorDivide("Now starting main() loop");
 }
@@ -3302,7 +3312,9 @@ void loop()
     // Serial.println("Artefact Specific update function finished running");
     // delay(1000);
     // TODO
-    // updateDatalog();
+    if (data_logging_active) {
+      updateDatalog();
+    }
     // readUserControls(P_USER_CONTROLS);
     // }
 

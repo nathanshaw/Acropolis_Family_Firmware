@@ -359,7 +359,7 @@ double ONSET_THRESH =                   1.20;
 #define LED_MAPPING_CUSTOM        7
 
 #if ARTEFACT_TYPE == SPECULATOR && HV_MAJOR == 3
-int LED_MAPPING_MODE = LED_MAPPING_CLOCK_FILL;
+int LED_MAPPING_MODE = LED_MAPPING_CLOCK_HAND;
 #else
 int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
@@ -558,7 +558,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ///////////////////////////////// Datalogging //////////////////////////////////////////////////
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-#define DATALOG_ACTIVE                  false
+#define DATALOG_ACTIVE                  true
 #define PRINT_EEPROM_ON_BOOT            false
 
 #if DATALOG_ACTIVE == true
@@ -598,8 +598,9 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_LUX_READINGS                  true
 // sets general debug printing for the lux_manager class
 #define P_LUX_MANAGER_DEBUG             true
+
 // sets print_brightness_scaler within the lux_manager
-#define P_BS                            true
+#define P_BS                            false
 
 //
 #define P_CALCULATE_BRIGHTNESS_LENGTH   false
@@ -629,12 +630,13 @@ elapsedMillis song_update_timer = 0;
 // for calculating the dominate channel, it works best if the dominate channel is re-caculated every
 
 /////////////////////////// Datalogging ////////////////////////////////
-#define P_LOG_WRITE                               false
-#define DLM_PRINT                                 false
+#define P_LOG_WRITE                               true
+#define DLM_PRINT                                 true
 // if LOOP_LENGTH is set to true the program will keep track of how long it takes to go through
 // the main loop, it will also store the min and max loop length values as well as calculate
 // what the average loop length is
-#define P_LOOP_LENGTH                             false
+// TODO - this needs to be implemented
+#define P_LOOP_LENGTH                             true
 ///////////////////////// Audio Stuff ///////////////////////////////////////
 #define P_RMS_VALS                                false
 #define P_PEAK_VALS                               false
@@ -664,7 +666,7 @@ elapsedMillis last_audio_usage_print;
 
 //////////////////////////// EEPROM ///////////////////////////////////
 // set to true if you want to print out data stored in EEPROM on boot
-#define P_EEPROM_CONTENTS                         false
+#define P_EEPROM_CONTENTS                         true
 
 ////////////////////////////////////////////////////////////////////////////
 /////////////////////////// User Controls //////////////////////////////////
@@ -1100,7 +1102,7 @@ double hue_max =                                0.0;
 #if ARTEFACT_TYPE == SPECULATOR
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
-uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_ENERGY;
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK_AVG;
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);

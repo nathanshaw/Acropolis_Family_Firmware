@@ -11,7 +11,7 @@
 // ORB_ENCLOSURE_WITHOUT_HOLE, and NO_ENCLOSURE
 // if it is unknown what enclosure will be paired with the PCB
 // it is recommended to map ENCLOSURE_TYPE to a physical switch
-uint8_t ENCLOSURE_TYPE =          ORB_ENCLOSURE;
+uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 
 ////////////////////////////////////////////////////////////
 // different enclosures result in varying gain levels
@@ -25,7 +25,7 @@ double ENCLOSURE_GAIN_FACTOR =        2.0;
 #elif ENCLOSURE_TYPE == GROUND_ENCLOSURE
 double ENCLOSURE_GAIN_FACTOR =        3.0;
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
-double ENCLOSURE_GAIN_FACTOR =        0.75;
+double ENCLOSURE_GAIN_FACTOR =        0.65;
 #endif // ENCLOSURE_TYPE
 
 #elif ARTEFACT_TYPE == EXPLORATOR
