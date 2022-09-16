@@ -39,17 +39,16 @@
 
 // the current modes, or software driven functionality in which 
 // the firmware should use.
-#define TEST_MODE                       0
+#define TEST_MODE                       9
 // speculator modes
-#define CICADA_MODE                     1
-#define PITCH_MODE                      2
-#define CICADA_MODE_NEW                 3
+#define CICADA_MODE                     0
+#define PITCH_MODE                      1
+#define CICADA_MODE_NEW                 2
 
 // Explorator modes
 #define CLAP_BACK_MODE            101
 
 // Legatus modes
-
 #define ECHO_FEEDBACK_MODE        200
 #define MATCH_PITCH_MODE          201
 #define FEEDBACK_MODE             202

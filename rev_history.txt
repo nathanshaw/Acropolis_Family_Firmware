@@ -63,4 +63,17 @@
    how version 0.0.4 was performing, the changes included higher starting gains, a brighter flash,
    and the addition of a flag to differentiate between adding the flash brightness of just displaying
    the brightness
+
+// 0.1.8 is when the Explorator Shaker is fully supported (more or less)
+// 0.1.9 improved support for the Legatus, adding in more balenced color balencinig between
+// audio clip playback and the microphone feedback. Also increased in time between playback events.
+// added a fade-in period of one second for clips so ensure tehy do not clip when initially played
+// lastly added several more audio clips
+// 0.1.10 adds support for the Explorator MB
+// 0.1.11 revisited the Speculator code. USer controls were added back to the main loop. 
+// HSB is used to map the data from FFT for the frequency specific feedback.
+// scaled the FFT bins according to frequncy 
+// 0.1.12 contains a few minor changes to optimize the performance of Speculator, primarally by expanding
+// the range of the user brightness scaler, adding a saturation control, and moving the
+// brightness cuttoff pot to pos 2 from pos 4 which is now occupied by the new saturation pot
 */

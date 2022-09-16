@@ -1,4 +1,4 @@
-#if ARTEFACT_TYPE == EXPLORATOR
+#if ARTEFACT_GENUS == EXPLORATOR
 
 /*
 void createPeckRhythm(uint8_t num, uint16_t on_time, uint16_t str ) {
@@ -116,4 +116,4 @@ void updateSolenoids() {
     }
   }
 }
-#endif // ARTEFACT_TYPE == EXPLORATOR
+#endif // ARTEFACT_GENUS == EXPLORATOR

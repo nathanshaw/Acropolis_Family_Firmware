@@ -1,6 +1,9 @@
 #ifndef __EXPLORATOR_CONFIGURATION_H__
 #define __EXPLORATOR_CONFIGURATION_H__
 
+// should correspond to the serial number on the PCB
+#define SERIAL_ID                       13
+
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// H-Bridge Motors  ///////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -41,8 +44,8 @@
 #define M3_GEAR_RATIO         1
 
 ///////////////////////// for the woodpecker bot
-#elif HV_MAJOR == 1 && BODY_TYPE  == WOODPECKER_BODY
-#define NUM_MOTORS            3
+#elif HV_MAJOR == 1 && ARTEFACT_SPECIES  == EX_CHIPPER
+#define NUM_MOTORS            1
 
 #define MOT1_ACTIVE           true
 #define MOT1_DIR_PIN          26
@@ -72,7 +75,7 @@
 #define M2_GEAR_RATIO         67
 #define M3_GEAR_RATIO         1
 
-#elif HV_MAJOR == 1 && BODY_TYPE  == SHAKER_BODY
+#elif HV_MAJOR == 1 && ARTEFACT_SPECIES  == EX_SPINNER
 #define NUM_MOTORS            1
 
 #define MOT1_ACTIVE           true
@@ -103,7 +106,7 @@
 #define M2_GEAR_RATIO         1
 #define M3_GEAR_RATIO         1
 
-#elif HV_MAJOR == 2 && BODY_TYPE == MB_BODY
+#elif HV_MAJOR == 2 && ARTEFACT_SPECIES == EX_WINDER
 #define NUM_MOTORS            1
 
 #define MOT1_ACTIVE           true
@@ -151,7 +154,7 @@ const bool active_motors[1] = {MOT1_ACTIVE};
 #define DAMPENER_DELAY 10
 
 /////////////////////////////// For the Bell Bot //////////////////////////////////////
-#if HV_MAJOR == 0 && BODY_TYPE == BELL_BODY
+#if HV_MAJOR == 0 && ARTEFACT_SPECIES == EX_CHIRPER
 #define NUM_SOLENOIDS 6
 #define SOL1_PIN 12
 #define SOL2_PIN 11
@@ -179,7 +182,7 @@ const bool active_motors[1] = {MOT1_ACTIVE};
 
 #endif
 
-#if BODY_TYPE == BELL_BODY
+#if ARTEFACT_SPECIES == EX_CHIRPER
 #define SOL1_ACTIVE true
 #define SOL2_ACTIVE true
 #define SOL3_ACTIVE true
@@ -187,7 +190,7 @@ const bool active_motors[1] = {MOT1_ACTIVE};
 #define SOL5_ACTIVE true
 #define SOL6_ACTIVE true
 
-#elif HV_MAJOR == 1 && BODY_TYPE == WOODPECKER_BODY
+#elif HV_MAJOR == 1 && ARTEFACT_SPECIES == EX_CHIPPER
 // todo these need to be chosen by the body not the HV
 #define SOL1_ACTIVE true
 #define SOL2_ACTIVE false
@@ -199,7 +202,7 @@ const bool active_motors[1] = {MOT1_ACTIVE};
 #define SOL8_ACTIVE false
 #define SOL9_ACTIVE false
 
-#elif HV_MAJOR == 1 && BODY_TYPE == CLAPPER_BODY 
+#elif HV_MAJOR == 1 && ARTEFACT_SPECIES == EX_CLAPPER 
 // todo these need to be chosen by the body not the HV
 #define SOL1_ACTIVE false
 #define SOL2_ACTIVE false
@@ -211,7 +214,7 @@ const bool active_motors[1] = {MOT1_ACTIVE};
 #define SOL8_ACTIVE true
 #define SOL9_ACTIVE false
 
-#elif HV_MAJOR == 1 && BODY_TYPE == SHAKER_BODY 
+#elif HV_MAJOR == 1 && ARTEFACT_SPECIES == EX_SPINNER 
 // todo these need to be chosen by the body not the HV
 #define SOL1_ACTIVE false
 #define SOL2_ACTIVE false
@@ -223,7 +226,7 @@ const bool active_motors[1] = {MOT1_ACTIVE};
 #define SOL8_ACTIVE false
 #define SOL9_ACTIVE false
 
-#elif HV_MAJOR == 2 && BODY_TYPE == MB_BODY
+#elif HV_MAJOR == 2 && ARTEFACT_SPECIES == EX_WINDER
 #define SOL1_ACTIVE false
 #define SOL2_ACTIVE false
 
@@ -362,7 +365,7 @@ double last_peak = 0.0;
 // the maximum number of rhythms to store
 #define MAX_RHYTHMS 10
 // the maximum number of notes which can be stored in a single rhythm
-#define MAX_NOTES 24
+#define MAX_NOTES 16
 
 uint8_t active_rhythm; // what rhythm number is to be played next
 uint8_t active_notes; // what note number from within the current rhythm will be played next
@@ -378,14 +381,15 @@ float WINDING_RATE =              1.0;
 #define MID_WINDING_RATE          1.0
 #define MIN_WINDING_RATE          0.5
 
-#define BASE_FORWARD_RATE         90
-#define BASE_BACKWARD_RATE        -35
+// 90 and -35
+#define BASE_FORWARD_RATE         225
+#define BASE_BACKWARD_RATE        -125
 
-#define MIN_FORWARD_RATE          BASE_FORWARD_RATE - 10
-#define MAX_FORWARD_RATE          BASE_FORWARD_RATE + 10
+#define MIN_FORWARD_RATE          BASE_FORWARD_RATE / 2
+#define MAX_FORWARD_RATE          450
 
-#define MIN_BACKWARD_RATE         (BASE_BACKWARD_RATE + 10)
-#define MAX_BACKWARD_RATE         (BASE_BACKWARD_RATE - 10)
+#define MIN_BACKWARD_RATE         (BASE_BACKWARD_RATE + 18)
+#define MAX_BACKWARD_RATE         -250
 
 // when set to true through the user interface theses bools
 // trigger manual winding of the motor
@@ -413,7 +417,7 @@ float STRIKE_LENGTH  = 30.0;
 
 #define PWR_KILL_PIN              25
 
-#if BODY_TYPE == MB_BODY
+#if ARTEFACT_SPECIES == EX_WINDER
 int motor_speed = 0;
 int target_motor_speed = 0;
 int next_motor_speed = 0;

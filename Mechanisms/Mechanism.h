@@ -5,7 +5,6 @@ class Mechanism {
     public:
         Mechanism();
         virtual void update();
-
     private:
         virtual elapsedMillis last_action;
 }

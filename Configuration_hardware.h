@@ -16,8 +16,8 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 ////////////////////////////////////////////////////////////
 // different enclosures result in varying gain levels
 // ENCLOSURE_GAIN_FACTOR is automatically calculated based on
-// the ARTEFACT_TYPE and ENCLOSURE_TYPE
-#if ARTEFACT_TYPE == SPECULATOR
+// the ARTEFACT_GENUS and ENCLOSURE_TYPE
+#if ARTEFACT_GENUS == SPECULATOR
 #if ENCLOSURE_TYPE == ORB_ENCLOSURE_WITH_HOLE
 double ENCLOSURE_GAIN_FACTOR =        1.0;
 #elif ENCLOSURE_TYPE == ORB_ENCLOSURE_WITHOUT_HOLE
@@ -25,14 +25,14 @@ double ENCLOSURE_GAIN_FACTOR =        2.0;
 #elif ENCLOSURE_TYPE == GROUND_ENCLOSURE
 double ENCLOSURE_GAIN_FACTOR =        3.0;
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
-double ENCLOSURE_GAIN_FACTOR =        0.65;
+double ENCLOSURE_GAIN_FACTOR =        0.5;
 #endif // ENCLOSURE_TYPE
 
-#elif ARTEFACT_TYPE == EXPLORATOR
+#elif ARTEFACT_GENUS == EXPLORATOR
 double ENCLOSURE_GAIN_FACTOR =        1.0;
-#elif ARTEFACT_TYPE == LEGATUS
+#elif ARTEFACT_GENUS == LEGATUS
 double ENCLOSURE_GAIN_FACTOR =        1.0;
-#endif // ARTEFACT_TYPE
+#endif // ARTEFACT_GENUS
 
 //////////////////////////////////////////////////////////////////
 /////////////////////// Enclosure Finish /////////////////////////
@@ -53,22 +53,22 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 ////////////////////// Microphones ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 // TODO
-#if ARTEFACT_TYPE == SPECULATOR
+#if ARTEFACT_GENUS == SPECULATOR
 #define NUM_MICROPHONES                 2
-#elif ARTEFACT_TYPE == EXPLORATOR
+#elif ARTEFACT_GENUS == EXPLORATOR
 #define NUM_MICROPHONES                 1
-#elif ARTEFACT_TYPE == LEGATUS
+#elif ARTEFACT_GENUS == LEGATUS
 #define NUM_MICROPHONES                 2
 #endif // microphones
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Lux Sensors ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-#if ARTEFACT_TYPE == SPECULATOR
+#if ARTEFACT_GENUS == SPECULATOR
 #define NUM_LUX_SENSORS           2
-#elif ARTEFACT_TYPE == EXPLORATOR
+#elif ARTEFACT_GENUS == EXPLORATOR
 #define NUM_LUX_SENSORS           2
-#elif ARTEFACT_TYPE == LEGATUS
+#elif ARTEFACT_GENUS == LEGATUS
 #define NUM_LUX_SENSORS           2
 #endif
 
@@ -77,7 +77,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 //////////////////////////////////////////////////////////////////////
 // I2C_MULTI should be 0 if no TCA I2C bus expander is present on the PCB
 // I2C MULTI should be 1 if a TCA I2C bus expander is present
-#if HV_MAJOR < 3 && ARTEFACT_TYPE == SPECULATOR
+#if HV_MAJOR < 3 && ARTEFACT_GENUS == SPECULATOR
 #define I2C_MULTI                 1
 // the number of active channels on the TCA (can in theory support 8 sensors, etc.)
 #define TCA_CHANNELS              2
@@ -91,14 +91,14 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 //////////////////////////////////////////////////////////////////////
 // how much play will the pots have before returning a value?
 // good values should range between 0.002 and 0.005
-#if ARTEFACT_TYPE == EXPLORATOR && BODY_TYPE == MB_BODY
+#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
 #define POT_PLAY        0.05
 #else
 #define POT_PLAY        0.006
 #endif
 
 // for the bell bot basically
-#if (ARTEFACT_TYPE == EXPLORATOR) &&  (HV_MAJOR == 0)
+#if (ARTEFACT_GENUS == EXPLORATOR) &&  (HV_MAJOR == 0)
 ///////////////////// Buttons /////////////////////////////////////////
 #define NUM_BUTTONS     0
 #define BUT1_PIN        33
@@ -161,7 +161,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 ////////////////////////////////////////////////////////////////////////////////
 // now lets set things up for the woodpecker bot
 ////////////////////////////////////////////////////////////////////////////////
-#elif (ARTEFACT_TYPE == EXPLORATOR) && (HV_MAJOR == 1)
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (HV_MAJOR == 1)
 
 ///////////////////// Buttons //////////////////////////////////////////////////
 #define NUM_BUTTONS     4
@@ -186,7 +186,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define BUT3_LOW_CHANGES    true
 #define BUT4_LOW_CHANGES    true
 
-#if BODY_TYPE == CLAPPER_BODY
+#if ARTEFACT_SPECIES == EX_CLAPPER
 #define BUT1_ACTIVE     false
 #define BUT2_ACTIVE     false
 #define BUT3_ACTIVE     false
@@ -218,7 +218,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define POT1_REVERSE    false
 #define POT2_REVERSE    false
 
-#if BODY_TYPE == CLAPPER_BODY
+#if ARTEFACT_SPECIES == EX_CLAPPER
 #define POT1_ACTIVE     false
 #define POT2_ACTIVE     false
 #else // for the woodpecker and bellbot body
@@ -235,8 +235,8 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define POT1_NAME       "ACTIVITY_LEVEL"
 #define POT2_NAME       "STRIKE_LENGTH"
 
-// For the Explorator MB_BODY
-#elif ARTEFACT_TYPE == EXPLORATOR && HV_MAJOR == 2
+// For the Explorator EX_WINDER
+#elif ARTEFACT_GENUS == EXPLORATOR && HV_MAJOR == 2
 ///////////////////// Buttons //////////////////////////////////////////////////
 #define NUM_BUTTONS     2
 
@@ -284,7 +284,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define POT1_NAME       "Activity Level"
 #define POT2_NAME       "Winding Rate"
 
-#elif (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 2) && (HV_MINOR == 1)
+#elif (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 2) && (HV_MINOR == 1)
 // num buttons (how many buttons does the hardware support?)
 #define NUM_BUTTONS       6
 
@@ -355,7 +355,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 // play        (what is the amount of play allowed? 0.002 - 0.005 is usally good
 // name        (what is the name for the pot?)
 
-#elif (ARTEFACT_TYPE == SPECULATOR) && (HV_MAJOR == 3) && (HV_MINOR == 0)
+#elif (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 3) && (HV_MINOR == 0)
 // num buttons (how many buttons does the hardware support?)
 #define NUM_BUTTONS       10
 
@@ -405,7 +405,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define BUT6_HIGH_VAL   0
 
 #define BUT7_HIGH_VAL    LED_MAPPING_STANDARD
-#define BUT7_LOW_VAL     LED_MAPPING_CENTER_OUT
+#define BUT7_LOW_VAL     LED_MAPPING_INSIDE_OUT
 
 #define BUT8_HIGH_VAL    LED_MAPPING_STANDARD
 #define BUT8_LOW_VAL     LED_MAPPING_OUTSIDE_IN
@@ -440,7 +440,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define BUT6_HIGH_VAL   1
 
 #define BUT7_LOW_VAL    LED_MAPPING_STANDARD
-#define BUT7_HIGH_VAL   LED_MAPPING_CENTER_OUT
+#define BUT7_HIGH_VAL   LED_MAPPING_INSIDE_OUT
 
 #define BUT8_LOW_VAL    LED_MAPPING_STANDARD
 #define BUT8_HIGH_VAL   LED_MAPPING_OUTSIDE_IN
@@ -529,7 +529,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define POT3_NAME       "POT3"
 #define POT4_NAME       "user_brightness_cuttoff"
 
-#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 0
+#elif ARTEFACT_GENUS == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 0
 
 // num buttons (how many buttons does the hardware support?)
 #define NUM_BUTTONS       6
@@ -611,7 +611,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define POT1_NAME         "POT1"
 #define POT2_NAME         "POT2"
 
-#elif ARTEFACT_TYPE == LEGATUS && HV_MAJOR == 1 && HV_MINOR > 0
+#elif ARTEFACT_GENUS == LEGATUS && HV_MAJOR == 1 && HV_MINOR > 0
 
 // num buttons (how many buttons does the hardware support?)
 #define NUM_BUTTONS         6
@@ -694,7 +694,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define POT1_NAME           "Brightness"
 #define POT2_NAME           "Amplitude"
 
-#endif // ARTEFACT_TYPE and HV_MAJOR
+#endif // ARTEFACT_GENUS and HV_MAJOR
 
 // TODO - need  to move some of this to the EEPROM storage, and add a flag in the standard configuratui file to  either read that information or to write it
 // how long does the microphone test routine last for in the feature collector testMicrophone() function
@@ -704,7 +704,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #endif // __HARDWARE_CONFIGURATION_H__
 
 //////////////////////////////// SD Card Stuff /////////////////////
-#if ARTEFACT_TYPE == LEGATUS && FIRMWARE_MODE == MODULAR_LEGATUS_MODE
+#if ARTEFACT_GENUS == LEGATUS && FIRMWARE_MODE == MODULAR_LEGATUS_MODE
 
 #define SD_PRESENT                            true
 #define SD_MOSI                               7
@@ -714,10 +714,10 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 
 #else
 #define SD_PRESENT                            false
-#endif// ARTEFACT_TYPE == LEGATUS for SD card stuff
+#endif// ARTEFACT_GENUS == LEGATUS for SD card stuff
 
 /////////////////////////////// DOF Sensors ////////////////////////
-#if ARTEFACT_TYPE == LEGATUS
+#if ARTEFACT_GENUS == LEGATUS
 
 #define DOF_PRESENT                           true
 

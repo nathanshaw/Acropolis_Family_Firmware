@@ -5,19 +5,22 @@
 #include "Macros.h"
 #endif
 
-ENCLOSURE_TYPE = LEGATUS_ENCLOSURE;
+// should correspond to the serial number on the PCB
+#define SERIAL_ID                 13
 
+////////////////////////////////////////
 #if FIRMWARE_MODE == FEEDBACK_MODE
-#define AUDIO_MEMORY              90
-#else
-#define AUDIO_MEMORY              32
-#endif
-
+#define AUDIO_MEMORY              45
+#else // FIRMWARE_MODE == FEEDBACK_MODE
+#define AUDIO_MEMORY              16
+#endif // FIRMWARE_MODE == FEEDBACK_MODE
+////////////////////////////////////////
 
 #define NUM_AUDIO_FILES           19
 
 #define USE_RAW_AUDIO_PLAYER      false
 
+////////////////////////////////////////
 #if USE_RAW_AUDIO_PLAYER == false
 const char *audio_file_names[] = {
   "CHAIN1.WAV",
@@ -40,7 +43,7 @@ const char *audio_file_names[] = {
   "SEWING2.WAV",
   "SEWING3.WAV"
 };
-#else
+#else // USE_RAW_AUDIO_PLAYER == false
 const char *audio_file_names[] = {
   "CHAIN1.raw",
   "CICADA1.raw",
@@ -62,7 +65,8 @@ const char *audio_file_names[] = {
   "SEWING2.raw",
   "SEWING3.raw"
 };
-#endif
+#endif // USE_RAW_AUDIO_PLAYER == false
+////////////////////////////////////////
 
 // This value is used to calculate how long between unit actuations
 uint32_t      PLAYBACK_INTERVAL = 0;

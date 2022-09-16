@@ -30,14 +30,14 @@ bool data_logging_active =              true;
 #define DATALOG_TIMER_4                 (1000*60*1)
 
 // how long the program runs for before the datalog starts logging
-#define DATALOG_START_DELAY_1           (1000*60*0.1)
-#define DATALOG_START_DELAY_2           (1000*60*0.1)
-#define DATALOG_START_DELAY_3           (1000*60*0.1)
-#define DATALOG_START_DELAY_4           (1000*60*0.1)
+#define DATALOG_START_DELAY_1           (1000*60*120)
+#define DATALOG_START_DELAY_2           (1000*60*120)
+#define DATALOG_START_DELAY_3           (1000*60*120)
+#define DATALOG_START_DELAY_4           (1000*60*120)
 
 // how long the data logging  will last for
 #define DATALOG_TIME_FRAME_1            (1000*60*60*1000) // one thousand hours
-#define DATALOG_TIME_FRAME_2            (1000*60*60*1) // two hours
+#define DATALOG_TIME_FRAME_2            (1000*60*60*1000) // two hours
 // #define DATALOG_TIME_FRAME_3         (1000*60*60*0.1)
 // #define DATALOG_TIME_FRAME_4         (1000*60*60*1)
 

@@ -118,7 +118,7 @@ bool gain_adjust_active =                false;
     are filled last
    LED_MAPPING_ROUND
     The LEDs are displayed like around a clock face moving in a counter clockwise or a clockwise direction
-   LED_MAPPING_CENTER_OUT
+   LED_MAPPING_INSIDE_OUT
     The LEDS in the center of the PCB are mapped first while the outside LEDs are mapped last
 */
 
