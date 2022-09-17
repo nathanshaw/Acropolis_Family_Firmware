@@ -1,0 +1,6 @@
+class FeatureCollector {
+  public:
+    FeatureCollector();
+    void update();
+
+    /////////// RMS

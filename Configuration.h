@@ -29,22 +29,9 @@
 #define ARTEFACT_GENUS            LEGATUS
 
 ////////////////////// Artefact Species //////////////////////////////////////
-// for the explorator there are two currently available body types
-// bell bot, which features 3 desk bells with solenoid strikers and damperers
-// woodpecker bot, which features a rotating wooden disk which is struck by a solenoid
-#define EX_CHIPPER              0
-#define EX_CHIRPER              1
-#define EX_CLAPPER              2
-#define EX_SPINNER              3
-#define EX_WINDER               4
-
-#define SPEC_MAJOR              20
-#define SPEC_MINOR              21
-
-#define ORB_BODY                  10
-#define GND_BODY                  11
-//////////////////////////////
-#define LEG_MAJOR              20
+// Speculator Species include: SPEC_MINOR and SPEC_MAJOR
+// Explorator Species include: EX_CHIPPER, EX_CHIRPER, EX_CLAPPER, EX_SPINNER, and EX_WINDER
+// Legatus Species include: LEG_MAJOR
 
 #if ARTEFACT_GENUS == EXPLORATOR
 #define ARTEFACT_SPECIES                 EX_CHIRPER
@@ -52,7 +39,10 @@
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
 #define ARTEFACT_SPECIES                 ORB_BODY
+
 #endif
+#define ORB_BODY                  10
+#define GND_BODY                  11
 
 
 ////////////////////// Hardware Revision /////////////////////////////
@@ -842,7 +832,6 @@ int AUTOGAIN_ACTIVE      =                               true;
 // IMPORTANT - these values need to be floats
 #define AUTOGAIN_MIN_GAIN                               (double)1.0
 #define AUTOGAIN_MAX_GAIN                               (double)3000.0
-
 
 #if ARTEFACT_GENUS == LEGATUS && FIRMWARE_MODE == FM_FEEDBACK_MODE
 const float min_playback_gain = 0.0001;

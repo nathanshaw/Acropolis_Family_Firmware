@@ -1,0 +1,29 @@
+
+    FeatureCollector        KEYWORD1
+    testMicrophone          KEYWORD2
+    printFeatures           KEYWORD2
+    getName                 KEYWORD2
+    linkRMS                 KEYWORD2
+    getRMS                  KEYWORD2
+    getRMSPosDelta          KEYWORD2
+    printRMSVals            KEYWORD2
+
+    linkPeak                KEYWORD2
+    getPeakVa               KEYWORD2
+    getPeakPosDelta         KEYWORD2
+    getPeakAvg              KEYWORD2
+    resetPeakAvgLog         KEYWORD2
+    printPeakVals           KEYWORD2
+    linkTone                KEYWORD2
+    getToneLevel            KEYWORD2
+    printToneVals           KEYWORD2
+    linkFreq                KEYWORD2
+    getFreq                 KEYWORD2
+    printFreqVals           KEYWORD2
+    linkFFT                 KEYWORD2
+    printFFTVals            KEYWORD2
+    getFFTRange             KEYWORD2
+    getHighestEnergyBin     KEYWORD2
+    update                  KEYWORD2
+    isActive                KEYWORD2
+

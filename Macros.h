@@ -30,12 +30,29 @@
 #define LOG_SCALING                     2
 
 ////////////////////////////////////////////////////////////////////////////
-///////////////////////// Operating Modes //////////////////////////////////
+///////////////////////// Artefact Genus //////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 // artefact family
 #define SPECULATOR                      0
 #define EXPLORATOR                      1
 #define LEGATUS                         2
+
+////////////////////////////////////////////////////////////////////////////
+///////////////////////// Artefact Species //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+// Speculator Species include: SPEC_MINOR and SPEC_MAJOR
+// Explorator Species include: EX_CHIPPER, EX_CHIRPER, EX_CLAPPER, EX_SPINNER, and EX_WINDER
+// Legatus Species include: LEG_MAJOR
+////////////////////////////
+#define SPEC_MAJOR              0
+#define SPEC_MINOR              1
+#define EX_CHIPPER              10
+#define EX_CHIRPER              11
+#define EX_CLAPPER              12
+#define EX_SPINNER              13
+#define EX_WINDER               14
+#define LEG_MAJOR               20
+//////////////////////////////
 
 // the current modes, or software driven functionality in which 
 // the firmware should use.
