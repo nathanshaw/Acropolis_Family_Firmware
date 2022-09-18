@@ -1,6 +1,6 @@
 #ifndef __CONFIGURATION_HARDWARE_H__
 #define __CONFIGURATION_HARDWARE_H__
-#include "PrintUtils.h"
+#include "../lib/ValueTracker/ValueTrackerDouble.h"
 #include "Macros.h"
 
 #define FLIP_SWITCHES             true

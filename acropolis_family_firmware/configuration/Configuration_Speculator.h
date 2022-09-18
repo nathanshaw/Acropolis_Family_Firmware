@@ -6,10 +6,10 @@
 #define __SPECULATOR_CONFIGURATION_H__
 
 #include "Configuration_hardware.h"
-#include <ValueTracker.h>
+#include "../lib/ValueTracker/ValueTrackerDouble.h"
 #include <Audio.h>
 #include "Macros.h"
-#include <PrintUtils.h>
+#include "../lib/PrintUtils/PrintUtils.h">
 
 ////////////////////////////////////////////////////////////////////////////
 /////////////////////////// MOST IMPORTANT /////////////////////////////////

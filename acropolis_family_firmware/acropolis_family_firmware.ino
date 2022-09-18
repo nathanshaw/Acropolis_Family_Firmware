@@ -5,7 +5,7 @@
   The runtime, boot, and all other configurations are found in the Configuration.h file
 */
 // configuration needs to be added first to determine what mode will be added
-#include "Configuration.h"
+#include "configuration/Configuration.h"
 
 // #include <MemoryFree.h>
 

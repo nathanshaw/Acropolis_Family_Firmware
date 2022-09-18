@@ -3,7 +3,7 @@
 
 // to get some definitions such as SPECULATOR
 #include "Macros.h"
-#include "ValueTrackerDouble.h"
+#include "../lib/ValueTracker/ValueTrackerDouble.h"
 
 ////////////////////////// Boot Tests ////////////////////////////////
 #define TEST_SOLENOIDS           false
