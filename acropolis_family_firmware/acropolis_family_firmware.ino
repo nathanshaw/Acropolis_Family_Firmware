@@ -16,19 +16,19 @@
 #if ARTEFACT_SPECIES == EX_CLAPPER || ARTEFACT_SPECIES == EX_WINDER
 // no need for the mechanisms or playback engine for the music box guy
 #else
-#include <Mechanisms.h>
-#include <PlaybackEngine.h>
+#include "lib/Mechanisms/Mechanisms.h"
+#include "lib/PlaybackEngine/PlaybackEngine.h"
 #endif
 #endif
 ////////////////////////////// Libraries needed for Every Artefact /////////////////////////////////////
-#include <LuxManager.h>
-#include <PrintUtils.h>
+#include "lib/LuxManager/LuxManager.h"
+#include "lib/PrintUtils/PrintUtils.h"
 #include <WS2812Serial.h>
-#include <NeopixelManager.h>
-#include <AudioEngine.h>
+#include "lib/NeopixelManager/NeopixelManager.h"
+#include "lib/AudioEngine/AudioEngine.h"
 #include <Wire.h>
 #include <SPI.h>
-#include <UIManager.h>
+#include "lib/UIManager/UIManager.h"
 ////////////////////////////////////////////////////////////////
 ///////////////////////// SD CARD //////////////////////////////
 ////////////////////////////////////////////////////////////////

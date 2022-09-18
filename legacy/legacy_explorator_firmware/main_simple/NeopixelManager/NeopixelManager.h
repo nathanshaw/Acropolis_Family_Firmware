@@ -23,7 +23,7 @@
 #include <WS2812Serial.h>
 #include "../Configuration.h"
 #include "../Macros.h"
-#include <PrintUtils.h>
+#include "../PrintUtils/PrintUtils.h"
 
 #ifndef PRINT_CLICK_DEBUG
 #define PRINT_CLICK_DEBUG 0

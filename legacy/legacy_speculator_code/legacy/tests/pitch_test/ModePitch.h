@@ -3,7 +3,7 @@
 
 #include <Audio.h>
 #include <Arduino.h>
-#include <PrintUtils.h>
+#include "../PrintUtils/PrintUtils.h"
 #include "AudioEngine.h"
 #include "Neos.h"
 #include <WS2812Serial.h>

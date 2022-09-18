@@ -23,7 +23,7 @@
 */
 #include <WS2812Serial.h>
 #include "Configuration.h"
-#include <PrintUtils.h>
+#include "../PrintUtils/PrintUtils.h"
 // #include <elapsedMillis.h>
 
 uint32_t packColors(uint8_t red, uint8_t green, uint8_t blue, double scaler) {

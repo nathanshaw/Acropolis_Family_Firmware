@@ -25,3 +25,6 @@
 [submodule "acropolis_family_firmware/lib/DLManager"]
 	path = acropolis_family_firmware/lib/DLManager
 	url = https://github.com/nathanshaw/DLManager
+[submodule "acropolis_family_firmware/lib/AudioEngine"]
+	path = acropolis_family_firmware/lib/AudioEngine
+	url = https://github.com/nathanshaw/AudioEngine
