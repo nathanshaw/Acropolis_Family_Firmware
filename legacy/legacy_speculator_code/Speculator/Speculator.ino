@@ -6,9 +6,9 @@
 // configuration needs to be added first to determine what mode will be added
 #include "Configuration.h"
 
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
 #include "ModeCicada.h"
-#elif FIRMWARE_MODE == PITCH_MODE
+#elif BEHAVIOUR_ROUTINE == PITCH_MODE
 #include "ModePitch.h"
 #endif
 
@@ -197,7 +197,7 @@ void setup() {
   lux_manager.setBrightnessScalerMinMax(LUX_BS_MIN, LUX_BS_MAX);
   lux_manager.calibrate(2000, true);
   lux_manager.print();
-#if FIRMWARE_MODE == TEST_MODE
+#if BEHAVIOUR_ROUTINE == TEST_MODE
   neos.colorWipe(64, 64, 64, 1.0);
   delay(10000000);
 #endif

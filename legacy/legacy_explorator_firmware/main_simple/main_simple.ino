@@ -370,8 +370,8 @@ AudioAnalyzeFFT1024      fft;           //xy=1145.4286575317383,290.428598403930
 
 #if USB_OUTPUT > 0
 AudioOutputUSB           usb_output;       //xy=1147.4286575317383,194.42859840393066
-AudioConnection          patchCord10(input_amp, 0, usb_output, 0);
-AudioConnection          patchCord11(input_amp, 0, usb_output, 1);
+AudioConnection          patchCordUSB1(input_amp, 0, usb_output, 0);
+AudioConnection          patchCordUSB2(input_amp, 0, usb_output, 1);
 #endif
 
 AudioConnection          patchCord1(i2s, 0, biquad, 0);

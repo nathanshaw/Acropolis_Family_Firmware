@@ -44,7 +44,7 @@ void readJumpers(bool p_user_controls) {
   //////////// Jumper 3 ///////////////////////
 
   temp_b = digitalRead(BUT3_PIN);
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
   FLASH_DOMINATES = temp_b;
   if (temp_b == 1) {
     dprintln(p_user_controls, "(but3)  - ON  - FLASH_DOMINATES is true, flash will erase other brightness messages");
@@ -59,7 +59,7 @@ void readJumpers(bool p_user_controls) {
     USE_TARGET_BRIGHTNESS = false;
     dprintln(p_user_controls, "(but3)  - ON  - USE_TARGET_BRIGHTNESS is false");
   }
-#endif//FIRMWARE_MODE
+#endif//BEHAVIOUR_ROUTINE
 
   //////////// Jumper 4 ///////////////////////
   //////////// Major Sensitivity Attenuation //

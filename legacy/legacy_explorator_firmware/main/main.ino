@@ -203,8 +203,8 @@ AudioConnection          patchCord1(i2s, 0, biquad, 0);
 AudioConnection          patchCord2(biquad, input_amp);
 AudioConnection          patchCord6(input_amp, peak);
 AudioConnection          patchCord7(input_amp, fft);
-AudioConnection          patchCord10(input_amp, 0, usb_output, 0);
-AudioConnection          patchCord11(input_amp, 0, usb_output, 1);
+AudioConnection          patchCordUSB1(input_amp, 0, usb_output, 0);
+AudioConnection          patchCordUSB2(input_amp, 0, usb_output, 1);
 
 double peak_val = 0.0;
 double last_peak = 0.0;

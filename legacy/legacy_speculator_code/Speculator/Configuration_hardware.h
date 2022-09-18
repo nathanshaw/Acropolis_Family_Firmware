@@ -14,7 +14,7 @@
 // For the Speculator.....
 // FIRMWARE MODE should be set to  CICADA_MODE, PITCH_MODE, or TEST_MODE
 // depending on what functionality you want
-#define FIRMWARE_MODE             PITCH_MODE
+#define BEHAVIOUR_ROUTINE             PITCH_MODE
 
 /////////////////////// Enclosure Type //////////////////////////////
 // Currently there are four the Speculator enclosures: 

@@ -22,7 +22,7 @@
 //    datalog_manager.logSetupConfigByte("Software Version major      : ", SV_SUBVERSION);
 //    datalog_manager.logSetupConfigByte("Bot ID Number               : ", SERIAL_ID);
 //    datalog_manager.logSetupConfigByte("Datalog Active              : ", data_logging_active);
-//    datalog_manager.logSetupConfigByte("Firmware Mode               : ", FIRMWARE_MODE);
+//    datalog_manager.logSetupConfigByte("Firmware Mode               : ", BEHAVIOUR_ROUTINE);
 //    // Lux Sensors
 //    printMinorDivide();
 //    datalog_manager.logSetupConfigDouble("Lux Low Threshold           : ", LOW_LUX_THRESHOLD);

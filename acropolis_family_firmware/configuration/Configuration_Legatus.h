@@ -9,11 +9,11 @@
 #define SERIAL_ID                 13
 
 ////////////////////////////////////////
-#if FIRMWARE_MODE == FEEDBACK_MODE
+#if BEHAVIOUR_ROUTINE == FEEDBACK_MODE
 #define AUDIO_MEMORY              45
-#else // FIRMWARE_MODE == FEEDBACK_MODE
+#else // BEHAVIOUR_ROUTINE == FEEDBACK_MODE
 #define AUDIO_MEMORY              16
-#endif // FIRMWARE_MODE == FEEDBACK_MODE
+#endif // BEHAVIOUR_ROUTINE == FEEDBACK_MODE
 ////////////////////////////////////////
 
 #define NUM_AUDIO_FILES           19

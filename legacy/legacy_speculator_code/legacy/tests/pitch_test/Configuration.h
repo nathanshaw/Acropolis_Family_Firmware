@@ -10,7 +10,7 @@
 ///////////////////////// Operating Modes //////////////////////////////////
 #define CICADA_MODE 0
 #define PITCH_MODE  1
-#define FIRMWARE_MODE (PITCH_MODE)
+#define BEHAVIOUR_ROUTINE (PITCH_MODE)
 
 ///////////////////////// Lux    Settings /////////////////////////////////
 #define LUX_CALIBRATION_TIME 4000

@@ -25,8 +25,8 @@ AudioConnection          patchCord6(biquad, peak);
 AudioConnection          patchCord7(biquad, fft1024);
 AudioConnection          patchCord8(biquad, rms);
 AudioConnection          patchCord9(biquad, note_freq);
-AudioConnection          patchCord10(biquad, 0, usb_output, 0);
-AudioConnection          patchCord11(biquad1, 0, usb_output, 1);
+AudioConnection          patchCordUSB1(biquad, 0, usb_output, 0);
+AudioConnection          patchCordUSB2(biquad1, 0, usb_output, 1);
 
 double peak_val = 0.0;
 double last_peak = 0.0;

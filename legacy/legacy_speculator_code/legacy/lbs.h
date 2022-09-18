@@ -17,7 +17,7 @@ elapsedMillis lbs_timer;
 #define LBS_LOW_TRUNCATE_THRESH       0.1
 #define LBS_HIGH_TRUNCATE_THRESH      0.75
 // currently the cicada mode will use integers to determine the LBS
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
 uint8_t lbs_min =                     255;
 uint8_t lbs_max =                     0;
 // to keep track of 
@@ -30,7 +30,7 @@ double lbs_max_temp =                 0.0;
 uint8_t lbs_scaler_min_thresh =       0;
 uint8_t lbs_scaler_max_thresh =       255;
 /////////////////////////////////
-#elif FIRMWARE_MODE == PITCH_MODE
+#elif BEHAVIOUR_ROUTINE == PITCH_MODE
 double lbs_min =                     1.0;
 double lbs_max =                     0.0;
 // to keep track of 
@@ -44,7 +44,7 @@ double lbs_max_temp =                 0.0;
 double lbs_scaler_min_thresh =       0.0;
 double lbs_scaler_max_thresh =       1.0;
 
-#endif // FIRMWARE_MODE
+#endif // BEHAVIOUR_ROUTINE
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Local Brightness Scaler /////////////////////////////////////////

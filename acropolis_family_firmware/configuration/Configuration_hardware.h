@@ -704,7 +704,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #endif // __HARDWARE_CONFIGURATION_H__
 
 //////////////////////////////// SD Card Stuff /////////////////////
-#if ARTEFACT_GENUS == LEGATUS && FIRMWARE_MODE == MODULAR_LEGATUS_MODE
+#if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == MODULAR_LEGATUS_MODE
 
 #define SD_PRESENT                            true
 #define SD_MOSI                               7

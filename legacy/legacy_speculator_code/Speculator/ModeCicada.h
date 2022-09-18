@@ -58,8 +58,8 @@ AudioConnection          patchCord11(amp2, rms2);
 
 #if AUDIO_USB > 0
 AudioOutputUSB           usb1;           //xy=519.142822265625,284.71433544158936
-AudioConnection          patchCord5(amp2, 0, usb1, 1);
-AudioConnection          patchCord7(amp1, 0, usb1, 0);
+AudioConnection          patchCordUSB2(amp2, 0, usb1, 1);
+AudioConnection          patchCordUSB1(amp1, 0, usb1, 0);
 #endif // DEBUG_USB_AUDIO
 
 AudioConnection          patchCord1(i2s1, 0, biquad1, 0);
@@ -175,9 +175,9 @@ void setupAudio() {
   if (FFT_FEATURES_ACTIVE) {
     fft_manager.linkFFT(&input_fft);
     Serial.println("Linked FFT to FFTManager");
-    if (FIRMWARE_MODE == CICADA_MODE) {
+    if (BEHAVIOUR_ROUTINE == CICADA_MODE) {
       fft_manager.setupCentroid(true, 4000, 16000);
-    } else if (FIRMWARE_MODE == PITCH_MODE) {
+    } else if (BEHAVIOUR_ROUTINE == PITCH_MODE) {
       fft_manager.setupCentroid(true, 120, 16000);
     }
     Serial.println("Started calculating Centroid in the FFTManager");

@@ -43,7 +43,7 @@ void setupDLManagerBasics()
   datalog_manager.logSetupConfigByte("Software Version major      : ", SV_REVISION);
   datalog_manager.logSetupConfigByte("Bot ID Number               : ", SERIAL_ID);
   datalog_manager.logSetupConfigByte("Datalog Active              : ", data_logging_active);
-  datalog_manager.logSetupConfigByte("Firmware Mode               : ", FIRMWARE_MODE);
+  datalog_manager.logSetupConfigByte("Firmware Mode               : ", BEHAVIOUR_ROUTINE);
 
   // Autolog settings
   printMinorDivide();

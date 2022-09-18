@@ -76,7 +76,7 @@ long enc_pos = 0;
 #endif // if weather manager present?
 
 #if WEATHER_MANAGER_PRESENT == true
-#include <WeatherManager.h>
+#include "lib/WeatherManager/WeatherManager.h"
 #endif
 
 ////////////////////////////////////////////////////////////////
@@ -104,7 +104,7 @@ AudioOutputUSB           output_usb;     //xy=916,300
 
 AudioConnection          patchCord1(i2s1, 0, mixer1, 0);
 AudioConnection          patchCord2(i2s1, 1, mixer1, 1);
-AudioConnection          patchCord3(mixer1, 0, output_usb, 1);
+AudioConnection          patchCordUSB2(mixer1, 0, output_usb, 1);
 AudioConnection          patchCord4(mixer1, HPF1);
 AudioConnection          patchCord5(mixer1, HPF2);
 AudioConnection          patchCord6(HPF1, LPF1);
@@ -113,7 +113,7 @@ AudioConnection          patchCord8(LPF1, amp1);
 AudioConnection          patchCord9(LPF2, amp2);
 AudioConnection          patchCord10(amp1, fft1);
 AudioConnection          patchCord11(amp1, peak1);
-AudioConnection          patchCord12(amp1, 0, output_usb, 0);
+AudioConnection          patchCordUSB1(amp1, 0, output_usb, 0);
 AudioConnection          patchCord13(amp2, fft2);
 AudioConnection          patchCord14(amp2, peak2);
 #endif
@@ -206,7 +206,7 @@ void rampMotor(int which, int16_t start, int16_t target, int ramp_total_time)
 #endif // motor stuff
 
 #if DATALOG_ACTIVE == true
-#include <DLManager.h>
+#include "lib/DLManager/DLManager.h"
 //#include <SerialFlash.h>
 //#include <EEPROM.h>
 DLManager datalog_manager = DLManager();
@@ -421,7 +421,7 @@ float applyWeatherToFloat(float val) {
 #endif // WEATHER_MANAGER_PRESENT
 
 //////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == LEGATUS && FIRMWARE_MODE == MODULAR_LEGATUS_MODE
+#if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == MODULAR_LEGATUS_MODE
 // NOTE, the default configuration is for playback mode
 ////////////////////////// Audio Objects //////////////////////////////////////////
 AudioInputI2S i2s1; //xy=723.2500076293945,775.5000114440918
@@ -439,6 +439,7 @@ AudioAmplifier amp2; //xy=1132.750015258789,669.0000095367432
 AudioAmplifier amp3; //xy=1295.0000190734863,761.5000114440918
 
 AudioOutputI2S audioOutput; //xy=1356.0000190734863,604.5000095367432
+AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
 
 AudioAnalyzeRMS rms1;     //xy=1578.5000228881836,682.5000114440918
 AudioAnalyzeFFT1024 fft1; //xy=1578.4999885559082,714.2499980926514
@@ -446,7 +447,10 @@ AudioAnalyzePeak peak1;   //xy=1582.4999885559082,746.2499980926514
 
 AudioEffectDelay audio_delay1;
 
+// TOOD - not sure if this routing makes any sense
 AudioOutputUSB output_usb; //xy=1589.4999885559082,781.2499980926514
+AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
+AudioConnection patchCordUSB1(amp1, 0, output_usb, 0);
 
 #if USE_RAW_AUDIO_PLAYER == true
 AudioPlaySdRaw audio_player; //xy=767.0000267028809,648.750018119812
@@ -479,10 +483,10 @@ AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
 AudioConnection patchCord1(i2s1, 0, mixer1, 0);
 AudioConnection patchCord2(i2s1, 1, mixer1, 1);
 AudioConnection patchCord3(mixer1, amp1);
-AudioConnection patchCord4(mixer1, 0, output_usb, 1);
+AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
 AudioConnection patchCord5(amp1, HPF1);
 AudioConnection patchCord6(HPF1, peak1);
-AudioConnection patchCord7(HPF1, 0, output_usb, 0);
+AudioConnection patchCordUSB1(HPF1, 0, output_usb, 0);
 AudioConnection patchCord8(HPF1, fft1);
 #endif
 
@@ -2003,6 +2007,9 @@ void setupAudio()
 #else // LEGATUS only loop logic
 void setupAudio()
 {
+  // TODO, this needs to be implemented for all genera
+  // there should be a pair of patch cables which dynamically
+  // provides a connection to a USB audio output object
 #if AUDIO_USB == false
   Serial.println("Disconnecting usb patch cords");
   patchCord_usb1.disconnect();
@@ -3425,7 +3432,7 @@ void loop()
 }
 #if ARTEFACT_GENUS == SPECULATOR
 /////////////////////////// CICADA_MODE /////////////////////////////////////////////////
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
 void speculatorLoop()
 {
 
@@ -3504,7 +3511,7 @@ void getSongBrightness(FFT_Manager1024 *_fft_manager)
 /////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// PITCH_MODE ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
-#elif FIRMWARE_MODE == PITCH_MODE
+#elif BEHAVIOUR_ROUTINE == PITCH_MODE
 
 void speculatorLoop()
 {
@@ -3647,5 +3654,5 @@ void speculatorLoop()
     Serial.println("ERROR = that color mode is not implemented in update neos");
   }
 }
-#endif // FIRMWARE_MODE
+#endif // BEHAVIOUR_ROUTINE
 #endif // ARTEFACT_GENUS

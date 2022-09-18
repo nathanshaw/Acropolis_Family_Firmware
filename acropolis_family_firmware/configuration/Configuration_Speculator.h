@@ -76,16 +76,16 @@ bool gain_adjust_active =                false;
 // WARNING NOT IMPLEMENTED - TODO
 #define DEACTIVATE_UNDER_EXTREME_LUX     false
 
-// this needs to be included after the firmware_mode line so everything loads properly
-#if FIRMWARE_MODE == PITCH_MODE
+// this needs to be included after the BEHAVIOUR_ROUTINE line so everything loads properly
+#if BEHAVIOUR_ROUTINE == PITCH_MODE
 #define NUM_AUTOGAINS                 1
 #define NUM_FEATURE_COLLECTORS        1
 #define NUM_NEO_GROUPS                1
-#elif FIRMWARE_MODE == CICADA_MODE
+#elif BEHAVIOUR_ROUTINE == CICADA_MODE
 #define NUM_AUTOGAINS                 0
 #define NUM_FEATURE_COLLECTORS        1
 #define NUM_NEO_GROUPS                1
-#elif FIRMWARE_MODE == TEST_MODE
+#elif BEHAVIOUR_ROUTINE == TEST_MODE
 #define NUM_AUTOGAINS                 0
 #define NUM_FEATURE_COLLECTORS        0
 #define NUM_NEO_GROUPS                1

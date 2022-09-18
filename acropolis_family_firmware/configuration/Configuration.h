@@ -26,7 +26,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_GENUS to one of these types
 /////////////////// TODO
-#define ARTEFACT_GENUS            LEGATUS
+#define ARTEFACT_GENUS            SPECUlATOR
 
 ////////////////////// Artefact Species //////////////////////////////////////
 // Speculator Species include: SPEC_MINOR and SPEC_MAJOR
@@ -38,33 +38,34 @@
 #elif ARTEFACT_GENUS == LEGATUS 
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
-#define ARTEFACT_SPECIES                 ORB_BODY
+#define ARTEFACT_SPECIES                 SPEC_MINOR
 
 #endif
 #define ORB_BODY                  10
 #define GND_BODY                  11
 
 
+//////////////////////////////////////////////////////////////////////
 ////////////////////// Hardware Revision /////////////////////////////
-///////////////// Speculator  //
+//////////////////////////////////////////////////////////////////////
+///////////////// Speculator  //////////////////////////////////////////////////////////
 // There are different hardware revisions for different Artefacts
 // Starting with the Speculator the 2.0, 2.1 and 3.0 are the primary revisions
 // where the 2.0 and 2.1 are 10 LED 100 mm units, where the 2.1 has 6 jumpers and
 // the 2.0 has no user controls. The 3.0 is the 80 mm units with 40 LEDs
-
-//////////////// Explorator //
+//////////////// Explorator ////////////////////////////////////////////////////////////
 // For the Explorator the 0.0 PCB is the yellow one with the temp/humid sensor on the
 // main PCB (the bell bot is PCB revision 0.0, where revision 1.0 is the one with 3x motor
 // drivers and 9 solenoid drivers, revision 2.0 is the small PCB used for the EX_WINDER
 // revision 2.0 is the smaller PCB with two solenoid outputs and a single motor driver
 // 0.1.4 = version used for the jan, 2021 southwest installations
-
-//////////////// Legatus //
+//////////////// Legatus ///////////////////////////////////////////////////////////////
 // There are three current Legatus firmware revisions:
 // v0.1 - "square PCB"
 // v1.0 - first circular PCB with the modular audio codecs and amplifiers
 // v1.1 - second circular PCB with the jellybean audio amplifier and the audio codec
 // v1.2 - second circular PCB which addressed shortcomings with first iteration
+/////////////////////////////////////////////////////////////////////////////////////////
 #if ARTEFACT_SPECIES == SPEC_MAJOR
 #define HV_MAJOR                  2
 #define HV_MINOR                  1
@@ -99,6 +100,61 @@
 float USER_CONTROL_PLAYBACK_GAIN             = 0.0;
 #endif
 
+//////////////////////////////////////////////////////////////////////////////////////////
+////////////////////// Behaviour Routine /////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
+/* This is where the run-time behaviour of the artefact is determined, each genus provides
+    several Behaviour Routines to select from:
+
+Speculator:
+   CICADA_MODE
+   PITCH_MODE
+   TEST_MODE
+
+Explorator:
+    TODO
+
+Legatus:
+ MATCH_PITCH_ACTIVE = false;
+ FEEDBACK_ACTIVE = false;
+ FM_FEEDBACK_ACTIVE = true;
+ PLAYBACK_ACTIVE = false;
+
+*/
+
+// TODO - these need to be replaced with Macros to fix the mode-selection for Legatus
+int MATCH_PITCH_ACTIVE = false;
+int FEEDBACK_ACTIVE = false;
+int FM_FEEDBACK_ACTIVE = false;
+int PLAYBACK_ACTIVE = true;
+
+#if ARTEFACT_GENUS == SPECULATOR
+#define BEHAVIOUR_ROUTINE             PITCH_MODE
+#elif ARTEFACT_GENUS == LEGATUS
+#define BEHAVIOUR_ROUTINE             MODULAR_LEGATUS_MODE
+int ARTEFACT_BEHAVIOUR =          PLAYBACK_MODE;
+// this needs to be a number which does not correspond to a mode so the audio system connects properly when needed.
+int LAST_ARTEFACT_BEHAVIOR =      -1;
+#else //
+#define BEHAVIOUR_ROUTINE             PLAYBACK_MODE
+#endif
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////// Visual Feedback System //////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////// Brightness Scaling /////////////////////////////////////
+/* There are several stages in which the brightness of LED feedback is scaled:
+
+LED lighting events are determined by the artefact's species-specific firmware
+lighting events are calculated in the HSB or RGBW colour space
+
+lux_brightness_scaler ranges from TODO to TODO and is determine by ambient lighting conditions
+user_brightness_scaler ranges from TODO to TODO and is determined by position of physical user controls
+
+*/
+
 // which pot will be used to control thebrightness overide
 // if USER_BS_ACTIVE is set to true the user will scale the natural
 // brightness levels (in pitch mode only) before being sent to the neopixel
@@ -111,33 +167,14 @@ float user_brightness_scaler               = 0.0;
 float user_brightness_scaler               = 1.0;
 #endif
 
+///////////////////////// Saturation  /////////////////////////////////////
 // TODO finish integrating this
+/*
+When the code is within the HSB colour space, there is an option to 
+offset the saturation level according to this value
+*/
 float ADDED_SATURATION  = 0.4;
 
-////////////////////// Firmware Mode //////////////////////////////////////////////////////
-// For the Speculator.....
-// FIRMWARE MODE should be set to  CICADA_MODE, PITCH_MODE, or TEST_MODE
-// depending on what functionality you want
-// MATCH_PITCH_ACTIVE = false;
-// FEEDBACK_ACTIVE = false;
-// FM_FEEDBACK_ACTIVE = true;
-// PLAYBACK_ACTIVE = false;
-
-int MATCH_PITCH_ACTIVE = false;
-int FEEDBACK_ACTIVE = false;
-int FM_FEEDBACK_ACTIVE = false;
-int PLAYBACK_ACTIVE = true;
-
-#if ARTEFACT_GENUS == SPECULATOR
-#define FIRMWARE_MODE             PITCH_MODE
-#elif ARTEFACT_GENUS == LEGATUS
-#define FIRMWARE_MODE             MODULAR_LEGATUS_MODE
-int ARTEFACT_BEHAVIOUR =          PLAYBACK_MODE;
-// this needs to be a number which does not correspond to a mode so the audio system connects properly when needed.
-int LAST_ARTEFACT_BEHAVIOR =      -1;
-#else // whja
-#define FIRMWARE_MODE             PLAYBACK_MODE
-#endif
 
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////// 
@@ -156,19 +193,11 @@ int LAST_ARTEFACT_BEHAVIOR =      -1;
 // speculator, explorator, and legatus configuration files
 #include "Configuration_hardware.h"
 
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 2
 #define NUM_AMPLIFIERS                1
 #define NUM_PEAK_ANAS                 1
 #define NUM_RMS_ANAS                  1
 #define NUM_FFT                       1
 #define NUM_CHANNELS                  1
-#else
-#define NUM_AMPLIFIERS                1
-#define NUM_PEAK_ANAS                 1
-#define NUM_RMS_ANAS                  1
-#define NUM_FFT                       1
-#define NUM_CHANNELS                  1
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Boot Settings //////////////////////////////////////////
@@ -188,11 +217,11 @@ uint32_t  BOOT_DELAY      =           (1000);
 int BOOT_DELAY_ACTIVE    =           false;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// Audio System ///////////////////////////////////////////
+////////////////////////////// Audio Analysis /////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
 // if set to true an audio USB object will be created so the audio can be debuged via Audacity
-#define AUDIO_USB                       true
+#define AUDIO_USB                       false
 
 // Which Audio features will be activated?
 #if ARTEFACT_GENUS == EXPLORATOR
@@ -207,19 +236,28 @@ int BOOT_DELAY_ACTIVE    =           false;
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// Lux Manager ////////////////////////////////////////////
+////////////////////////////// Ambient Light Sensing //////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
-// TODO - this setting is critial to how the LuxManager effects NeoPixel brightness
-// the two options are to either generate a brightness scaler floating point value
-// to which all color messages are multiplied against, or to adjust the maximum and minimum
-// values allowed
+
+// the options are to either generate a brightness scaler floating point value
+// to which all color messages are multiplied against, adjust the maximum and minimum
+// values allowed, or conduct both operations
+
+// if LUX_MAPPING_SCHEMA is set to LUX_ADJUSTS_BS, the ambient light sensor's readings will generate a brightness-scaler that
+// influences the brightness of all artefact visual feedback
 #define LUX_ADJUSTS_BS                  0
+//  if LUX_MAPPING_SCHEMA is set to LUX_ADJUSTS_MIN_MAX, the ambient light sensor's readings will adjust 
+// the minimum and maximum display brightness values for all feedback
 #define LUX_ADJUSTS_MIN_MAX             1
-#if ARTEFACT_GENUS == SPECULATOR
-uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_MIN_MAX;
-#else
-uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
-#endif
+//  if LUX_MAPPING_SCHEMA is set to LUX_ADJUSTS_BS_AND_MIN_MAX, the ambient light sensor's readings will generate a brightness-scaler
+// that influences the brightness of all artefact feedback AND adjusts 
+// the minimum and maximum display brightness values for all feedback
+#define LUX_ADJUSTS_BS_AND_MIN_MAX      2
+
+// it is generally reccomdended that both options are left active for most species
+// LUX_MAPPING_SCHEMA is a global varaible instead of a constant to allow 
+// for user controls to toggle between different mapping options during runtime if wanted
+uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
 
 ////////////////////////////////// Lux Ambiant Lighting Thresholds /////////////////////
 #if (ARTEFACT_GENUS == SPECULATOR) && HV_MAJOR == 2
@@ -352,15 +390,15 @@ uint32_t lux_min_reading_delay =        1000 * 2;       // ten seconds
 #define USER_BRIGHT_THRESH_OVERRIDE            false
 #endif//HV_MAJOR
 
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
 float user_brightness_cuttoff = 0.15;
-#elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 2
+#elif BEHAVIOUR_ROUTINE == PITCH_MODE && HV_MAJOR == 2
 float user_brightness_cuttoff = 0.01;
-#elif FIRMWARE_MODE == PITCH_MODE && HV_MAJOR == 3
+#elif BEHAVIOUR_ROUTINE == PITCH_MODE && HV_MAJOR == 3
 float user_brightness_cuttoff = 0.05;
 #else 
 float user_brightness_cuttoff = 0.0;
-#endif//FIRMWARE_MODE
+#endif//BEHAVIOUR_ROUTINE
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// Neopixel LEDs /////////////////////////////////////
@@ -370,11 +408,11 @@ float user_brightness_cuttoff = 0.0;
 
 /////////////////////////// Onsets //////////////////////
 #if ARTEFACT_GENUS == SPECULATOR
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
 #define ONSET_DETECTION_ACTIVE        true
-#elif FIRMWARE_MODE == PITCH_MODE
+#elif BEHAVIOUR_ROUTINE == PITCH_MODE
 #define ONSET_DETECTION_ACTIVE        false
-#endif// FIRMWARE_MODE
+#endif// BEHAVIOUR_ROUTINE
 #elif ARTEFACT_GENUS == EXPLORATOR
 #define ONSET_DETECTION_ACTIVE        true
 #else
@@ -533,7 +571,7 @@ int FLASH_DOMINATES =                  false;
 // if this is true then the brightness will b = (b + b) * b; in order to reduce its value, and make loud events even more noticable
 int SQUARE_BRIGHTNESS =                false;
 
-#if FIRMWARE_MODE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == CICADA_MODE
 bool SATURATED_COLORS =                 false;
 #else
 bool SATURATED_COLORS =                 true;
@@ -833,7 +871,7 @@ int AUTOGAIN_ACTIVE      =                               true;
 #define AUTOGAIN_MIN_GAIN                               (double)1.0
 #define AUTOGAIN_MAX_GAIN                               (double)3000.0
 
-#if ARTEFACT_GENUS == LEGATUS && FIRMWARE_MODE == FM_FEEDBACK_MODE
+#if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == FM_FEEDBACK_MODE
 const float min_playback_gain = 0.0001;
 const float mid_playback_gain = 0.15;
 const float max_playback_gain = 1.0;
@@ -872,10 +910,10 @@ uint8_t num_fft_managers =                              1;
 uint8_t num_fft_managers =                              2;
 #endif
 
-#if ARTEFACT_GENUS == SPECULATOR && FIRMWARE_MODE == CICADA_MODE
+#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == CICADA_MODE
 #define CENTROID_FEATURE_MIN                            4000
 #define CENTROID_FEATURE_MAX                            16000
-#elif ARTEFACT_GENUS == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
+#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == PITCH_MODE
 #define CENTROID_FEATURE_MIN                            200
 #define CENTROID_FEATURE_MAX                            20000
 #elif ARTEFACT_GENUS == EXPLORATOR
@@ -1021,7 +1059,7 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 float starting_gain = STARTING_GAIN * ENCLOSURE_GAIN_FACTOR;
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#if ARTEFACT_GENUS == SPECULATOR && FIRMWARE_MODE == CICADA_MODE
+#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == CICADA_MODE
 // SONG HP
 #define LBQ1_THRESH         4000
 #define LBQ1_Q              0.85
@@ -1039,7 +1077,7 @@ float starting_gain = STARTING_GAIN * ENCLOSURE_GAIN_FACTOR;
 #define RBQ2_Q              0.85
 #define RBQ2_DB             -12
 
-#elif ARTEFACT_GENUS == SPECULATOR && FIRMWARE_MODE == PITCH_MODE
+#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == PITCH_MODE
 // Mix HP
 #define LBQ1_THRESH         400
 #define LBQ1_Q              1.0
