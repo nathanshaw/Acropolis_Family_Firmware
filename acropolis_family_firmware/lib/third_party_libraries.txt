@@ -1,0 +1,8 @@
+To take full advantage of this codebase, you need to acquire the following libraries
+---------------------------------------------
+
+Adafruit_SHTC3_Library
+Adafruit_Unified_Sensor
+Adafruit_VEML7700_Library
+SD - Arduino / Sparkfun
+ColorConverter
