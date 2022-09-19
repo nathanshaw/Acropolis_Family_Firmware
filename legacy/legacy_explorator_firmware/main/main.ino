@@ -54,17 +54,28 @@ void testSolenoids(unsigned int len) {
 //////////////////////////////////////////////////////////////////////////
 
 // TODO - dynamically create these objects based on info in the configuration file
-WS2812Serial leds[3] = {WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB),
-                        WS2812Serial(LED2_COUNT, displayMemory[1], drawingMemory[1], LED2_PIN, WS2812_GRB),
-                        WS2812Serial(LED3_COUNT, displayMemory[2], drawingMemory[2], LED3_PIN, WS2812_GRB)
-                       };
-
-// TODO - likewise for these
+#if LED_ACTIVE_CHANNELS == 3
+WS2812Serial leds[3] = {
+  WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB),
+  WS2812Serial(LED2_COUNT, displayMemory[1], drawingMemory[1], LED2_PIN, WS2812_GRB),
+  WS2812Serial(LED3_COUNT, displayMemory[2], drawingMemory[2], LED3_PIN, WS2812_GRB)
+};
 NeoGroup neos[3] = {
   NeoGroup(&leds[0], 0, LED1_COUNT, LED1_NAME),
   NeoGroup(&leds[1], 0, LED2_COUNT, LED2_NAME),
   NeoGroup(&leds[2], 0, LED3_COUNT, LED3_NAME)
 };
+#elif LED_ACTIVE_CHANNELS == 2
+WS2812Serial leds[2] = {WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB),
+                        WS2812Serial(LED2_COUNT, displayMemory[1], drawingMemory[1], LED2_PIN, WS2812_GRB)};
+NeoGroup neos[2] = {
+  NeoGroup(&leds[0], 0, LED1_COUNT, LED1_NAME),
+  NeoGroup(&leds[1], 0, LED2_COUNT, LED2_NAME)
+};
+#elif LED_ACTIVE_CHANNELS == 1
+WS2812Serial leds[1] = {WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB)};
+NeoGroup neos[2] = {NeoGroup(&leds[0], 0, LED1_COUNT, LED1_NAME)};
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 ///////////////////// H-Bridge Motor Driver //////////////////////////////

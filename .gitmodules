@@ -28,3 +28,18 @@
 [submodule "acropolis_family_firmware/lib/AudioEngine"]
 	path = acropolis_family_firmware/lib/AudioEngine
 	url = https://github.com/nathanshaw/AudioEngine
+[submodule "acropolis_family_firmware/lib/Adafruit_BusIO"]
+	path = acropolis_family_firmware/lib/Adafruit_BusIO
+	url = https://github.com/adafruit/Adafruit_BusIO
+[submodule "acropolis_family_firmware/lib/Adafruit_Sensor"]
+	path = acropolis_family_firmware/lib/Adafruit_Sensor
+	url = https://github.com/adafruit/Adafruit_Sensor
+[submodule "acropolis_family_firmware/lib/Adafruit_SHTC3"]
+	path = acropolis_family_firmware/lib/Adafruit_SHTC3
+	url = https://github.com/adafruit/Adafruit_SHTC3
+[submodule "acropolis_family_firmware/lib/Adafruit_VEML7700"]
+	path = acropolis_family_firmware/lib/Adafruit_VEML7700
+	url = https://github.com/adafruit/Adafruit_VEML7700
+[submodule "acropolis_family_firmware/lib/SparkFun_Ambient_Light_Sensor_Arduino_Library"]
+	path = acropolis_family_firmware/lib/SparkFun_Ambient_Light_Sensor_Arduino_Library
+	url = https://github.com/sparkfun/SparkFun_Ambient_Light_Sensor_Arduino_Library

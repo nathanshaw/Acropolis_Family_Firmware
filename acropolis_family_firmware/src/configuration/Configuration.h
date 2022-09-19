@@ -3,7 +3,8 @@
 
 // to get some definitions such as SPECULATOR
 #include "Macros.h"
-#include "../lib/ValueTracker/ValueTrackerDouble.h"
+#include <ValueTrackerDouble.h>
+// #include "../lib/ValueTracker/ValueTrackerDouble.h"
 
 ////////////////////////// Boot Tests ////////////////////////////////
 #define TEST_SOLENOIDS           false
@@ -193,11 +194,19 @@ float ADDED_SATURATION  = 0.4;
 // speculator, explorator, and legatus configuration files
 #include "Configuration_hardware.h"
 
+#if ARTEFACT_GENUS == SPECULATOR
+#define NUM_AMPLIFIERS                1
+#define NUM_PEAK_ANAS                 1
+#define NUM_RMS_ANAS                  0
+#define NUM_FFT                       1
+#define NUM_CHANNELS                  1
+#else
 #define NUM_AMPLIFIERS                1
 #define NUM_PEAK_ANAS                 1
 #define NUM_RMS_ANAS                  1
 #define NUM_FFT                       1
 #define NUM_CHANNELS                  1
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Boot Settings //////////////////////////////////////////
@@ -299,6 +308,28 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
 
 #endif // ARTEFACT_GENUS for Lux thresholds
 
+////////////////////////////////////////////////////////////////
+///////////////////////// Weather Manager //////////////////////
+////////////////////////////////////////////////////////////////
+#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
+#define WEATHER_MANAGER_PRESENT true
+#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
+#define WEATHER_MANAGER_PRESENT true
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
+#define WEATHER_MANAGER_PRESENT false
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIRPER
+#define WEATHER_MANAGER_PRESENT true
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
+#define WEATHER_MANAGER_PRESENT false
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
+#define WEATHER_MANAGER_PRESENT true
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
+#define WEATHER_MANAGER_PRESENT true
+#elif ARTEFACT_GENUS == LEGATUS
+#define WEATHER_MANAGER_PRESENT true
+#else
+#define WEATHER_MANAGER_PRESENT false
+#endif // if weather manager present?
 
 ///////////////////////////////////////////////////////////
 ////////////////// Weather Manager Effecting Feedback /////
@@ -563,6 +594,8 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #define LED3_ACTIVE     false
 #endif //LED3_COUNT
 
+#define LED_ACTIVE_CHANNELS (LED1_ACTIVE + LED2_ACTIVE + LED3_ACTIVE)
+
 // if false, a onset detected on either side results in a LED flash on both sides
 // if true, a onset detected on one side will only result in a flash on that side
 int INDEPENDENT_ONSETS =               false; // WARNING NOT IMPLEMENTED - TODO
@@ -589,7 +622,7 @@ const uint8_t num_active_led_channels = LED1_ACTIVE + LED2_ACTIVE + LED3_ACTIVE;
 const uint16_t max_led_count = max(max(LED1_COUNT, LED2_COUNT), LED3_COUNT);
 
 // these should be 3
-#if ARTEFACT_SPECIES == EX_CHIPPER
+#if ARTEFACT_GENUS == SPECULATOR_GENUS || ARTEFACT_GENUS == LEGATUS_GENUS
 byte drawingMemory[1][max_led_count * 3];       //  3 bytes per LED
 DMAMEM byte displayMemory[1][max_led_count * 12]; // 12 bytes per LED
 #else
@@ -653,8 +686,12 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ///////////////////////////////// Datalogging //////////////////////////////////////////////////
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-#define DATALOG_ACTIVE                  true
+#define DATALOG_ACTIVE                  false
+#if DATALOG_ACTIVE
 #define PRINT_EEPROM_ON_BOOT            true
+#else
+#define PRINT_EEPROM_ON_BOOT            false
+#endif
 
 #if DATALOG_ACTIVE == true
 #include "Configuration_datalogging.h"
@@ -678,9 +715,9 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 ///////////////////////// NeoPixels and Colour ////////////////////////
 #define P_HSB                           false
 #define P_SMOOTH_HSB                    false
-#define P_SATURATION                    false
-#define P_HUE                           false
-#define P_BRIGHTNESS                    false
+#define P_SATURATION                    true 
+#define P_HUE                           true 
+#define P_BRIGHTNESS                    true 
 
 #define P_NEO_COLORS                    true
 
@@ -695,7 +732,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define P_LUX_MANAGER_DEBUG             false
 
 // sets print_brightness_scaler within the lux_manager
-#define P_BS                            false
+#define P_BS                            true
 
 //
 #define P_CALCULATE_BRIGHTNESS_LENGTH   false
@@ -943,7 +980,7 @@ const float max_user_brightness_cuttoff           = 1.3;
 #if ARTEFACT_GENUS == LEGATUS
 #define USER_BS_ACTIVE                        false
 #else
-#define USER_BS_ACTIVE                        true
+#define USER_BS_ACTIVE                        false
 #endif
 
 int but_test[NUM_BUTTONS];
@@ -1003,11 +1040,13 @@ ValueTrackerDouble hue_tracker        = ValueTrackerDouble((String)"HUE", &hue, 
 ValueTrackerDouble saturation_tracker = ValueTrackerDouble((String)"SATURATION", &saturation, SAT_DECAY_FACTOR, SAT_DECAY_DELAY, SATURATION_LP_LEVEL);
 ValueTrackerDouble brightness_tracker = ValueTrackerDouble((String)"BRIGHTNESS", &brightness, BGT_DECAY_FACTOR, BGT_DECAY_DELAY, BRIGHTNESS_LP_LEVEL);
 
+////////////////////////////////////////////////////////////////////////////
 // TODO -- need to implement the target hue saturation and brightness mapping schema
 float target_hue = 1.0;
 float target_saturation = 1.0;
 float target_brightness = 1.0;
-
+////////////////////////////////////////////////////////////////////////////
+// WARNING!!!!!! DO NOT USE THIS FEATURE!!!!!
 int USE_TARGET_BRIGHTNESS = false;
 int USE_TARGET_HUE        = false;
 int USE_TARGET_SATURATION = false;
@@ -1034,7 +1073,7 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 // 240.00 is good for the better mics?
-#define STARTING_GAIN                         20.0
+#define STARTING_GAIN                         40.0
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
@@ -1195,7 +1234,7 @@ double hue_max =                                0.0;
 #if ARTEFACT_GENUS == SPECULATOR
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
-uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK;
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_ENERGY;
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);

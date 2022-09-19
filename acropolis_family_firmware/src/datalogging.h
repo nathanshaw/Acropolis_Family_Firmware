@@ -1,3 +1,4 @@
+#if DATALOG_ACTIVE
 //// TODO
 void updateDatalog()
 {
@@ -183,4 +184,4 @@ void setupDLManagerCicada()
   //      lux_manager.resetBrightnessScalerAvg();
   //      datalog_manager.addAutolog("Front Flashes Per Minute  ", AUTOLOG_FPM_TIMER, ptr);
   //    }
-}
+#endif

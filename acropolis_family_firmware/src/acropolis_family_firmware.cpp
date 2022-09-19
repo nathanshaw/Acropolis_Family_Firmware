@@ -1,34 +1,34 @@
- 
-/**
-  Moth Sonic Art Framework Firmware
-  Written by Nathan Villicana-Shaw in 2020
-  The runtime, boot, and all other configurations are found in the Configuration.h file
-*/
+#include <Arduino.h>
+
 // configuration needs to be added first to determine what mode will be added
 #include "configuration/Configuration.h"
 
 // #include <MemoryFree.h>
-
-// mechanisms needs be be added before the Mode file
 #if ARTEFACT_GENUS == EXPLORATOR
-
+// mechanisms needs be be added before the Mode file
+#include <explorator_behaviour.cpp>
 // #include <explorator_functions.ino>
 #if ARTEFACT_SPECIES == EX_CLAPPER || ARTEFACT_SPECIES == EX_WINDER
 // no need for the mechanisms or playback engine for the music box guy
 #else
-#include "lib/Mechanisms/Mechanisms.h"
-#include "lib/PlaybackEngine/PlaybackEngine.h"
+#include <Mechanisms.h>
+#include <PlaybackEngine.h>
 #endif
 #endif
+
 ////////////////////////////// Libraries needed for Every Artefact /////////////////////////////////////
-#include "lib/LuxManager/LuxManager.h"
-#include "lib/PrintUtils/PrintUtils.h"
+// #include "lib/LuxManager/LuxManager.h"
+#include <LuxManager.h>
+// #include "lib/PrintUtils/PrintUtils.h"
+#include <PrintUtils.h>
 #include <WS2812Serial.h>
-#include "lib/NeopixelManager/NeopixelManager.h"
-#include "lib/AudioEngine/AudioEngine.h"
+// #include "lib/NeopixelManager/NeopixelManager.h"
+#include <NeopixelManager.h>
+// #include "lib/AudioEngine/AudioEngine.h"
+#include <AudioEngine.h>
 #include <Wire.h>
 #include <SPI.h>
-#include "lib/UIManager/UIManager.h"
+#include <UIManager.h>
 ////////////////////////////////////////////////////////////////
 ///////////////////////// SD CARD //////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -52,31 +52,8 @@ Encoder enc(12, 11);
 long enc_pos = 0;
 #endif // encoder library
 
-////////////////////////////////////////////////////////////////
-///////////////////////// Weather Manager //////////////////////
-////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
-#define WEATHER_MANAGER_PRESENT true
-#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
-#define WEATHER_MANAGER_PRESENT true
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
-#define WEATHER_MANAGER_PRESENT false
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIRPER
-#define WEATHER_MANAGER_PRESENT true
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#define WEATHER_MANAGER_PRESENT false
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-#define WEATHER_MANAGER_PRESENT true
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-#define WEATHER_MANAGER_PRESENT true
-#elif ARTEFACT_GENUS == LEGATUS
-#define WEATHER_MANAGER_PRESENT true
-#else
-#define WEATHER_MANAGER_PRESENT false
-#endif // if weather manager present?
-
 #if WEATHER_MANAGER_PRESENT == true
-#include "lib/WeatherManager/WeatherManager.h"
+#include <WeatherManager.h>
 #endif
 
 ////////////////////////////////////////////////////////////////
@@ -99,24 +76,17 @@ AudioAmplifier           amp2;           //xy=738,232
 AudioAnalyzeFFT1024      fft1;           //xy=902,160
 AudioAnalyzePeak         peak1;          //xy=902,231
 AudioAnalyzePeak         peak2;          //xy=902,266
+AudioAnalyzeRMS          rms1;          //xy=902,231
+AudioAnalyzeRMS          rms2;          //xy=902,266
 AudioAnalyzeFFT1024      fft2;           //xy=903,196
-AudioOutputUSB           output_usb;     //xy=916,300
 
-AudioConnection          patchCord1(i2s1, 0, mixer1, 0);
-AudioConnection          patchCord2(i2s1, 1, mixer1, 1);
+#if AUDIO_USB
+AudioOutputUSB           output_usb;     //xy=916,300
 AudioConnection          patchCordUSB2(mixer1, 0, output_usb, 1);
-AudioConnection          patchCord4(mixer1, HPF1);
-AudioConnection          patchCord5(mixer1, HPF2);
-AudioConnection          patchCord6(HPF1, LPF1);
-AudioConnection          patchCord7(HPF2, LPF2);
-AudioConnection          patchCord8(LPF1, amp1);
-AudioConnection          patchCord9(LPF2, amp2);
-AudioConnection          patchCord10(amp1, fft1);
-AudioConnection          patchCord11(amp1, peak1);
 AudioConnection          patchCordUSB1(amp1, 0, output_usb, 0);
-AudioConnection          patchCord13(amp2, fft2);
-AudioConnection          patchCord14(amp2, peak2);
 #endif
+
+#endif // SPECULATOR GENUS AUDIO ROUTING
 
 
 #if NUM_MOTORS > 0
@@ -206,7 +176,7 @@ void rampMotor(int which, int16_t start, int16_t target, int ramp_total_time)
 #endif // motor stuff
 
 #if DATALOG_ACTIVE == true
-#include "lib/DLManager/DLManager.h"
+#include <DLManager.h>
 //#include <SerialFlash.h>
 //#include <EEPROM.h>
 DLManager datalog_manager = DLManager();
@@ -270,12 +240,19 @@ LuxManager lux_manager = LuxManager(lux_min_reading_delay, lux_max_reading_delay
 
 /////////////////////////////// NeoPixelManager //////////////////////////////////
 
+
 // for the explorators, there are three NeoPixels Strips
 #if ARTEFACT_GENUS == SPECULATOR || ARTEFACT_GENUS == LEGATUS
-WS2812Serial leds[1] = WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB);
-NeoGroup neos[1] = NeoGroup(&leds[0], 0, LED1_COUNT - 1, "All Neos", MIN_FLASH_TIME, MAX_FLASH_TIME);
+
+WS2812Serial leds[1] = {WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB)};
+NeoGroup neos[1] = {NeoGroup(&leds[0], 0, LED1_COUNT - 1, "All Neos", MIN_FLASH_TIME, MAX_FLASH_TIME)};
 
 #elif ARTEFACT_GENUS == EXPLORATOR
+int max_leds = max(LED1_COUNT, LED2_COUNT);
+max_leds = max(max_leds, LED3_COUNT);
+// byte drawingMemory[3][max_leds*3];         //  3 bytes per LED
+// DMAMEM byte displayMemory[3][max_leds*12]; // 12 bytes per LED
+
 // TODO - dynamically create these objects based on info in the configuration file
 WS2812Serial leds[num_active_led_channels] = {
 #if LED1_ACTIVE == true
@@ -704,6 +681,7 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
       break;
     case (FEATURE_PEAK):
       dprintln(P_BRIGHTNESS, "feature is PEAK");
+      f->printPeakVals();
       b = f->getDominatePeak();
       break;
     case (FEATURE_RMS_AVG):
@@ -713,11 +691,11 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
       break;
     case (FEATURE_RMS):
       dprintln(P_BRIGHTNESS, "feature is RMS");
-      b = f->getDominateRMS();
+      b = f->getDominateRMS() * 100;
       break;
     case (FEATURE_FFT_ENERGY):
       dprintln(P_BRIGHTNESS, "feature is FFT_ENERGY");
-      b = _fft->getFFTTotalEnergy();
+      b = _fft->getFFTTotalEnergy() * 50;
       break;
     case (FEATURE_STRONG_FFT):
       // range index is what the highest energy bin is within the range we care about
@@ -733,8 +711,10 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
   dprint(P_BRIGHTNESS, "brightness is: ");
   dprint(P_BRIGHTNESS, b);
   brightness = b;
-  // brightness_tracker.update();
-  // brightness = brightness_tracker.getRAvg();
+
+  // Scale the brightness value according to a rolling average 
+  brightness_tracker.update();
+  brightness = brightness_tracker.getRAvg();
   dprint(P_BRIGHTNESS, "\t");
   dprintln(P_BRIGHTNESS, brightness);
   ////////////////////////// When using target_brightness
@@ -959,580 +939,6 @@ void printRGB()
 
 // #endif // ARTEFACT_GENUS == EXPLORATOR
 
-#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-
-void windBack(float rotations, int backward_rate)
-{
-  Serial.println("starting windBack()");
-  motors.enableDrivers();
-  delay(10);
-  enc.write(0);
-  enc_pos = 0;
-  int target = 20;
-  if (M1_POLARITY == false)
-  {
-    Serial.println("M1_POLARITY is set to false, reversing backward_rate and reversing target");
-    backward_rate *= -1;
-    // start winding slowly
-    for (int i = backward_rate * 0.5; i < backward_rate; i++)
-    {
-      motors.setM1Speed(i);
-      enc_pos = enc.read();
-      delay(15);
-      updateFeedbackLEDs(&fft_manager[0]);
-    }
-    motors.setM1Speed(backward_rate);
-  }
-  else
-  {
-    for (int i = backward_rate * 0.5; i > backward_rate; i--)
-    {
-      motors.setM1Speed(i);
-      enc_pos = enc.read();
-      delay(25);
-      updateFeedbackLEDs(&fft_manager[0]);
-    }
-    motors.setM1Speed(backward_rate);
-  }
-
-  // TODO determine how far to wind the box
-  last_enc_change = 0;
-  while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) && enc_pos >= (rotations * -1 * M1_GEAR_RATIO * COUNTS_PER_REV))
-  {
-    enc_pos = enc.read();
-    if (last_pos != enc_pos)
-    {
-      Serial.print(last_enc_change);
-      Serial.print("\tenc pos: ");
-      Serial.print((float)enc_pos / 1500.00);
-      Serial.print(" / ");
-      Serial.println(rotations);
-      last_pos = enc_pos;
-      last_enc_change = 0;
-    }
-    // if 15 seconds pass without being able to get to the target position, then move on to unwinding
-    if (last_enc_change > 600)
-    {
-      Serial.println("Winding taking too, long, breaking from loop");
-      motors.setM1Speed(0);
-      break;
-    }
-    else if (last_enc_change > 150)
-    {
-      motors.setM1Speed(backward_rate * 1.5);
-      Serial.print("1.50 - ");
-    }
-    else if (last_enc_change > 50)
-    {
-      motors.setM1Speed(backward_rate * 1.25);
-      Serial.print("1.25 - ");
-    }
-
-    if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 100) && M1_POLARITY == false)
-    {
-      if (enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 50)
-      {
-        motors.setM1Speed(10);
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("\t Bringing speed down to 10");
-      }
-      else
-      {
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("Bringing speed down to 20");
-        motors.setM1Speed(20);
-      }
-    }
-    else if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 100) && M1_POLARITY == true)
-    {
-      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 50)
-      {
-        motors.setM1Speed(-10);
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("Bringing speed down to -10");
-      }
-      else
-      {
-        motors.setM1Speed(-20);
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("Bringing speed down to -20");
-      }
-    }
-    updateFeedbackLEDs(&fft_manager[0]);
-  }
-  last_enc_change = 0;
-  Serial.print("enc pos: ");
-  Serial.println(enc_pos);
-  motors.setM1Speed(0);
-  enc.write(0);
-  enc_pos = 0;
-  Serial.println("----- exiting windBack -------");
-}
-
-void windForward(float rotations, int forward_rate)
-{
-  if (M1_POLARITY == false)
-  {
-    motors.setM1Speed(forward_rate);
-  }
-  else
-  {
-    motors.setM1Speed(forward_rate);
-  }
-
-  float EXTRA_REWIND = 0.80;
-
-  while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) && enc_pos >= (COUNTS_PER_REV * rotations * -1 * M1_GEAR_RATIO * EXTRA_REWIND))
-  {
-    enc_pos = enc.read();
-    if (last_pos != enc_pos)
-    {
-      Serial.print("enc pos: ");
-      Serial.println((float)enc_pos / 1500.00);
-      last_pos = enc_pos;
-      last_enc_change = 0;
-    }
-    updateFeedbackLEDs(&fft_manager[0]);
-    if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 100) && M1_POLARITY == true)
-    {
-      motors.setM1Speed(20);
-      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 50)
-      {
-        motors.setM1Speed(10);
-      }
-    }
-    else if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 100) && M1_POLARITY == false)
-    {
-      motors.setM1Speed(-20);
-      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 50)
-      {
-        motors.setM1Speed(-10);
-      }
-    }
-    updateFeedbackLEDs(&fft_manager[0]);
-    if (last_enc_change > 250)
-    {
-      Serial.println("Unwininding taking too, long, breaking from loop");
-      motors.setM1Speed(0);
-      break;
-    }
-  }
-  Serial.print("enc pos: ");
-  Serial.println((float)enc_pos / 1500.00);
-  motors.disableDrivers();
-  // (in terms of the encoder)
-  last_winding = 0;
-}
-
-void windBox(float rotations, int between_delay)
-{
-  if (last_winding > winding_interval)
-  {
-    // slowly wind the motor up
-    rotations *= 1.0;
-    int forward_rate = constrain((float)BASE_FORWARD_RATE * WINDING_RATE, MIN_FORWARD_RATE, MAX_FORWARD_RATE);
-    int backward_rate = constrain((float)BASE_BACKWARD_RATE * WINDING_RATE, MIN_BACKWARD_RATE, MAX_BACKWARD_RATE);
-
-    if (M1_POLARITY == true)
-    {
-      forward_rate *= -1;
-      backward_rate *= -1;
-    }
-    Serial.println("----------------------");
-    Serial.print("windBox(rotations): ");
-    Serial.println(rotations);
-    Serial.print("between_delay: ");
-    Serial.println(between_delay);
-    Serial.print("forward_rate: ");
-    Serial.println(forward_rate);
-    Serial.print("backward_rate: ");
-    Serial.println(backward_rate);
-    Serial.println("----------------------");
-
-    windBack(rotations, backward_rate);
-
-    delay(between_delay);
-    //motors.setM1Speed(2);
-    windForward(rotations, forward_rate);
-  }
-  else
-  {
-    Serial.println("Not winding music box, last winding was too soon");
-  }
-}
-
-void manualWinding()
-{
-  // if the wind button is pressed wind the box up
-  if (WIND_FORWARD == true)
-  {
-    Serial.println("WIND_FORWARD is active, winding motor forward...");
-    motors.enableDrivers();
-    motors.setM1Speed(20);
-    while (WIND_FORWARD == true)
-    {
-      updateFeedbackLEDs(&fft_manager[0]);
-      uimanager.update();
-      delay(10);
-    }
-    motors.disableDrivers();
-    Serial.println("WIND_FORWARD is no longer active, turning off the motors...");
-  }
-  // if the unwind button is pressed unwind the box
-  else if (WIND_BACKWARD == true)
-  {
-    Serial.println("WIND_BACKWARD is active, winding motor backward...");
-    motors.enableDrivers();
-    motors.setM1Speed(-20);
-    while (WIND_FORWARD == true)
-    {
-      updateFeedbackLEDs(&fft_manager[0]);
-      uimanager.update();
-      delay(10);
-    }
-    motors.disableDrivers();
-    Serial.println("WIND_BACKWARD is no longer active, turning off the motors...");
-  }
-}
-
-// for the MB Body
-void exploratorMBLoop()
-{
-  /*
-  ///////////////// Passive Visual Feedback ///////////
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB)
-  {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
-    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-    printHSB();
-    printRGB();
-
-    // if (feature_collector.isActive() == true) {
-    s = constrain(s+s+s, 0, 1.0);
-    b = constrain(b*5, 0, 1.0);
-    neos[0].colorWipeHSB(h, s, b); // now colorWipe the LEDs with the HSB value
-    // } else {
-    // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
-    // }
-  }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR)
-  {
-    updateFeedbackLEDs(&fft_manager[dominate_channel]);
-    // Serial.println("Finished running updateFeedbackLEDs()");
-    // delay(2000);
-  }
-  else
-  {
-    neos[0].colorWipeHSB(0, 0, 0); // now colorWipe the LEDs with the HSB value
-    Serial.println("ERROR = that color mode is not implemented in update neos");
-  }
-  uimanager.update();
-
-  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
-  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
-  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
-  // activity level adds a base of up to five minutes
-  ACTUATION_DELAY = ACTIVITY_LEVEL * 1.0 * 250;
-  ACTUATION_DELAY += weather_manager.getTemperature() * -250;
-  ACTUATION_DELAY += weather_manager.getHumidity() * 1000;
-  ACTUATION_DELAY += 5000 - lux_manager.getGlobalLux();
-  if (millis() % 30000 == 0)
-  {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
-  }
-  if (last_playback_tmr > ACTUATION_DELAY)
-  {
-    float wind_amount = 2.0;// how many times will be box be wound?
-    int between_time = 500;
-    windBox(wind_amount, between_time);
-    last_playback_tmr = 0;
-  }
-  manualWinding();
-  */
-}
-
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-
-int motor_speed = 0;
-int target_motor_speed = 0;
-int next_motor_speed = 0;
-int motor_time = 0;
-int next_motor_time = 0;
-const int max_motor_speed = 450;
-const int min_motor_speed = -450;
-
-void shake(int on_speed, int on_time, int rev_speed, int rev_time)
-{
-  if (rev_speed > 0)
-  {
-    rev_speed *= -1;
-  }
-  target_motor_speed = on_speed;
-  next_motor_speed = rev_speed;
-  motor_time = on_time;
-  next_motor_time = rev_time;
-
-  Serial.print("shaking (onspeed, ontime, revspeed, revtime): ");
-  Serial.print(on_speed);
-  Serial.print("\t");
-  Serial.print(on_time);
-  Serial.print("\t");
-  Serial.print(rev_speed);
-  Serial.print("\t");
-  Serial.println(rev_time);
-
-  neos[0].colorWipe(0, 40, 125, 1.0);
-
-  // rev the motor up
-  rampSpinnerMotor(0, on_speed, on_time * 0.05);
-
-  // Serial.print("starting / ending pos: ");
-  // enc_pos = enc.read();
-  // Serial.print(enc_pos);
-
-  // let motor spin, with new color
-  neos[0].colorWipe(200, 200, 255, 1.0);
-  delay(on_time * 0.95);
-
-  // ramp up motor to it's reverse speed
-  neos[0].colorWipe(125, 40, 0, 1.0);
-  rampSpinnerMotor(on_speed, rev_speed, rev_time * 0.1);
-
-  neos[0].colorWipe(50, 40, 0, 1.0);
-  // let things rotate for a bit
-  delay(rev_time * 0.75);
-  // rev down to off
-  neos[0].colorWipe(25, 20, 0, 1.0);
-  rampSpinnerMotor(rev_speed, 0, rev_time * 0.15);
-
-  // enc_pos = enc.read();
-  // Serial.print(enc_pos);
-  neos[0].colorWipe(0, 0, 0, 1.0);
-}
-
-void rampSpinnerMotor(int16_t start, int16_t target, int ramp_total_time)
-{
-  Serial.print("Ramping Motor (start, target, time) - ");
-  Serial.print(start);
-  Serial.print("\t");
-  Serial.print(target);
-  Serial.print("\t");
-  Serial.println(ramp_total_time);
-
-  int difference = target - start;
-  float step_delay = abs(difference / ramp_total_time) * 1.0;
-
-  Serial.print(" dif: ");
-  Serial.print(difference);
-  Serial.print(" stepd: ");
-  Serial.print(step_delay);
-  motors.enableDrivers(0);
-
-  if (difference > 0)
-  {
-    for (int16_t i = start; i <= target; i++)
-    {
-      motors.setM1Speed(i);
-      // Serial.println(i);
-      delayMicroseconds(step_delay);
-    }
-  }
-  else
-  {
-    for (int16_t i = start; i > target; i--)
-    {
-      motors.setM1Speed(i);
-      delayMicroseconds(step_delay);
-      // Serial.println(i);
-    }
-  }
-
-  if (target == 0)
-  {
-    motors.setM1Speed(0);
-    motors.disableDrivers(0);
-  }
-  Serial.println("Disabled Drivers");
-}
-
-void sustainedShake(int on_speed, int ramp_time, int on_time, int deviation) {
-  target_motor_speed = on_speed;
-  motor_time = on_time;
-
-  Serial.print("sustained shake (on_speed, ramp_time, on_time): ");
-  Serial.print(on_speed);
-  Serial.print("\t");
-  Serial.print(ramp_time);
-  Serial.print("\t");
-  Serial.println(on_time);
-
-  // TODO - replace with an update to the visual feedback system
-  neos[0].colorWipe(0, 40, 125, 1.0);
-
-  // rev the motor up
-  rampSpinnerMotor(0, on_speed, ramp_time * 0.05);
-
-  // Serial.print("starting / ending pos: ");
-  // enc_pos = enc.read();
-  // Serial.print(enc_pos);
-
-  // let motor spin, with new color
-  neos[0].colorWipe(200, 200, 255, 1.0);
-  elapsedMillis t;
-  while (t < on_time){
-    target_motor_speed += map(random(0, deviation), 0, deviation, (-0.5 * deviation), (0.5*deviation));
-    motors.setM1Speed(target_motor_speed);
-    Serial.print("set motor speed to: ");
-    Serial.println(target_motor_speed);
-    delay(20 + random(100));
-  }
-
-  // ramp up motor to it's reverse speed
-  neos[0].colorWipe(125, 40, 0, 1.0);
-  rampSpinnerMotor(target_motor_speed, 0, ramp_time * 0.1);
-  neos[0].colorWipe(0, 0, 0, 1.0);
-  Serial.println("------------ finished with sustained spin ------------------");
-}
-
-// for the shaker
-void exploratorLoop()
-{
-
-  ///////////////// Passive Visual Feedback ///////////
-  updateFeedbackLEDs(&fft_manager[dominate_channel]);
-
-  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
-  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
-  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
-  // activity level adds a base of up to five minutes
-  ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
-  // uint16_t t = random(45, 150);
-
-  // TODO
-  // ACTUATION_DELAY = ACTUATION_DELAY * 0.5;
-  ACTUATION_DELAY = 10000;
-
-  if (last_playback_tmr > ACTUATION_DELAY)
-  {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
-
-    // on speed, on time, reverse speed, reverse time
-    int on_speed = 200;// + (weather_manager.getTemperature() * 10);
-    int ramp_time = 200;// + (weather_manager.getTemperature() * 10);
-    int on_time = 5000;// + (weather_manager.getTemperature() * 20);
-    int deviation = 20;// + (weather_manager.getTemperature() * 10);
-    sustainedShake(on_speed, ramp_time, on_time, deviation);
-    last_playback_tmr = 0;
-  }
-}
-
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
-
-void exploratorLoop()
-{
-  ///////////////// Actuator Outputs //////////////////
-  playback_engine.update(); // will also update all linked mechanisms
-
-  ///////////////// Passive Visual Feedback ///////////
-  updateFeedbackLEDs(&fft_manager[dominate_channel]);
-
-  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
-  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
-  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
-  // activity level adds a base of up to five minutes
-  // ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
-  // uint16_t t = random(45, 150);
-  // TODO
-  ACTUATION_DELAY = 1000;
-  if (last_playback_tmr > ACTUATION_DELAY)
-  {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
-    if (playback_engine.isActive() == false)
-    {
-      playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
-      last_playback_tmr = 0;
-    }
-    else
-    {
-      Serial.println("Skipping rhythm as a rhythm is already playing");
-    }
-  }
-}
-
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIRPER
-void exploratorLoop()
-{
-  ///////////////// Actuator Outputs //////////////////
-  updateSolenoids(); // turns off all solenoids which have
-  playback_engine.update();
-  ACTUATION_DELAY = (30000) + ((weather_manager.getTemperature() + weather_manager.getHumidity()) * lux_manager.getGlobalLux());
-  if (last_playback_tmr > ACTUATION_DELAY)
-  {
-    Serial.print("actuation_delay : ");
-    Serial.println(ACTUATION_DELAY);
-    Serial.println("playing rhythm through playback_engine");
-    playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
-    last_playback_tmr = 0;
-  }
-  updateFeedbackLEDs(&fft_manager[0]);
-}
-
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-
-void exploratorLoop()
-{
-  updateSolenoids(); // turns off all solenoids which need to be turned off
-  //  listen for onsets
-  if (millis() > 50000 && updateOnset())
-  {
-    Serial.println("Clapping in reaction to onset detection");
-    triggerSolenoid(2, random(20, 50));
-    triggerSolenoid(7, random(20, 50));
-    last_playback_tmr = 0;
-  }
-  else if (millis() > 50000 && last_playback_tmr > 5000) {
-    // if onset detected, immedietally actuate
-    // pause audio analysis for x period of time
-    Serial.println("Clapping due to 30 seconds since previous vocalisation session");
-    triggerSolenoid(2, random(20, 50));
-    triggerSolenoid(7, random(20, 50));
-    last_playback_tmr = 0;
-  }
-
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB)
-  {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
-    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-    printHSB();
-    printRGB();
-
-    // if (feature_collector.isActive() == true) {
-    b = constrain(b+b, 0, 1.0);
-    neos[0].colorWipeHSB(h, s, b); // now colorWipe the LEDs with the HSB value
-    // } else {
-    // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
-    // }
-  }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR)
-  {
-    updateFeedbackLEDs(&fft_manager[dominate_channel]);
-    // Serial.println("Finished running updateFeedbackLEDs()");
-    // delay(2000);
-  }
-  else
-  {
-    neos[0].colorWipeHSB(0, 0, 0); // now colorWipe the LEDs with the HSB value
-    Serial.println("ERROR = that color mode is not implemented in update neos");
-  }
-}
-
-#endif // Explorator Loops
-
 //////////////////////////////////////////////////////////////////////////////////////
 // || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || ||
 // || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || || ||
@@ -1638,6 +1044,19 @@ void updateAudioAnalysis()
     last_audio_use_print = 0;
   }
 #endif
+}
+
+void colorWipeAll(uint8_t red, uint8_t green, uint8_t blue, float bright)
+{
+  for (int i = 0; i < num_active_led_channels; i++)
+  {
+    neos[i].colorWipe(red, green, blue, bright);
+  }
+}
+
+void colorWipeAll(uint8_t red, uint8_t green, uint8_t blue)
+{
+  colorWipeAll(red, green, blue, 1.0);
 }
 
 void printArtefactInfo()
@@ -2007,17 +1426,6 @@ void setupAudio()
 #else // LEGATUS only loop logic
 void setupAudio()
 {
-  // TODO, this needs to be implemented for all genera
-  // there should be a pair of patch cables which dynamically
-  // provides a connection to a USB audio output object
-#if AUDIO_USB == false
-  Serial.println("Disconnecting usb patch cords");
-  patchCord_usb1.disconnect();
-  patchCord_usb2.disconnect();
-#endif // audio_usb
-
-  // TODO connect and disconnect objects as needed
-
   ////////////// Audio ////////////
   printMajorDivide("Setting up Audio Parameters");
   AudioMemory(AUDIO_MEMORY);
@@ -2028,14 +1436,14 @@ void setupAudio()
   /////////////////////////////////////////////////////////////////////
   feature_collector.linkAmplifier(&amp1, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
 #if NUM_AMPLIFIERS > 1
-  feature_collector.linkAmplifier(&right_amp, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
+  feature_collector.linkAmplifier(&amp2, AUTOGAIN_MIN_GAIN, AUTOGAIN_MAX_GAIN, AUTOGAIN_MAX_GAIN_ADJ);
 #endif
   // feature_collector 0-1 are for the song front/rear
   if (PEAK_FEATURE_ACTIVE)
   {
     feature_collector.linkPeak(&peak1, P_PEAK_VALS);
-#if NUM_PEAK_ANAS > 1
-    feature_collector.linkPeak(&right_peak, P_PEAK_VALS);
+#if NUM_PEAK_ANAS == 2
+    feature_collector.linkPeak(&peak2, P_PEAK_VALS);
 #endif
   }
 
@@ -2050,7 +1458,7 @@ void setupAudio()
   {
     fft_manager[0].linkFFT(&fft1, "Front");
 #if NUM_FFT > 1
-    fft_manager[1].linkFFT(&right_fft, "Rear");
+    fft_manager[1].linkFFT(&fft2, "Rear");
 #endif
 
     for (int i = 0; i < num_fft_managers; i++)
@@ -2074,6 +1482,7 @@ void setupAudio()
 
 #if ARTEFACT_GENUS == SPECULATOR
   amp1.gain(MAKEUP_GAIN);
+  amp2.gain(MAKEUP_GAIN);
   mixer1.gain(0, starting_gain);
   mixer1.gain(1, starting_gain);
   //////////////////////// configure filters ////////////////////////
@@ -2121,6 +1530,35 @@ void setupAudio()
   Serial.print("\t");
   Serial.println(RBQ2_DB);
   
+  // Dynamic audio routing for Speculator 
+  audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+  audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+  audio_connections[2] = new AudioConnection(mixer1, HPF1);
+  audio_connections[3] = new AudioConnection(mixer1, HPF2);
+  audio_connections[4] = new AudioConnection(HPF1, LPF1);
+  audio_connections[5] = new AudioConnection(HPF2, LPF2);
+  audio_connections[6] = new AudioConnection(LPF1, amp1);
+  audio_connections[7] = new AudioConnection(LPF2, amp2);
+  audio_connections[9] = new AudioConnection(amp1, peak1);
+
+  #if NUM_PEAK_ANAS == 2
+  audio_connections[12] = new AudioConnection(amp2, peak2);
+  #endif
+
+  #if NUM_RMS_ANAS > 0
+  audio_connections[10] = new AudioConnection(amp1, rms1);
+  #endif
+  #if NUM_RMS_ANAS == 2
+  audio_connections[13] = new AudioConnection(amp2, rms2);
+  #endif
+  #if NUM_FFT > 0
+  audio_connections[8] = new AudioConnection(amp1, fft1);
+  #endif
+  #if NUM_FFT == 2
+  audio_connections[11] = new AudioConnection(amp2, fft2);
+  #endif
+
+    
 #elif ARTEFACT_GENUS == LEGATUS
   amp1.gain(starting_gain);
   /////////////////////////////////////////////////////////////////////
@@ -2607,6 +2045,9 @@ void setupLuxManager()
   };
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////// WeatherManager //////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if WEATHER_MANAGER_PRESENT == true
 void extremeHumidityShutdown()
 {
@@ -2641,18 +2082,7 @@ void extremeTemperatureShutdown()
 }
 #endif // WEATHER_MANAGER_PRESENT == true
 
-void colorWipeAll(uint8_t red, uint8_t green, uint8_t blue, float bright)
-{
-  for (int i = 0; i < num_active_led_channels; i++)
-  {
-    neos[i].colorWipe(red, green, blue, bright);
-  }
-}
 
-void colorWipeAll(uint8_t red, uint8_t green, uint8_t blue)
-{
-  colorWipeAll(red, green, blue, 1.0);
-}
 
 #if P_AUDIO_USAGE_MAX == true
 void printAudioUsage()
@@ -2835,279 +2265,6 @@ void buildPeckRhythm(int idx, uint32_t quarter)
 elapsedMillis loop_tmr;
 const int loop_print_delay = 1000;
 
-#if ARTEFACT_GENUS == LEGATUS
-void legatusLoopSamplePlayback()
-{
-    int avg_time = 1000 * 60 * 0.5;
-    // PLAYBACK_INTERVAL = avg_time - (weather_manager.getTemperature() * (avg_time / 40)) + (weather_manager.getHumidity() * (avg_time / 100)); // uint16_t t = random(45, 150);
-    if (loop_tmr > loop_print_delay)
-    {
-      Serial.print("Awaiting playback (recording is TODO) : ");
-      Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
-      loop_tmr = 0;
-    }
-    if (last_playback_tmr > PLAYBACK_INTERVAL)
-    {
-      Serial.print("PLAYBACK_INTERVAL is : ");
-      Serial.println(PLAYBACK_INTERVAL);
-      int file_num = random(0, NUM_AUDIO_FILES);
-      // playFile(audio_file_names[file_num], 0.5);
-      // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
-      last_playback_tmr = 0;
-      Serial.println("last_playback_tmr is reset now to 0");
-    }
-}
-
-void activateFeedback(float amp, float dur)
-{
-  amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
-  if (amp < 0.01)
-  {
-    amp = 0.01;
-  }
-  else if (amp > 0.015)
-  {
-    amp = 0.015;
-  }
-  Serial.print("activateFeedback(amp, dur) called: ");
-  Serial.print(amp);
-  Serial.print("\t");
-  Serial.println(dur);
-
-  // connect amp to audio output
-  for (float i = 0.0; i < amp; i = i + 0.001)
-  {
-    updateLegatusPassiveLEDs();
-    Serial.print("gain is : ");
-    Serial.println(i);
-    amp3.gain(i);
-    delay(10);
-  }
-
-  elapsedMillis t;
-  while (t < dur)
-  {
-    /*
-      amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
-      if (amp < 0.01){
-      amp = 0.01;
-      } else if (amp > 0.04) {
-      amp = 0.04;
-      }
-      uimanager.update();
-      amp3.gain(amp);
-    */
-    updateLegatusPassiveLEDs();
-    delay(10);
-  }
-
-  delay(dur);
-
-  for (float i = amp; i > 0.0; i = i - 0.001)
-  {
-    updateLegatusPassiveLEDs();
-    amp3.gain(i);
-    delay(10);
-    Serial.print("gain is : ");
-    Serial.println(i);
-  }
-  amp3.gain(0.0);
-}
-
-void legatusLoopFeedback()
-{
-  updateLegatusPassiveLEDs();
-  uimanager.update();
-  int avg_time = 1000 * 60 * 2.0;
-  float temp = weather_manager.getTemperature();
-  float humid = weather_manager.getHumidity();
-  PLAYBACK_INTERVAL = avg_time - (temp * (avg_time / 40)) + (humid * (avg_time / 100)); // uint16_t t = random(45, 150);
-  if (loop_tmr > loop_print_delay)
-  {
-    Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
-    loop_tmr = 0;
-  }
-  if (last_playback_tmr > PLAYBACK_INTERVAL)
-  {
-    Serial.print("PLAYBACK_INTERVAL is : ");
-    Serial.println(PLAYBACK_INTERVAL);
-    float factor = random(1, 8);
-    float base_freq = factor * ((temp * 2) + (humid * 2));
-    activateFeedback(1.0, PLAYBACK_INTERVAL);
-    // turn on oscillator
-    // let it run for a period of time
-    // turn off oscillator
-
-    // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
-    last_playback_tmr = 0;
-    Serial.println("last_playback_tmr is reset now to 0");
-  }
-}
-
-void activateFM(int t, float freq, float amp)
-{
-  if (amp > 1.0)
-  {
-    amp = 1.0;
-  }
-  Serial.print("activateFM called (len, freq, amp): ");
-  Serial.print(t);
-  Serial.print("\t");
-  Serial.print(freq);
-  Serial.print("\t");
-  Serial.println(amp);
-
-  amp3.gain(starting_gain * amp * USER_CONTROL_PLAYBACK_GAIN);
-  sine_fm.frequency(freq);
-  for (float i = 0.0; i < 1.0; i = i + 0.0001)
-  {
-    // make sure we dont pass an amp over 1.0
-    if (i > 1.0)
-    {
-      i = 1.0;
-    }
-    updateLegatusPassiveLEDs();
-    uimanager.update();
-    sine_fm.amplitude(i * USER_CONTROL_PLAYBACK_GAIN);
-    delay(5);
-  }
-  for (float i = 0; i < 20; i++)
-  {
-    updateLegatusPassiveLEDs();
-    freq += random(freq * -0.01, freq * 0.01);
-    Serial.print("freq:");
-    Serial.println(freq);
-    sine_fm.frequency(freq);
-    float d_time = t * 0.05;
-    elapsedMillis m;
-    while (m < d_time)
-    {
-      uimanager.update();
-      sine_fm.amplitude(USER_CONTROL_PLAYBACK_GAIN);
-      // amp3.gain(starting_gain * amp * USER_CONTROL_PLAYBACK_GAIN);
-      updateLegatusPassiveLEDs();
-      delay(20);
-    }
-  }
-  for (float i = 1.0; i > 0.0; i = i - 0.0001)
-  {
-    updateLegatusPassiveLEDs();
-    uimanager.update();
-    sine_fm.amplitude(i * USER_CONTROL_PLAYBACK_GAIN);
-    delay(10);
-  }
-  sine_fm.amplitude(0.0);
-  amp3.gain(starting_gain);
-}
-
-int avg_time = 1000 * 60 * 2.0;
-void legatusLoopFM()
-{
-  updateLegatusPassiveLEDs();
-  uimanager.update();
-  float temp = weather_manager.getTemperature();
-  float humid = weather_manager.getHumidity();
-  PLAYBACK_INTERVAL = avg_time - (temp * (avg_time / 40)) + (humid * (avg_time / 100)); // uint16_t t = random(45, 150);
-  if (loop_tmr > loop_print_delay)
-  {
-    Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
-    loop_tmr = 0;
-  }
-  if (last_playback_tmr > PLAYBACK_INTERVAL)
-  {
-    avg_time = 1000 * 60 * random(1, 4);
-    Serial.print("PLAYBACK_INTERVAL is : ");
-    Serial.println(PLAYBACK_INTERVAL);
-    float factor = random(1, 16);
-    float base_freq = factor * ((temp * 2) + (humid * 2));
-    float amp = 0.5 + random(0, 1000) / 1000;
-    activateFM(PLAYBACK_INTERVAL, base_freq, amp);
-    // turn on oscillator
-    // let it run for a period of time
-    // turn off oscillator
-
-    // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
-    last_playback_tmr = 0;
-    Serial.println("last_playback_tmr is reset now to 0");
-  }
-}
-
-#endif // ARTEFACT_GENUS == LEGATUS (for all types)
-
-#if SD_PRESENT
-void initSD()
-{
-  SPI.setMOSI(SD_MOSI); // Audio shield has MOSI on pin 7
-  SPI.setSCK(SD_CLK);   // Audio shield has SCK on pin 14
-  // we'll use the initialization code from the utility libraries
-  // since we're just testing if the card is working!
-  if (!card.init(SPI_HALF_SPEED, SD_CS))
-  {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("* is a card inserted?");
-    Serial.println("* is your wiring correct?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module?");
-    return;
-  }
-  else
-  {
-    Serial.println("Wiring is correct and a card is present.");
-  }
-
-  // print the type of card
-  Serial.print("\nCard type: ");
-  switch (card.type())
-  {
-    case SD_CARD_TYPE_SD1:
-      Serial.println("SD1");
-      break;
-    case SD_CARD_TYPE_SD2:
-      Serial.println("SD2");
-      break;
-    case SD_CARD_TYPE_SDHC:
-      Serial.println("SDHC");
-      break;
-    default:
-      Serial.println("Unknown");
-  }
-
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
-  if (!volume.init(card))
-  {
-    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    return;
-  }
-
-  // print the type and size of the first FAT-type volume
-  uint32_t volumesize;
-  Serial.print("\nVolume type is FAT");
-  Serial.println(volume.fatType(), DEC);
-  Serial.println();
-
-  volumesize = volume.blocksPerCluster(); // clusters are collections of blocks
-  volumesize *= volume.clusterCount();    // we'll have a lot of clusters
-  if (volumesize < 8388608ul)
-  {
-    Serial.print("Volume size (bytes): ");
-    Serial.println(volumesize * 512); // SD card blocks are always 512 bytes
-  }
-  Serial.print("Volume size (Kbytes): ");
-  volumesize /= 2;
-  Serial.println(volumesize);
-  Serial.print("Volume size (Mbytes): ");
-  volumesize /= 1024;
-  Serial.println(volumesize);
-
-  Serial.println("\nFiles found on the card (name, date and size in bytes): ");
-  root.openRoot(volume);
-
-  // list all files in the card with date and size
-  root.ls(LS_R | LS_DATE | LS_SIZE);
-
-  // list the length of all audio files
-}
-#endif // SD card related functions
-
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -3132,21 +2289,23 @@ void setup()
 
   /////////////////// NeoPixels //////////////////f //////////////
   printMinorDivide();
+  Serial.print("Starting ");
   Serial.print(num_active_led_channels);
-  Serial.println(" - Starting the LED strips");
-  delay(2000);
+  Serial.println(" LED strips");
+  delay(1000);
 
   for (int i = 0; i < num_active_led_channels; i++)
   {
     leds[i].begin();
-    Serial.print("neogroup ");
-    Serial.println(i);
+    Serial.print("WS2813Serial Object ");
+    Serial.print(i);
+    Serial.println(" .begin() called");
     delay(2000);
 
     neos[i].begin();
     neos[i].colorWipe(12, 12, 12, 1.0);
     printMinorDivide();
-    Serial.println("LEDS have been initalised");
+    Serial.println("NeoPixel Managers have been initalised");
     Serial.print("There are ");
     Serial.print(LED1_COUNT);
     Serial.println(" LEDs in the first group");
@@ -3220,12 +2379,14 @@ void setup()
   ///////////////////////// Weather Manager /////////////////////
   // nothing is needed =P
 #if WEATHER_MANAGER_PRESENT == true
-  neos[0].colorWipe(12, 12, 0, 1.0);
+  neos[0].colorWipe(2, 12, 0, 1.0);
   printMinorDivide();
   Serial.println("initalising the weather manager");
   weather_manager.init();
-  weather_manager.setPrintReadings(P_WEATHER_MANAGER_READINGS);
   Serial.println("finished initalising the weather manager");
+  neos[0].colorWipe(0, 5, 12, 1.0);
+  delay(1000);
+  weather_manager.setPrintReadings(P_WEATHER_MANAGER_READINGS);
   Serial.print("WeatherManager HUMID_EXTREME_THRESH  : \t");
   Serial.println(HUMID_EXTREME_THRESH);
   Serial.print("WeatherManager TEMP_EXTREME_THRESH   : \t");
@@ -3277,10 +2438,12 @@ void setup()
 #endif // only update UIManager if it exists
     }
   }
+  #if DATALOG_ACTIVE
   // start datalogging if active
   if (data_logging_active == true) {
     setupDLManager();
   }
+  #endif
   neos[0].colorWipe(0, 0, 0, 0.0);
   printMajorDivide("Now starting main() loop");
 }
@@ -3306,6 +2469,21 @@ int determineLegatusBehavior()
   return 0;
 }
 
+
+/////////////////////////// Species-Specific Behaviour //////////////////////////////////
+// include the artefact-specific operating logic depending on what genus we have...
+#if ARTEFACT_GENUS == SPECULATOR
+#include <speculator_behaviour.h>
+#elif ARTEFACT_GENUS == EXPLORATOR
+// mechanisms needs be be added before the Mode file
+#include <explorator_behaviour.cpp>
+#elif ARTEFACT_GENUS == LEGATUS
+#include <legatus_behaviour.cpp>
+#endif
+/////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Main Loop //////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 void loop()
 {
   //////////////// Testing ///////////////////////////////////
@@ -3369,48 +2547,27 @@ void loop()
   else
   {
 #endif // WEATHER_MANAGER_PRESENT
-    // if (lux_manager.getExtremeLux() == true) {
-    //   Serial.println("WARNING ------------ updateMode() returning due extreme lux conditions, not updating onset or song...");
-    // } else {
-    //////////////// Audio Analysis ///////////////////////////
-    updateAudioAnalysis();
-    // Serial.println("updateAudioAnalysis() function finished running");
-    // delay(1000);
-    // Serial.println(millis()/1000);
-#if ARTEFACT_GENUS == SPECULATOR
-    speculatorLoop();
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-    exploratorMBLoop();
-#elif ARTEFACT_GENUS == EXPLORATOR
-    exploratorLoop();
-#elif ARTEFACT_GENUS == LEGATUS
-    if (DISABLE_USER_CONTROLS == false)
-    {
-      uimanager.update();
-    }
-    updateLegatusPassiveLEDs();
-    ARTEFACT_BEHAVIOUR = determineLegatusBehavior();
-    if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
-    {
-      legatusLoopSamplePlayback();
-    }
-    else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
-    {
-      legatusLoopFeedback();
-    }
-    else if (ARTEFACT_BEHAVIOUR == FM_FEEDBACK_MODE)
-    {
-      legatusLoopFM();
-    }
+// if (lux_manager.getExtremeLux() == true) {
+//   Serial.println("WARNING ------------ updateMode() returning due extreme lux conditions, not updating onset or song...");
+// } else {
+
+//////////////// Audio Analysis ///////////////////////////
+updateAudioAnalysis();
+// Serial.println("updateAudioAnalysis() function finished running");
+// delay(1000);
+// Serial.println(millis()/1000);
+/////////////// Use-case specific operating logic (determined by BEHAVIOUR_MODE)
+updateBehaviour();
+// Serial.println("Artefact Specific update function finished running");
+// delay(1000);
+// TODO
+#if DATALOG_ACTIVE
+if (data_logging_active) {
+  updateDatalog();
+}
 #endif
-    // Serial.println("Artefact Specific update function finished running");
-    // delay(1000);
-    // TODO
-    if (data_logging_active) {
-      updateDatalog();
-    }
-    // readUserControls(P_USER_CONTROLS);
-    // }
+// readUserControls(P_USER_CONTROLS);
+// }
 
 #if WEATHER_MANAGER_PRESENT
   }
@@ -3430,229 +2587,4 @@ void loop()
   printAudioUsage();
 #endif
 }
-#if ARTEFACT_GENUS == SPECULATOR
-/////////////////////////// CICADA_MODE /////////////////////////////////////////////////
-#if BEHAVIOUR_ROUTINE == CICADA_MODE
-void speculatorLoop()
-{
 
-}
-
-void updateAugmentations(*FeatureCollector feature_collector, *FFTManager fft_manager)
-{
-  uint8_t rgb[3]; // red, green, and blue
-  float brightness;
-
-  // get brightness according to relative level of cicada song amplitude (0 - 1.0)
-  brightness = getBrightness();
-  // scale brightness according to most recent ambient light brightness scaler
-  // and the current user brightness scaler (determined by physical controls)
-  // note this process intentionally can increase the brightness value above 1.0
-  brightness = brightness * lux_manager.getLuxScaler() * user_brightness_scaler;
-  // getColor sets the values of red, green, and blue (0 - 255) according to
-  // relative pitch of cicada song where high pitch corresponds to high color values
-  rgb = getColor(&feature_collector, &fft_manager[0]);
-  // scale rgb values according to brightness (will limit values to between 0 - starting value)
-  // will return 0's if the brightness is lower than the MINIMUM_BRIGHTNESS_THRESHOLD variable
-  rgb = scaleRGB(rgb, brightness);
-  // update neopixels with the expected color information
-  neos.updateFeedback(rgb[0], rgb[1], rgb[2]);
-}
-
-uint8_t *getColor(*FeatureCollector feature_collector, *fft_manager)
-{
-}
-
-void getSongBrightness(FFT_Manager1024 *_fft_manager)
-{
-  if (last_led_update_tmr > led_refresh_rate)
-  {
-    double target_brightness = 0.0;
-    // calculate the target brightness ///////////////////////////////////
-    double calculateFeedbackBrightness(FFTManager1024 * _fft_manager)
-    {
-      // how much energy is stored in the range of 4000 - 16000 compared to  the entire spectrum?
-      double target_brightness = _fft_manager->getFFTRangeByFreq(100, 16000) * user_brightness_scaler * lux_brightness_scaler;
-      if (target_brightness < 0.01)
-      {
-        target_brightness = 0.0;
-      }
-      else if (target_brightness > 1.0)
-      {
-        target_brightness = 1.0;
-      }
-      if (target_brightness < brightness_feature_min)
-      {
-        brightness_feature_min = (target_brightness * 0.15) + (brightness_feature_min * 0.85);
-        target_brightness = brightness_feature_min;
-      }
-      if (target_brightness > brightness_feature_max)
-      {
-        brightness_feature_max = (target_brightness * 0.15) + (brightness_feature_max * 0.85);
-        // to ensure that loud clipping events do not skew things too much
-        if (brightness_feature_max > 1.0)
-        {
-          brightness_feature_max = 1.0;
-        }
-        target_brightness = brightness_feature_max;
-      }
-      target_brightness = (target_brightness - brightness_feature_min) / (brightness_feature_max - brightness_feature_min);
-    }
-    /////////////////////////// Apply user brightness scaler ////////////////////////
-    if (USER_BS_ACTIVE > 0)
-    {
-      target_brightness = target_brightness;
-    }
-    last_brightness = current_brightness;
-    // current brightness is a global variable
-    current_brightness = (target_brightness * 0.5) + (current_brightness * 0.5);
-  }
-}
-/////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////// PITCH_MODE ////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////
-#elif BEHAVIOUR_ROUTINE == PITCH_MODE
-
-void speculatorLoop()
-{
-  double h, s, b;
-  if (CALCULATE_DOMINATE_CHANNEL)
-  {
-    // TODO - erm, look into this code, what does it do again, should it be a part of the
-    dominate_channel = feature_collector.getDominateChannel();
-    // Serial.print("dominate channel is : ");
-    // Serial.println(dominate_channel);
-  }
-  Serial.print("color map mode: ");
-  Serial.println(COLOR_MAP_MODE);
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
-    s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
-    h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-
-    printHSB();
-    printRGB();
-
-    // if (feature_collector.isActive() == true) {
-    // the specific mapping strategy is handled by the NeoPixelManager
-    neos[0].colorWipeHSB(h, s, b); // now colorWipe the LEDs with the HSB value
-    // neos[0].colorWipe(0, 0, 0, 0.0, 0.0); // now colorWipe the LEDs with the HSB value
-    // neos[0].colorWipe(255, 255, 255, 1.0, 1.0); // now colorWipe the LEDs with the HSB value
-    // } else {
-    Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
-  }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR) {
-    updateFeedbackLEDs(&fft_manager[dominate_channel]);
-    // Serial.println("Finished running updateFeedbackLEDs()");
-    // delay(2000);
-  }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_FFT) {
-    // determine the amount of energy contained in each of the three bands
-    float total_energy = fft_manager[0].getFFTTotalEnergy() * 0.16;
-    int front_inside_out_order[20] = {16, 17, 18, 19, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    int rear_inside_out_order[20] = {36, 37, 38, 39, 30, 31, 32, 33, 34, 35, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
-    Serial.print("total energy : ");
-    Serial.print(total_energy, 6);
-    total_energy = constrainf(total_energy, 0.0, 1.0);
-    Serial.print("\t");
-    Serial.println(total_energy, 6);
-
-    // map each individual LED to a range of four bins
-    for (int i = 0; i < 20; i++)
-    {
-      int idx_start = (i * 6) + 10;
-
-      // amount of energy contained in the bin multiplied by the number of bins (ignoring the second half)
-      double r = pow((idx_start * (fft_manager[0].getFFTRangeByIdx(idx_start, idx_start + 18))), 0.5) * (user_brightness_scaler - user_brightness_scaler * 0.5);
-      idx_start += 2;
-      double g = pow((idx_start * (fft_manager[0].getFFTRangeByIdx(idx_start, idx_start + 18))), 0.5) * (user_brightness_scaler - user_brightness_scaler * 0.5);
-      idx_start += 2;
-      double b = pow((idx_start * (fft_manager[0].getFFTRangeByIdx(idx_start, idx_start + 18))), 0.5) * (user_brightness_scaler - user_brightness_scaler * 0.5);
-
-      // scale up the values between 0.0 and 255 for NeoPixel color values
-      Serial.print("r: ");
-      Serial.print(r);
-      Serial.print("\t");
-      r = constrainf(r / 3, 0.0, 0.75);
-      r = r - user_brightness_cuttoff;
-      r = constrainf(r, 0.0, 0.75);
-      Serial.print(r);
-      Serial.print("\t");
-      Serial.println(user_brightness_cuttoff);
-
-      g = constrainf(g / 3, 0.0, 0.75);
-      g = g - user_brightness_cuttoff;
-      g = constrainf(g, 0.0, 0.75);
-
-      b = constrainf(b / 3, 0.0, 0.75);
-      b = b - user_brightness_cuttoff;
-      b = constrainf(b, 0.0, 0.75);
-
-      g = (r + g + b) / 2.25;
-      g = constrainf(g, 0.0, 1.0);
-
-      double h = pow(g, 0.5);
-      double s = 1.0 - pow((g), 0.5);
-      s = s + ADDED_SATURATION;
-      if (s < 1.0)
-      {
-        s = 1.0 - s;
-      }
-      else if (s > 1.0)
-      {
-        s = s - 1.0;
-      }
-      double br = pow(g, 2);
-
-      if (i == 10)
-      {
-        Serial.print(" h,s,b : ");
-        Serial.print(h);
-        Serial.print("\t");
-        Serial.print(s);
-        Serial.print("\t");
-        Serial.println(br);
-      }
-      neos[0].colorWipeHSB(h, s, br, user_brightness_scaler, front_inside_out_order[i], front_inside_out_order[i]);
-      neos[0].colorWipeHSB(h, s, br, user_brightness_scaler, rear_inside_out_order[i], rear_inside_out_order[i]);
-    }
-    // this section determines what we do with the HSB values generated from above
-    // use the total energy to influence the brightness
-    /*
-      total_energy = constrainf((total_energy - 0.02) * 20, 0.0, 1.0);
-
-      Serial.print("\t");
-      Serial.println(total_energy, 6);
-      Serial.print("total energy : ");
-      Serial.print(total_energy, 6);
-      // use the total energy to influence the brightness
-      total_energy = constrainf((total_energy - 0.02) * 20, 0.0, 1.0);
-
-      Serial.print("\t");
-      Serial.println(total_energy, 6);
-
-      Serial.print("r,g,b : ");
-      Serial.print(r);
-      Serial.print("\t");
-      Serial.print(g);
-      Serial.print("\t");
-      Serial.print(b);
-
-      // inner rings
-      neos[0].colorWipe(r, 255 - r, 255 - r, total_energy, 16, 19);
-      neos[0].colorWipe(r, 255 - r, 255 - r, total_energy, 36, 39);
-      // middle rings
-      neos[0].colorWipe(255 - g, g, 255 - g, total_energy, 10, 15);
-      neos[0].colorWipe(255 - g, g, 255 - g, total_energy, 30, 35);
-      // outer rings
-      neos[0].colorWipe(255 - b, 255 - b, b, total_energy, 0, 9);
-      neos[0].colorWipe(255 - b, 255 - b, b, total_energy, 20, 29);
-    */
-  }
-  else
-  {
-    Serial.println("ERROR = that color mode is not implemented in update neos");
-  }
-}
-#endif // BEHAVIOUR_ROUTINE
-#endif // ARTEFACT_GENUS
