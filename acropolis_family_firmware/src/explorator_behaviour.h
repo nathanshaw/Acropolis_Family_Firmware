@@ -1,6 +1,167 @@
 
 #if ARTEFACT_GENUS == EXPLORATOR 
 
+void configurePlaybackEngine()
+{
+  // freq, length, onset delay (since last note), velocity
+#if ARTEFACT_SPECIES == EX_CHIRPER
+  rhythm[0].addPitchedNote(500.0, 40, 0, 0.6);
+  rhythm[0].addPitchedNote(500.0, 40, 100, 0.8);
+  rhythm[0].addPitchedNote(500.0, 30, 150, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 30, 400, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 20, 1000, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 50, 1500, 1.0);
+
+  rhythm[0].addPitchedNote(100.0, 30, 100, 0.3);
+  rhythm[0].addPitchedNote(500.0, 40, 600, 0.4);
+  rhythm[0].addPitchedNote(1000.0, 30, 150, 0.5);
+  rhythm[0].addPitchedNote(100.0, 20, 700, 0.4);
+  rhythm[0].addPitchedNote(500.0, 40, 800, 0.3);
+  rhythm[0].addPitchedNote(1000.0, 30, 1500, 0.2);
+
+  rhythm[0].addPitchedNote(100.0, 40, 200, 1.0);
+  rhythm[0].addPitchedNote(500.0, 30, 70, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 40, 90, 1.0);
+  rhythm[0].addPitchedNote(100.0, 40, 60, 1.0);
+  rhythm[0].addPitchedNote(500.0, 30, 150, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 30, 100, 1.0);
+
+  rhythm[1].addPitchedNote(50.0, 50, 0, 1.05);
+  rhythm[1].addPitchedNote(150.0, 50, 500, 1.01);
+  rhythm[1].addPitchedNote(250.0, 60, 1000, 1.15);
+  rhythm[1].addPitchedNote(550.0, 60, 1500, 1.20);
+  rhythm[1].addPitchedNote(450.0, 50, 2000, 1.20);
+  rhythm[1].addPitchedNote(1550.0, 40, 2500, 1.20);
+  rhythm[1].addPitchedNote(1650.0, 30, 3000, 1.20);
+
+  rhythm[2].addPitchedNote(50.0, 40, 0, 1.35);
+  rhythm[2].addPitchedNote(150.0, 30, 400, 1.31);
+  rhythm[2].addPitchedNote(250.0, 30, 800, 1.35);
+  rhythm[2].addPitchedNote(1350.0, 40, 1200, 1.30);
+  rhythm[2].addPitchedNote(450.0, 30, 2000, 1.30);
+  rhythm[2].addPitchedNote(550.0, 50, 2400, 1.30);
+  rhythm[2].addPitchedNote(1650.0, 20, 2600, 1.30);
+
+  rhythm[3].addPitchedNote(150.0, 40, 0, 1.35);
+  rhythm[3].addPitchedNote(150.0, 50, 400, 1.31);
+  rhythm[3].addPitchedNote(250.0, 60, 600, 1.35);
+  rhythm[3].addPitchedNote(1350.0, 40, 700, 1.30);
+  rhythm[3].addPitchedNote(450.0, 40, 800, 1.30);
+  rhythm[3].addPitchedNote(550.0, 50, 500, 1.30);
+  rhythm[3].addPitchedNote(1650.0, 40, 1000, 1.30);
+
+  rhythm_bank.addRhythm(&rhythm[0]);
+  rhythm_bank.addRhythm(&rhythm[1]);
+  rhythm_bank.addRhythm(&rhythm[2]);
+  rhythm_bank.addRhythm(&rhythm[3]);
+  * /
+
+  playback_engine.linkBellMechanism(&bells[0]);
+  playback_engine.linkBellMechanism(&bells[1]);
+  playback_engine.linkBellMechanism(&bells[2]);
+
+  playback_engine.linkNeoGroup(&neos[0]);
+  playback_engine.linkNeoGroup(&neos[1]);
+  playback_engine.linkNeoGroup(&neos[2]);
+
+#elif ARTEFACT_SPECIES == EX_CHIPPER
+  for (int i = 0; i < 10; i++)
+  {
+    uint32_t quarter = random(120, 750);
+    buildPeckRhythm(i, quarter);
+    if (random(0, 100) < 30)
+    {
+      rhythm[i].addUnpitchedNote(quarter * 4, 0.75);
+      buildPeckRhythm(i, quarter);
+    }
+    rhythm[i].addMotorMove(1, 70, 100);
+    rhythm[i].print();
+    rhythm_bank.addRhythm(&rhythm[i]);
+  }
+  playback_engine.linkMechanism(&pecker[0]);
+  playback_engine.linkNeoGroup(&neos[1]);
+
+#endif // ARTEFACT_SPECIES == EX_CHIRPER
+}
+
+#if ARTEFACT_SPECIES == EX_CHIPPER
+void buildPeckRhythm(int idx, uint32_t quarter)
+{
+  uint32_t t = 0;
+  uint32_t eigth = quarter / 2;
+  uint32_t triplet = quarter / 3;
+
+  // 30% chance to start with a hard strike
+  if (random(0, 100) < 30)
+  {
+    rhythm[idx].addUnpitchedNote(0, 0.5);
+    t = quarter;
+  }
+
+  // then 85% chance for a triplet of 3-4
+  if (random(0, 100) < 85)
+  {
+    for (int i = 0; i < (int)random(3, 4); i++)
+    {
+      rhythm[idx].addUnpitchedNote(t, 0.25);
+      t = triplet;
+    }
+  }
+
+  // then 55% chance for a triplet of 3-4
+  if (random(0, 100) < 55)
+  {
+    for (int i = 0; i < (int)random(3, 4); i++)
+    {
+      rhythm[idx].addUnpitchedNote(t, 0.25);
+      t = triplet;
+    }
+  }
+
+  // chance for a pause
+  if (random(0, 100) < 45)
+  {
+    t += triplet;
+    if (random(0, 100) < 45)
+    {
+      t += triplet;
+    }
+  }
+
+  // then 55% chance for a triplet of 3-4
+  if (random(0, 100) < 55)
+  {
+    for (int i = 0; i < (int)random(3, 4); i++)
+    {
+      rhythm[idx].addUnpitchedNote(t, 0.25);
+      t = triplet;
+    }
+  }
+
+  // chance for a pause
+  if (random(0, 100) < 45)
+  {
+    t += triplet;
+    if (random(0, 100) < 45)
+    {
+      t += eigth;
+    }
+    if (random(0, 100) < 65)
+    {
+      t += eigth;
+    }
+  }
+
+  // 30% chance to start with a hard strike
+  if (random(0, 100) < 30)
+  {
+    rhythm[idx].addUnpitchedNote(t, 0.5);
+    t = quarter;
+  }
+}
+#endif // ARTEFACT_SPECIES == EX_CHIPPER
+#endif // ARTEFACT_GENUS == EXPLORATOR
+
 #if ARTEFACT_SPECIES == EX_WINDER
 
 void windBack(float rotations, int backward_rate)
@@ -295,6 +456,7 @@ void updateBehaviour()
   */
 }
 
+
 #elif ARTEFACT_SPECIES == EX_SPINNER
 
 int motor_speed = 0;
@@ -472,6 +634,21 @@ void updateBehaviour()
 }
 
 #elif ARTEFACT_SPECIES == EX_CHIPPER
+/////////////////////////////// Playback Engine  /////////////////////////////////
+// the playback engine handles the playback of melodies and rhythms through motors
+// and solenoids, as of right now, the only bot which makes use of this is the
+// Explorator
+Rhythm rhythm[3] = {
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+};
+RhythmBank rhythm_bank = RhythmBank();
+PlaybackEngine playback_engine = PlaybackEngine();
+// actuator pin, reference to motor, motor number, minimum_on_time for the solenoid
+// maximum on time for the solenoid, min_time between actuations for the solenoid
+WoodpeckerMechanism pecker[1] = {WoodpeckerMechanism(s_pins[0], &motors, 0, S1_MIN, S1_MAX, S1_BETWEEN)};
+#endif // ARTEFACT_GENUS and ARTEFACT_SPECIES for playback objects
 
 void updateBehaviour()
 {
@@ -506,6 +683,37 @@ void updateBehaviour()
 }
 
 #elif ARTEFACT_SPECIES == EX_CHIRPER
+/* Mechatronic Creatures
+  "Bowl Bot" Genus
+  using the Adafruit Huzzah ESP8266 Microcontroller
+*/
+/////////////////////////////// Playback Engine  /////////////////////////////////
+// the playback engine handles the playback of melodies and rhythms through motors
+// and solenoids, as of right now, the only bot which makes use of this is the
+// Explorator
+Rhythm rhythm[10] = {
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm()
+};
+
+RhythmBank rhythm_bank = RhythmBank();
+PlaybackEngine playback_engine = PlaybackEngine();
+
+// actuator pin, dampener pin, frequency, on_time
+BellMechanism bells[3] = {
+  BellMechanism(s_pins[0], s_pins[1], 20, 100.0, 40),
+  BellMechanism(s_pins[2], s_pins[3], 20, 500.0, 40),
+  BellMechanism(s_pins[4], s_pins[5], 20, 1000.0, 40)
+};
+
 void updateBehaviour()
 {
   ///////////////// Actuator Outputs //////////////////
@@ -690,4 +898,142 @@ void updateSolenoids() {
   }
 }
 
+void setOutputs()
+{
+  /////////////// Solenoid Outputs /////////////////////////////////////////
+  for (int i = 0; i < NUM_SOLENOIDS; i++)
+  {
+    pinMode(s_pins[i], OUTPUT);
+    digitalWrite(s_pins[i], LOW); // turns them off
+  }
+
+#if TEST_SOLENOIDS == true
+  Serial.println("TEST_SOLENOIDS is set to true, system will just test solenoids over and over again forever");
+  testSolenoids(1000); // let the system settle
+  Serial.println("Finished setting solenoid pins to outputs");
+#endif
+
+#if (NUM_MOTORS > 0)
+  Serial.println("Starting Motor Set-up");
+  motors.flipM1(M1_POLARITY);
+  motors.flipM2(M2_POLARITY);
+  motors.flipM3(M3_POLARITY);
+  motors.enableDrivers();
+  motors.setM1Speed(0);
+  motors.setM2Speed(0);
+  motors.setM3Speed(0);
+  delay(500);
+  Serial.println("Finished setting up motors");
+  Serial.println("-------------------------------------------------------------");
+  delay(2500); // let the system settle
+#endif
+}
+
+#if TEST_SOLENOIDS == true
+void testSolenoids(unsigned int len)
+{
+  elapsedMillis t = 0;
+  Serial.print("Testing Solenoids - ");
+  while (t < len)
+  {
+    for (int i = 0; i < NUM_SOLENOIDS; i++)
+    {
+      if (sol_active[i] == true)
+      {
+        Serial.print(i);
+        digitalWrite(s_pins[i], HIGH); // LOW is on for these transistors as a low opens the gate
+        delay(30);
+        Serial.print(" ");
+        digitalWrite(s_pins[i], LOW);
+      }
+    }
+    Serial.println();
+  }
+  Serial.println("Finished testing solenoids");
+  Serial.println("--------------------------");
+};
+#endif // test_solenoids, ARTEFACT_GENUS explorator
+
+void setupSpeciesAudio() {
+  HPF1.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
+  HPF1.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
+  amp1.gain(starting_gain);
+}
+
+void setupSpecies() {
+#if NUM_SOLENOIDS > 0 || NUM_MOTORS > 0
+  setOutputs();
+#endif
+  printMajorDivide("starting exploratorSetup() loop");
+
+#if ARTEFACT_SPECIES == EX_CHIPPER
+  pecker[0].setMotorSpeeds(70, -30);
+#endif // ARTEFACT_SPECIES == EX_CHIPPER
+
+  /////////////// User Controls ////////////////////////////////////////////
+#if USER_CONTROLS_ACTIVE
+#if ARTEFACT_SPECIES == EX_CHIPPER || ARTEFACT_SPECIES == EX_CHIRPER
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &but_test[2], BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &but_test[3], BUT4_NAME);
+
+  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &STRIKE_LENGTH, POT2_NAME);
+
+  uimanager.setup(false);
+  uimanager.printAll();
+
+#elif ARTEFACT_SPECIES == EX_WINDER
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &WIND_FORWARD, BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &WIND_BACKWARD, BUT2_NAME);
+
+  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &ACTIVITY_LEVEL, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &WINDING_RATE, POT2_NAME);
+  uimanager.addPotRange(0, MIN_ACTIVITY_LEVEL, MID_ACTIVITY_LEVEL, MAX_ACTIVITY_LEVEL);
+  uimanager.addPotRange(1, MIN_WINDING_RATE, MID_WINDING_RATE, MAX_WINDING_RATE);
+
+  uimanager.setup(false);
+  // uimanager.printAll();
+#endif // UI controls for the woodpecker and bellbot
+#endif // USER_CONTROLS_ACTIVE
+
+  ////////////////////// Audio
+  printMinorDivide();
+  Serial.println("Starting the Audio system");
+  // TODO make this proper
+  uint32_t lpf = 14000;
+  uint32_t hpf = 200;
+  double q = 0.8;
+  amp1.gain(starting_gain);
+#if ARTEFACT_SPECIES == EX_WINDER
+  mixer1.gain(0, starting_gain);
+  mixer1.gain(1, starting_gain);
+#endif // ARTEFACT_SPECIES == MB
+
+  HPF1.setLowpass(0, lpf, q);
+  HPF1.setLowpass(1, lpf, q);
+#if ARTEFACT_SPECIES == EX_CLAPPER
+  HPF1.setLowpass(2, lpf, q);
+  HPF1.setLowpass(3, lpf, q);
+#else  // ARTEFACT_SPECIES != CLAPPER
+  HPF1.setHighpass(2, hpf, q);
+  HPF1.setHighpass(3, hpf, q);
+#endif // ARTEFACT_SPECIES == CLAPPER
+
+  configurePlaybackEngine();
+
+  fft_manager[0].linkFFT(&fft1, "All");
+  fft_manager[0].setCalculateCent(true);
+  fft_manager[0].setCalculateFlux(false);
+
+  feature_collector.linkPeak(&peak1, P_PEAK_VALS);
+  // feature_collector.linkRMS(&rms1, P_PEAK_VALS);
+
+  printMinorDivide();
+  Serial.println("Finished setup Loop");
+  colorWipeAll(0, 120, 30, 0.25);
+  printMinorDivide();
+
+}
 #endif // Explorator genus only 

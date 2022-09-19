@@ -43,3 +43,6 @@
 [submodule "acropolis_family_firmware/lib/SparkFun_Ambient_Light_Sensor_Arduino_Library"]
 	path = acropolis_family_firmware/lib/SparkFun_Ambient_Light_Sensor_Arduino_Library
 	url = https://github.com/sparkfun/SparkFun_Ambient_Light_Sensor_Arduino_Library
+[submodule "acropolis_family_firmware/lib/MAX14870Motors"]
+	path = acropolis_family_firmware/lib/MAX14870Motors
+	url = https://github.com/nathanshaw/MAX14870Motors.git

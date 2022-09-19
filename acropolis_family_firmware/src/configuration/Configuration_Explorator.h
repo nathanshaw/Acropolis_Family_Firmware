@@ -1,5 +1,5 @@
-#ifndef __EXPLORATOR_CONFIGURATION_H__
-#define __EXPLORATOR_CONFIGURATION_H__
+#ifndef __CONFIGURATION_EXPLORATOR_H__
+#define __CONFIGURATION_EXPLORATOR_H__
 
 // should correspond to the serial number on the PCB
 #define SERIAL_ID                       13
@@ -432,4 +432,4 @@ const long winding_interval = 15000;
 int last_pos = 0;
 #endif
 
-#endif // __CONFIGURATION__H__
+#endif // __CONFIGURATION_EXPLORATOR_H__

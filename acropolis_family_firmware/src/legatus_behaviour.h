@@ -1,24 +1,28 @@
 
 #if ARTEFACT_GENUS == LEGATUS
 
-    if (DISABLE_USER_CONTROLS == false)
-    {
-      uimanager.update();
-    }
-    updateLegatusPassiveLEDs();
-    ARTEFACT_BEHAVIOUR = determineLegatusBehavior();
-    if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
-    {
-      legatusLoopSamplePlayback();
-    }
-    else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
-    {
-      legatusLoopFeedback();
-    }
-    else if (ARTEFACT_BEHAVIOUR == FM_FEEDBACK_MODE)
-    {
-      legatusLoopFM();
-    }
+int determineLegatusBehavior()
+{
+  if (FM_FEEDBACK_ACTIVE == true)
+  {
+    return FM_FEEDBACK_MODE;
+  }
+  else if (FEEDBACK_ACTIVE == true)
+  {
+    return FEEDBACK_MODE;
+  }
+  else if (PLAYBACK_ACTIVE == true)
+  {
+    return PLAYBACK_MODE;
+  }
+  else if (MATCH_PITCH_ACTIVE == true)
+  {
+    return MATCH_PITCH_MODE;
+  }
+  return 0;
+}
+
+
 
 void legatusLoopSamplePlayback()
 {
@@ -291,4 +295,211 @@ void initSD()
   // list the length of all audio files
 }
 #endif // SD card related functions
+
+void setupSpeciesAudio()
+{
+  sgtl5000.enable();
+  sgtl5000.volume(0.0);
+  sgtl5000.inputSelect(AUDIO_INPUT_MIC);
+  sgtl5000.micGain(54);
+
+#if SD_PRESENT
+  SPI.setMOSI(SD_MOSI);
+  SPI.setSCK(SD_CLK);
+  if (!(SD.begin(SD_CS)))
+  {
+    // stop here, but print a message repetitively
+    while (1)
+    {
+      Serial.println("Unable to access the SD card");
+      delay(500);
+    }
+  }
+  #else
+  Serial.println("WARNING SD_PRESENT IS SET TO FALSE!!!!");
+  delay(400000);
+#endif
+
+  /////////////////////////////////////////////////////////////////////
+  biquad3.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
+  // HPF1.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
+  // HPF1.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+  // HPF1.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+  Serial.print("mic HPF has been configured (thresh/Q/dB): ");
+  Serial.print(LBQ1_THRESH);
+  Serial.print("\t");
+  Serial.print(LBQ1_Q);
+  Serial.print("\t");
+  Serial.println(LBQ1_DB);
+
+  biquad4.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
+  // LPF1.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
+  // LPF1.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+  // LPF1.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+  Serial.print("mic LPF has been configured (thresh/Q/dB): ");
+  Serial.print(LBQ2_THRESH);
+  Serial.print("\t");
+  Serial.print(LBQ2_Q);
+  Serial.print("\t");
+  Serial.println(LBQ2_DB);
+
+  if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
+  {
+    audio_player.begin();
+    biquad1.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+    biquad1.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
+    // HPF1.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
+    // HPF1.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
+    Serial.println("playback left filters have been configured");
+
+    biquad2.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+    biquad2.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
+    // LPF1.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
+    // LPF1.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
+    Serial.println("playback right Filters have been configured ");
+
+    printMinorDivide();
+
+    //////////////////////////////////////////////////////////////////////////////////
+    amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
+    amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
+    Serial.print("playback gains are set to : ");
+    Serial.println(USER_CONTROL_PLAYBACK_GAIN);
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // TODO - make sure ENC_GAIN_ADJ exists for all bots
+    Serial.print("Starting gain is now set to: ");
+    Serial.println(starting_gain);
+    mixer1.gain(0, starting_gain * 0.5);
+    mixer1.gain(1, starting_gain * 0.5);
+    amp3.gain(starting_gain);
+
+    mixer2.gain(0, 0.33);
+    mixer2.gain(1, 0.33);
+    mixer2.gain(2, 0.5);
+    // Serial.println("Setting up the FFTManager to track the first channel");
+    // fft_manager.addInput(&patchCord_fft_input1);
+    // patchCord_fft_input2.disconnect();
+  }
+  else if (ARTEFACT_BEHAVIOUR == MATCH_PITCH_MODE)
+  {
+    mixer1.gain(0, starting_gain * 4);
+    mixer1.gain(1, starting_gain * 4);
+    sine_fm.amplitude(0.0);
+    sine_fm.frequency(200);
+  }
+  else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
+  {
+    audio_delay1.delay(0, 0);
+    mixer1.gain(0, starting_gain);
+    mixer1.gain(1, starting_gain);
+  }
+}
+
+void updateBehaviour(){
+  // TODO
+  updateLegatusPassiveLEDs();
+  ARTEFACT_BEHAVIOUR = determineLegatusBehavior();
+  if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
+  {
+    legatusLoopSamplePlayback();
+  }
+  else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
+  {
+    legatusLoopFeedback();
+  }
+  else if (ARTEFACT_BEHAVIOUR == FM_FEEDBACK_MODE)
+  {
+    legatusLoopFM();
+  }
+}
+
+void setupSpecies() {
+
+    ///////////////////////////// SD Card //////////////////////////////////
+#if SD_PRESENT
+    neos[i].colorWipe(12, 0, 0, 1.0);
+    initSD();
+#endif
+  if (ARTEFACT_BEHAVIOUR == PLAYBACK_MODE)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(mixer2, 0, output_usb, 0);
+    audio_connections[2] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[3] = new AudioConnection(audio_player, 0, biquad1, 0);
+    audio_connections[4] = new AudioConnection(audio_player, 1, biquad2, 0);
+    audio_connections[5] = new AudioConnection(mixer1, 0, output_usb, 1);
+    audio_connections[6] = new AudioConnection(mixer1, biquad3);
+    audio_connections[7] = new AudioConnection(biquad1, amp1);
+    audio_connections[8] = new AudioConnection(biquad2, amp2);
+    audio_connections[9] = new AudioConnection(biquad3, biquad4);
+    audio_connections[10] = new AudioConnection(amp1, 0, audioOutput, 0);
+    audio_connections[11] = new AudioConnection(amp1, 0, mixer2, 0);
+    audio_connections[12] = new AudioConnection(amp2, 0, audioOutput, 1);
+    audio_connections[13] = new AudioConnection(amp2, 0, mixer2, 1);
+    audio_connections[14] = new AudioConnection(biquad4, amp3);
+    audio_connections[15] = new AudioConnection(amp3, 0, mixer2, 2);
+    audio_connections[16] = new AudioConnection(mixer2, rms1);
+    audio_connections[17] = new AudioConnection(mixer2, fft1);
+    audio_connections[18] = new AudioConnection(mixer2, peak1);
+  }
+  else if (ARTEFACT_BEHAVIOUR == FEEDBACK_MODE)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
+    audio_connections[3] = new AudioConnection(mixer1, biquad3);
+    audio_connections[4] = new AudioConnection(biquad3, biquad4);
+    audio_connections[5] = new AudioConnection(biquad4, amp3);
+    audio_connections[6] = new AudioConnection(amp3, rms1);
+    audio_connections[7] = new AudioConnection(amp3, fft1);
+    audio_connections[8] = new AudioConnection(amp3, peak1);
+    audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
+    audio_connections[10] = new AudioConnection(audio_delay1, 0, audioOutput, 0);
+    audio_connections[11] = new AudioConnection(audio_delay1, 0, audioOutput, 1);
+    audio_connections[12] = new AudioConnection(amp3, 0, audio_delay1, 0);
+  }
+  else if (ARTEFACT_BEHAVIOUR == FM_FEEDBACK_MODE)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
+    audio_connections[3] = new AudioConnection(mixer1, biquad3);
+    audio_connections[4] = new AudioConnection(biquad3, biquad4);
+    audio_connections[5] = new AudioConnection(biquad4, amp3);
+    audio_connections[6] = new AudioConnection(amp3, rms1);
+    audio_connections[7] = new AudioConnection(amp3, fft1);
+    audio_connections[8] = new AudioConnection(amp3, peak1);
+    audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
+    audio_connections[10] = new AudioConnection(amp3, sine_fm);
+    audio_connections[11] = new AudioConnection(sine_fm, 0, audioOutput, 0);
+  }
+  // setup up some value tracker stuff
+  brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
+  hue_tracker.setMinMaxUpdateFactor(HUE_MIN_UPDATE_FACTOR, HUE_MAX_UPDATE_FACTOR);
+  saturation_tracker.setMinMaxUpdateFactor(SAT_MIN_UPDATE_FACTOR, SAT_MAX_UPDATE_FACTOR);
+
+  #if USER_CONTROLS_ACTIVE
+  /////////////// User Controls ////////////////////////////////////////////
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
+  uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &PLAYBACK_ACTIVE, BUT2_NAME);
+  uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &FM_FEEDBACK_ACTIVE, BUT3_NAME);
+  uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &FEEDBACK_ACTIVE, BUT4_NAME);
+  uimanager.addBut(BUT5_PIN, BUT5_PULLUP, BUT5_LOW_VAL, BUT5_HIGH_VAL, BUT5_LOW_CHANGES, &but_test[4], BUT5_NAME);
+  uimanager.addBut(BUT6_PIN, BUT6_PULLUP, BUT6_LOW_VAL, BUT6_HIGH_VAL, BUT6_LOW_CHANGES, &but_test[5], BUT6_NAME);
+
+  uimanager.addPot(POT1_PIN, POT1_REVERSE, POT1_PLAY, &user_brightness_scaler, POT1_NAME);
+  uimanager.addPot(POT2_PIN, POT2_REVERSE, POT2_PLAY, &USER_CONTROL_PLAYBACK_GAIN, POT2_NAME);
+  uimanager.addPotRange(0, min_user_brightness_scaler, mid_user_brightness_scaler, max_user_brightness_scaler);
+  uimanager.addPotRange(1, min_playback_gain, mid_playback_gain, max_playback_gain);
+
+  uimanager.setup(false);
+  uimanager.printAll();
+  #else
+    Serial.println("WARNING - user controls are disabled");
+  #endif
+  //////////////////// power control ///////////////////////
+  pinMode(PWR_KILL_PIN, OUTPUT);
+  digitalWrite(PWR_KILL_PIN, HIGH);
+}
 #endif // LEGATUS GENUS ONLY!!!

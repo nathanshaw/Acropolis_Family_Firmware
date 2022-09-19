@@ -1,6 +1,7 @@
 #ifndef __CONFIGURATION_HARDWARE_H__
 #define __CONFIGURATION_HARDWARE_H__
-#include "../lib/ValueTracker/ValueTrackerDouble.h"
+
+#include <ValueTrackerDouble.h>
 #include "Macros.h"
 
 #define FLIP_SWITCHES             true
@@ -27,7 +28,6 @@ double ENCLOSURE_GAIN_FACTOR =        3.0;
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
 double ENCLOSURE_GAIN_FACTOR =        0.5;
 #endif // ENCLOSURE_TYPE
-
 #elif ARTEFACT_GENUS == EXPLORATOR
 double ENCLOSURE_GAIN_FACTOR =        1.0;
 #elif ARTEFACT_GENUS == LEGATUS
@@ -701,8 +701,6 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define MICROPHONE_TEST_DURATION  1500
 #define LUX_TEST_DURATION         1000
 
-#endif // __HARDWARE_CONFIGURATION_H__
-
 //////////////////////////////// SD Card Stuff /////////////////////
 #if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == MODULAR_LEGATUS_MODE
 
@@ -711,18 +709,15 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define SD_MISO                               12
 #define SD_CLK                                14
 #define SD_CS                                 10
-
 #else
 #define SD_PRESENT                            false
 #endif// ARTEFACT_GENUS == LEGATUS for SD card stuff
 
 /////////////////////////////// DOF Sensors ////////////////////////
 #if ARTEFACT_GENUS == LEGATUS
-
 #define DOF_PRESENT                           true
-
 #else 
-
 #define DOF_PRESENT                           false
-
 #endif // DOF sensor stuff
+
+#endif // CONFIGURATION_HARDWARE_H__

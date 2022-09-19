@@ -4,30 +4,14 @@
 // to get some definitions such as SPECULATOR
 #include "Macros.h"
 #include <ValueTrackerDouble.h>
-// #include "../lib/ValueTracker/ValueTrackerDouble.h"
-
-////////////////////////// Boot Tests ////////////////////////////////
-#define TEST_SOLENOIDS           false
-#define TEST_MOTORS              false
-#define TEST_LEDS                false
-// TODO
-#define TEST_LUX                 false
-#define TEST_TEMP                false
-#define TEST_DOF                 false
-
-#define DISABLE_USER_CONTROLS    true
-
-//////////////////// Software Revision ////////////////////////////////
-#define SV_MAJOR                  0
-#define SV_MINOR                  1
-#define SV_REVISION               12
+#include "Configuration_printing_and_tests.h"
 
 /////////////////////// Artefact Genus ////////////////////////////////
 // There are three artefact genera currently availible
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_GENUS to one of these types
 /////////////////// TODO
-#define ARTEFACT_GENUS            SPECUlATOR
+#define ARTEFACT_GENUS            SPECULATOR
 
 ////////////////////// Artefact Species //////////////////////////////////////
 // Speculator Species include: SPEC_MINOR and SPEC_MAJOR
@@ -35,16 +19,13 @@
 // Legatus Species include: LEG_MAJOR
 
 #if ARTEFACT_GENUS == EXPLORATOR
-#define ARTEFACT_SPECIES                 EX_CHIRPER
+#define ARTEFACT_SPECIES                 EX_WINDER
 #elif ARTEFACT_GENUS == LEGATUS 
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
 #define ARTEFACT_SPECIES                 SPEC_MINOR
 
 #endif
-#define ORB_BODY                  10
-#define GND_BODY                  11
-
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Hardware Revision /////////////////////////////
@@ -176,7 +157,6 @@ offset the saturation level according to this value
 */
 float ADDED_SATURATION  = 0.4;
 
-
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////// 
 // Including the Appropiate configuration files depending on
@@ -193,56 +173,9 @@ float ADDED_SATURATION  = 0.4;
 // it will set the right directives according to information in the
 // speculator, explorator, and legatus configuration files
 #include "Configuration_hardware.h"
-
-#if ARTEFACT_GENUS == SPECULATOR
-#define NUM_AMPLIFIERS                1
-#define NUM_PEAK_ANAS                 1
-#define NUM_RMS_ANAS                  0
-#define NUM_FFT                       1
-#define NUM_CHANNELS                  1
-#else
-#define NUM_AMPLIFIERS                1
-#define NUM_PEAK_ANAS                 1
-#define NUM_RMS_ANAS                  1
-#define NUM_FFT                       1
-#define NUM_CHANNELS                  1
-#endif
-
-///////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// Boot Settings //////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-
-#if ARTEFACT_GENUS == SPECULATOR
-// how long will the bot wait until starting the main loop
-// this is useful for when it neeeds to bee put into an enclosure and then installed in the environment
-uint32_t  BOOT_DELAY      =           (1000 * 60 * 2);
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-uint32_t  BOOT_DELAY      =           (10000);
-#elif ARTEFACT_GENUS == EXPLORATOR
-uint32_t  BOOT_DELAY      =           (1000);
-#else
-uint32_t  BOOT_DELAY      =           (1000);
-#endif
-int BOOT_DELAY_ACTIVE    =           false;
-
-///////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// Audio Analysis /////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-
-// if set to true an audio USB object will be created so the audio can be debuged via Audacity
-#define AUDIO_USB                       false
-
-// Which Audio features will be activated?
-#if ARTEFACT_GENUS == EXPLORATOR
-#define PEAK_FEATURE_ACTIVE                    true
-#define RMS_FEATURE_ACTIVE                     false
-#elif ARTEFACT_GENUS == SPECULATOR
-#define PEAK_FEATURE_ACTIVE                    true
-#define RMS_FEATURE_ACTIVE                     false
-#else
-#define PEAK_FEATURE_ACTIVE                    true
-#define RMS_FEATURE_ACTIVE                     true
-#endif
+#include "Configuration_led_feedback.h"
+#include "Configuration_user_controls.h"
+#include "Configuration_audio_system.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Ambient Light Sensing //////////////////////////////////
@@ -312,23 +245,23 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
 ///////////////////////// Weather Manager //////////////////////
 ////////////////////////////////////////////////////////////////
 #if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
-#define WEATHER_MANAGER_PRESENT true
+#define WEATHER_MANAGER_ACTIVE true
 #elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
-#define WEATHER_MANAGER_PRESENT true
+#define WEATHER_MANAGER_ACTIVE true
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
-#define WEATHER_MANAGER_PRESENT false
+#define WEATHER_MANAGER_ACTIVE false
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIRPER
-#define WEATHER_MANAGER_PRESENT true
+#define WEATHER_MANAGER_ACTIVE true
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#define WEATHER_MANAGER_PRESENT false
+#define WEATHER_MANAGER_ACTIVE false
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-#define WEATHER_MANAGER_PRESENT true
+#define WEATHER_MANAGER_ACTIVE true
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-#define WEATHER_MANAGER_PRESENT true
+#define WEATHER_MANAGER_ACTIVE true
 #elif ARTEFACT_GENUS == LEGATUS
-#define WEATHER_MANAGER_PRESENT true
+#define WEATHER_MANAGER_ACTIVE true
 #else
-#define WEATHER_MANAGER_PRESENT false
+#define WEATHER_MANAGER_ACTIVE false
 #endif // if weather manager present?
 
 ///////////////////////////////////////////////////////////
@@ -354,7 +287,7 @@ bool TEMP_OFFSETS_FEEDBACK                   =  true;
 #define MAX_TEMP_OFFSET                         0.3
 #define TEMP_FEEDBACK_SCALING                  LINEAR_SCALING
 
-bool HUMID_SCALES_FEEDBACK               =  true;
+bool HUMID_SCALES_FEEDBACK               =  false;
 // these are the fo;r the humidity values, not the constraining
 #define HUMID_SCALES_HUE                    true
 #define HUMID_SCALES_SAT                    false
@@ -378,7 +311,7 @@ bool TEMP_SCALES_FEEDBACK               =  false;
 
 /////////////////////////////// Lighting Conditions ///////////////////////////////////
 // TODO this should be triggered by the light sensor and then determine the mapping
-#define LC_NIIGHT                       0
+#define LC_NIGHT                        0
 #define LC_DIM                          1
 #define LC_NORMAL                       2
 #define LC_BRIGHT                       3
@@ -415,6 +348,7 @@ uint16_t  MAX_BRIGHTNESS =              765;
 uint32_t lux_max_reading_delay =        1000 * 60 * 1;   // every 3 minute
 uint32_t lux_min_reading_delay =        1000 * 2;       // ten seconds
 
+#if USER_CONTROLS_ACTIVE
 #if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR > 2
 #define USER_BRIGHT_THRESH_OVERRIDE            true
 #else
@@ -430,6 +364,7 @@ float user_brightness_cuttoff = 0.05;
 #else 
 float user_brightness_cuttoff = 0.0;
 #endif//BEHAVIOUR_ROUTINE
+#endif // USER_CONTROLS_ACTIVE
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// Neopixel LEDs /////////////////////////////////////
@@ -662,26 +597,6 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define SCALE_FFT_BIN_RANGE             false
 #define FFT_FEATURES_ACTIVE             1
 
-///////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// User Controls //////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-
-// TODO - buttons should be linked to inturrupts
-
-// in ms, how often will theUI controls update?
-#if ((ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 2))
-#define UI_POLLING_RATE                 1000
-#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
-#define UI_POLLING_RATE                 500
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#define UI_POLLING_RATE                 600000
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-#define UI_POLLING_RATE                 20
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-#define UI_POLLING_RATE                 20
-#else
-#define UI_POLLING_RATE                 500
-#endif // UI_POLLING_RATE
 
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ///////////////////////////////// Datalogging //////////////////////////////////////////////////
@@ -698,117 +613,6 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 // perform a write check on everything that is written to EEPROM
 #define EEPROM_WRITE_CHECK              true
 #endif // DATALOG_ACTIVE
-
-// |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-///////////////////////////////// Debug Printing ///////////////////////////////////////////////
-// |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-#define P_LEDS_ON                       false
-// print lux debug mostly prints info about when extreme lux is entered and
-// other things in the lux manager, it is reccomended to leave this printing on
-#define P_LED_ON_RATIO                  false
-#define P_COLOR                         false
-#define P_COLOR_WIPE                    false
-
-////////////////////////////// weather manager ////////////////////////
-#define P_WEATHER_MANAGER_READINGS      false
-
-///////////////////////// NeoPixels and Colour ////////////////////////
-#define P_HSB                           false
-#define P_SMOOTH_HSB                    false
-#define P_SATURATION                    true 
-#define P_HUE                           true 
-#define P_BRIGHTNESS                    true 
-
-#define P_NEO_COLORS                    true
-
-//////////////////////// LuxManager and Ambiant Lighting ///////////////
-#define P_LUX_MANAGER_READINGS          false
-#define P_EXTREME_LUX                   false
-// sets p_lux_readings within the lux_manager but also the NeoPixelManager
-#define P_LUMIN                         false
-// sets p_lux within the lux_manager
-#define P_LUX_READINGS                  false
-// sets general debug printing for the lux_manager class
-#define P_LUX_MANAGER_DEBUG             false
-
-// sets print_brightness_scaler within the lux_manager
-#define P_BS                            true
-
-//
-#define P_CALCULATE_BRIGHTNESS_LENGTH   false
-
-// this is where the final brightness scaler is applied
-#define P_PACK_COLORS                   false
-
-#define P_SONG_GENERAL                  false
-#define P_SONG_COLOR                    false
-
-// basically do you want to print the number of song updates which occur every second?
-#define P_NUM_SONG_UPDATES              false
-#if P_NUM_SONG_UPDATES == 1
-uint16_t song_updates = 0;
-elapsedMillis song_update_timer = 0;
-#endif // P_NUM_SONG_UPDATES
-
-#define P_UPDATE_SONG_LENGTH                      false
-
-//////////////////////////// Onset Functionality ///////////////////////
-#define P_ONSET_FEATURES                          true 
-#define P_ONSET                                   false
-
-//////////////////////////// AutoGain //////////////////////////////////
-#define P_AUTOGAIN                                false
-
-// for calculating the dominate channel, it works best if the dominate channel is re-caculated every
-
-/////////////////////////// Datalogging ////////////////////////////////
-#define P_LOG_WRITE                               true
-#define DLM_PRINT                                 false
-// if LOOP_LENGTH is set to true the program will keep track of how long it takes to go through
-// the main loop, it will also store the min and max loop length values as well as calculate
-// what the average loop length is
-// TODO - this needs to be implemented
-#define P_LOOP_LENGTH                             false
-///////////////////////// Audio Stuff ///////////////////////////////////////
-#define P_RMS_VALS                                false
-#define P_PEAK_VALS                               false
-// #define P_TONE_VALS                     false
-#define P_FREQ_VALS                               false
-#define P_AUDIO_USAGE_MAX                         false
-#define P_DOMINATE_CHANNEL                        false
-
-// prints the max audio memory usage (to help calibrate how much is allocated to the system)
-#if P_AUDIO_USAGE_MAX == true
-elapsedMillis last_audio_usage_print;
-#define AUDIO_USAGE_POLL_RATE                     5000
-#endif
-
-//////////////////////////// FFT ///////////////////////////////////////////
-#define P_FFT_VALS                                false
-// will print spectral flux if flux_active
-#define P_FLUX_VALS                               false
-#define P_ONSET_FLUX                              false
-// will print centroid if centroid_active
-#define P_CENTROID_VALS                           false
-// will print highest energy bin in FFT
-//////////////////// General Purpose //////////////////////////////////
-
-// activates some printing which will print out how long different functions calls take
-#define P_FUNCTION_TIMES                          false
-
-//////////////////////////// EEPROM ///////////////////////////////////
-// set to true if you want to print out data stored in EEPROM on boot
-#define P_EEPROM_CONTENTS                         false
-
-////////////////////////////////////////////////////////////////////////////
-/////////////////////////// User Controls //////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-
-// will print readings from jumpers and pots
-#define P_USER_CONTROLS                           false
-
-///////////////////////// Solenoids //////////////////////////////////////////
-#define P_SOLENOID_DEBUG                          false
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// GLOBAL VARIABLES ////////////////////////////////
@@ -931,21 +735,6 @@ int dominate_channel =                                  0;
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// FFT Manager //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-uint8_t num_fft_managers =                              1;
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-uint8_t num_fft_managers =                              1;
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-uint8_t num_fft_managers =                              1;
-#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 2
-uint8_t num_fft_managers =                              1;
-#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
-uint8_t num_fft_managers =                              1;
-#elif ARTEFACT_GENUS == LEGATUS 
-uint8_t num_fft_managers =                              1;
-#else
-uint8_t num_fft_managers =                              2;
-#endif
 
 #if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == CICADA_MODE
 #define CENTROID_FEATURE_MIN                            4000
@@ -966,6 +755,25 @@ uint8_t num_fft_managers =                              2;
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// P1 - Brightness Overide ////////////////////////
 
+// TODO - buttons should be linked to inturrupts
+
+// in ms, how often will theUI controls update?
+#if ((ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 2))
+#define UI_POLLING_RATE                 1000
+#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
+#define UI_POLLING_RATE                 500
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
+#define UI_POLLING_RATE                 600000
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
+#define UI_POLLING_RATE                 20
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
+#define UI_POLLING_RATE                 20
+#else
+#define UI_POLLING_RATE                 500
+#endif // UI_POLLING_RATE
+
+// TODO - also check for if this scaling is actually mapped
+#if USER_CONTROLS_ACTIVE
 const float min_user_brightness_scaler           = 0.01;
 const float mid_user_brightness_scaler           = 0.7;
 const float max_user_brightness_scaler           = 2.0;
@@ -973,6 +781,7 @@ const float max_user_brightness_scaler           = 2.0;
 const float min_user_brightness_cuttoff           = 0.0;
 const float mid_user_brightness_cuttoff           = 0.3;
 const float max_user_brightness_cuttoff           = 1.3;
+#endif // USER_CONTROLS_ACTIVE
 
 // this will determine if the USER will have control over the brightness scaler
 // at this point v2.1 does this via jumpers and v3.0 does this via a pot
@@ -1283,5 +1092,11 @@ int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
 
 // should the centroid value be smoothed?
 #define SMOOTH_CENTROID                       true
+
+//////////////////// Software Revision ////////////////////////////////
+#define SV_MAJOR                  0
+#define SV_MINOR                  1
+#define SV_REVISION               12
+
 
 #endif // __CONFIGURATION_H__

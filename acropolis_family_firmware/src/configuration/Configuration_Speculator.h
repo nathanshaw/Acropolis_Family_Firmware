@@ -1,9 +1,9 @@
-                   /* This is the main configuration file for the Moth Framework
+#ifndef __CONFIGURATION_SPECULATOR_H__
+#define __CONFIGURATION_SPECULATOR_H__
+/* This is the main configuration file for the Moth Framework
    Using this file, along with the other configuration files you
    Can cistomise how the firmware performs.
 */
-#ifndef __SPECULATOR_CONFIGURATION_H__
-#define __SPECULATOR_CONFIGURATION_H__
 
 #include "Configuration_hardware.h"
 #include "../lib/ValueTracker/ValueTrackerDouble.h"

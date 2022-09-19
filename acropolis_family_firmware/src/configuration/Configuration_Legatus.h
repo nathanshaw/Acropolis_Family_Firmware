@@ -1,5 +1,5 @@
-#ifndef __LEGATUS_CONFIGURATION_H__
-#define __LEGATUS_CONFIGURATION_H__
+#ifndef __CONFIGURATION_LEGATUS_H__
+#define __CONFIGURATION_LEGATUS_H__
 
 #ifndef __MACROS_H__
 #include "Macros.h"
@@ -74,4 +74,5 @@ elapsedMillis last_playback_tmr;
 
 #define PWR_KILL_PIN              8
 
-#endif // __LEGATUS_CONFIGURATION_H__
+
+#endif // __CONFIGURATION_LEGATUS_H__
