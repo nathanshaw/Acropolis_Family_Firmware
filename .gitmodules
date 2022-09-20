@@ -1,0 +1,48 @@
+[submodule "acropolis_family_firmware/lib/NeopixelManager"]
+	path = acropolis_family_firmware/lib/NeopixelManager
+	url = https://github.com/nathanshaw/NeopixelManager
+[submodule "acropolis_family_firmware/lib/LuxManager"]
+	path = acropolis_family_firmware/lib/LuxManager
+	url = https://github.com/nathanshaw/LuxManager
+[submodule "acropolis_family_firmware/lib/ValueTracker"]
+	path = acropolis_family_firmware/lib/ValueTracker
+	url = https://github.com/nathanshaw/ValueTracker
+[submodule "acropolis_family_firmware/lib/WeatherManager"]
+	path = acropolis_family_firmware/lib/WeatherManager
+	url = https://github.com/nathanshaw/WeatherManager
+[submodule "acropolis_family_firmware/lib/UIManager"]
+	path = acropolis_family_firmware/lib/UIManager
+	url = https://github.com/nathanshaw/UIManager
+[submodule "acropolis_family_firmware/lib/PrintUtils"]
+	path = acropolis_family_firmware/lib/PrintUtils
+	url = https://github.com/nathanshaw/PrintUtils
+[submodule "acropolis_family_firmware/lib/PlaybackEngine"]
+	path = acropolis_family_firmware/lib/PlaybackEngine
+	url = https://github.com/nathanshaw/PlaybackEngine
+[submodule "acropolis_family_firmware/lib/Mechanisms"]
+	path = acropolis_family_firmware/lib/Mechanisms
+	url = https://github.com/nathanshaw/Mechanisms
+[submodule "acropolis_family_firmware/lib/DLManager"]
+	path = acropolis_family_firmware/lib/DLManager
+	url = https://github.com/nathanshaw/DLManager
+[submodule "acropolis_family_firmware/lib/AudioEngine"]
+	path = acropolis_family_firmware/lib/AudioEngine
+	url = https://github.com/nathanshaw/AudioEngine
+[submodule "acropolis_family_firmware/lib/Adafruit_BusIO"]
+	path = acropolis_family_firmware/lib/Adafruit_BusIO
+	url = https://github.com/adafruit/Adafruit_BusIO
+[submodule "acropolis_family_firmware/lib/Adafruit_Sensor"]
+	path = acropolis_family_firmware/lib/Adafruit_Sensor
+	url = https://github.com/adafruit/Adafruit_Sensor
+[submodule "acropolis_family_firmware/lib/Adafruit_SHTC3"]
+	path = acropolis_family_firmware/lib/Adafruit_SHTC3
+	url = https://github.com/adafruit/Adafruit_SHTC3
+[submodule "acropolis_family_firmware/lib/Adafruit_VEML7700"]
+	path = acropolis_family_firmware/lib/Adafruit_VEML7700
+	url = https://github.com/adafruit/Adafruit_VEML7700
+[submodule "acropolis_family_firmware/lib/SparkFun_Ambient_Light_Sensor_Arduino_Library"]
+	path = acropolis_family_firmware/lib/SparkFun_Ambient_Light_Sensor_Arduino_Library
+	url = https://github.com/sparkfun/SparkFun_Ambient_Light_Sensor_Arduino_Library
+[submodule "acropolis_family_firmware/lib/MAX14870Motors"]
+	path = acropolis_family_firmware/lib/MAX14870Motors
+	url = https://github.com/nathanshaw/MAX14870Motors.git
