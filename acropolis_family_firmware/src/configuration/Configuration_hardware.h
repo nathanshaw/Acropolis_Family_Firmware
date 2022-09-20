@@ -664,12 +664,12 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 
 // TODO name these properly
 // name        (what is the name for the buttons)
-#define BUT1_NAME           "BUT1"
-#define BUT2_NAME           "BUT2"
-#define BUT3_NAME           "BUT3"
-#define BUT4_NAME           "BUT4"
-#define BUT5_NAME           "BUT5"
-#define BUT6_NAME           "BUT6"
+#define BUT1_NAME           "Unmapped 1"
+#define BUT2_NAME           "Unmapped 2"
+#define BUT3_NAME           "Unmapped 3"
+#define BUT4_NAME           "Unmapped 4"
+#define BUT5_NAME           "Unmapped 5"
+#define BUT6_NAME           "Unmapped 6"
 
 // num pots    (how many pots does the hardware support?)
 #define NUM_POTS            2
@@ -692,7 +692,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 
 // name        (what is the name for the pot?)
 #define POT1_NAME           "Brightness"
-#define POT2_NAME           "Amplitude"
+#define POT2_NAME           "USER_CONTROL_PLAYBACK_GAIN"
 
 #endif // ARTEFACT_GENUS and HV_MAJOR
 
@@ -702,8 +702,7 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define LUX_TEST_DURATION         1000
 
 //////////////////////////////// SD Card Stuff /////////////////////
-#if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == MODULAR_LEGATUS_MODE
-
+#if ARTEFACT_GENUS == LEGATUS
 #define SD_PRESENT                            true
 #define SD_MOSI                               7
 #define SD_MISO                               12
@@ -715,7 +714,8 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 
 /////////////////////////////// DOF Sensors ////////////////////////
 #if ARTEFACT_GENUS == LEGATUS
-#define DOF_PRESENT                           true
+// TODO - this needs implementation
+#define DOF_PRESENT                           false
 #else 
 #define DOF_PRESENT                           false
 #endif // DOF sensor stuff

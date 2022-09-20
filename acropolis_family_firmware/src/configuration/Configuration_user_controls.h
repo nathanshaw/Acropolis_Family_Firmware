@@ -6,7 +6,7 @@
 #include "Macros.h"
 
 //////////////////// Will the artefact read the user controls? ////////
-#define USER_CONTROLS_ACTIVE     false
+#define USER_CONTROLS_ACTIVE     true
 
 
 #endif // __CONFIGURATION_USER_CONTROLS_H__

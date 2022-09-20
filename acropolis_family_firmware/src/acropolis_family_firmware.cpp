@@ -83,16 +83,80 @@ AudioOutputUSB           output_usb;     //xy=916,300
 AudioConnection          patchCordUSB2(mixer1, 0, output_usb, 1);
 AudioConnection          patchCordUSB1(amp1, 0, output_usb, 0);
 #endif
+//////////////////////////////////////////////////////////////////////
+#elif (ARTEFACT_GENUS == EXPLORATOR)
+AudioInputI2S i2s1;        //xy=1203.3333854675293,1356.3334693908691
+AudioMixer4 mixer1;        //xy=1373.3333549499512,1335.0000076293945
+AudioAmplifier amp1;       //xy=1519.3333206176758,1330.0000114440918
+AudioFilterBiquad HPF1;    //xy=1651.6667022705078,1330.6666841506958
+AudioAnalyzeFFT1024 fft1;  //xy=1846.3333740234375,1254.9999675750732
+AudioAnalyzePeak peak1;    //xy=1851.3332901000977,1288.6667175292969
 
-#endif // SPECULATOR GENUS AUDIO ROUTING
+#if AUDIO_USB
+AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
+AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
+AudioConnection patchCordUSB1(HPF1, 0, output_usb, 0);
+#endif
 
+// TODO - these should instead be dynamically created using the audio_connections[] array
+AudioConnection patchCord1(i2s1, 0, mixer1, 0);
+AudioConnection patchCord2(i2s1, 1, mixer1, 1);
+AudioConnection patchCord3(mixer1, amp1);
+AudioConnection patchCord5(amp1, HPF1);
+AudioConnection patchCord6(HPF1, peak1);
+AudioConnection patchCord8(HPF1, fft1);
 
-#if NUM_MOTORS > 0
+//////////////////////////////////////////////////////////////////////
+#elif ARTEFACT_GENUS == LEGATUS 
+// NOTE, the default configuration is for playback mode
+////////////////////////// Audio Objects //////////////////////////////////////////
+AudioInputI2S i2s1; //xy=723.2500076293945,775.5000114440918
+
+AudioMixer4 mixer1; //xy=884.5000114440918,788.0000114440918
+AudioMixer4 mixer2; //xy=1375.0000190734863,652.5000705718994
+
+AudioFilterBiquad biquad1; //xy=944.2500305175781,635.000018119812
+AudioFilterBiquad biquad2; //xy=944.7500152587891,667.0000095367432
+AudioFilterBiquad biquad3; //xy=1025.500015258789,760.5000114440918
+AudioFilterBiquad biquad4; //xy=1160.250015258789,761.0000133514404
+
+AudioAmplifier amp1; //xy=1130.000015258789,636.0000095367432
+AudioAmplifier amp2; //xy=1132.750015258789,669.0000095367432
+AudioAmplifier amp3; //xy=1295.0000190734863,761.5000114440918
+
+AudioOutputI2S audioOutput; //xy=1356.0000190734863,604.5000095367432
+
+AudioAnalyzeRMS rms1;     //xy=1578.5000228881836,682.5000114440918
+AudioAnalyzeFFT1024 fft1; //xy=1578.4999885559082,714.2499980926514
+AudioAnalyzePeak peak1;   //xy=1582.4999885559082,746.2499980926514
+
+#if OUTPUT_USB
+// TOOD - not sure if this routing makes any sense
+AudioOutputUSB output_usb; //xy=1589.4999885559082,781.2499980926514
+AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
+AudioConnection patchCordUSB1(amp1, 0, output_usb, 0);
+#endif // OUTPUT_USB
+
+#if USE_RAW_AUDIO_PLAYER
+AudioPlaySdRaw audio_player; //xy=767.0000267028809,648.750018119812
+#else
+AudioPlaySdWav audio_player; //xy=767.0000267028809,648.750018119812
+#endif
+
+// this should only be created if using the FM mode??
+// #if ARTEFACT_BEHAVIOUR == B_LEG_FM_FEEDBACK
+AudioSynthWaveformSineModulated sine_fm; //xy=1054.285743713379,2268.5713901519775
+//#elif ARTEFACT_BEHAVIOUR == B_LEG_FEEDBACK
+AudioEffectDelay audio_delay1;
+//#endif
+
+AudioControlSGTL5000 sgtl5000; //xy=997.7500152587891,513.2500104904175
+#endif                         // audio system for legatus modular firmware
 
 //////////////////////////////////////////////////////////////////////////
 ///////////////////// H-Bridge Motor Driver //////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-
+#if NUM_MOTORS > 0
 #include <MAX14870Motors.h>
 
 MAX14870Motors motors = MAX14870Motors(MOT1_DIR_PIN, MOT1_PWM_PIN,
@@ -170,7 +234,6 @@ void rampMotor(int which, int16_t start, int16_t target, int ramp_total_time)
   }
   Serial.println("Disabled Drivers");
 }
-
 #endif // motor stuff
 
 #if DATALOG_ACTIVE == true
@@ -347,74 +410,10 @@ float applyWeatherToFloat(float val) {
 #endif // WEATHER_MANAGER_ACTIVE
 
 //////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == MODULAR_LEGATUS_MODE
-// NOTE, the default configuration is for playback mode
-////////////////////////// Audio Objects //////////////////////////////////////////
-AudioInputI2S i2s1; //xy=723.2500076293945,775.5000114440918
-
-AudioMixer4 mixer1; //xy=884.5000114440918,788.0000114440918
-AudioMixer4 mixer2; //xy=1375.0000190734863,652.5000705718994
-
-AudioFilterBiquad biquad1; //xy=944.2500305175781,635.000018119812
-AudioFilterBiquad biquad2; //xy=944.7500152587891,667.0000095367432
-AudioFilterBiquad biquad3; //xy=1025.500015258789,760.5000114440918
-AudioFilterBiquad biquad4; //xy=1160.250015258789,761.0000133514404
-
-AudioAmplifier amp1; //xy=1130.000015258789,636.0000095367432
-AudioAmplifier amp2; //xy=1132.750015258789,669.0000095367432
-AudioAmplifier amp3; //xy=1295.0000190734863,761.5000114440918
-
-AudioOutputI2S audioOutput; //xy=1356.0000190734863,604.5000095367432
-AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
-
-AudioAnalyzeRMS rms1;     //xy=1578.5000228881836,682.5000114440918
-AudioAnalyzeFFT1024 fft1; //xy=1578.4999885559082,714.2499980926514
-AudioAnalyzePeak peak1;   //xy=1582.4999885559082,746.2499980926514
-
-AudioEffectDelay audio_delay1;
-
-// TOOD - not sure if this routing makes any sense
-AudioOutputUSB output_usb; //xy=1589.4999885559082,781.2499980926514
-AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
-AudioConnection patchCordUSB1(amp1, 0, output_usb, 0);
-
-#if USE_RAW_AUDIO_PLAYER == true
-AudioPlaySdRaw audio_player; //xy=767.0000267028809,648.750018119812
-#else
-AudioPlaySdWav audio_player; //xy=767.0000267028809,648.750018119812
-#endif
-
-
-AudioSynthWaveformSineModulated sine_fm; //xy=1054.285743713379,2268.5713901519775
-
-AudioControlSGTL5000 sgtl5000; //xy=997.7500152587891,513.2500104904175
-#endif                         // audio system for legatus modular firmware
-
-//////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#else
+#if USER_CONTROLS_ACTIVE
 UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 #endif
 
-//////////////////////////////////////////////////////////////////////
-#if (ARTEFACT_GENUS == EXPLORATOR)
-AudioInputI2S i2s1;        //xy=1203.3333854675293,1356.3334693908691
-AudioMixer4 mixer1;        //xy=1373.3333549499512,1335.0000076293945
-AudioAmplifier amp1;       //xy=1519.3333206176758,1330.0000114440918
-AudioFilterBiquad HPF1;    //xy=1651.6667022705078,1330.6666841506958
-AudioAnalyzeFFT1024 fft1;  //xy=1846.3333740234375,1254.9999675750732
-AudioAnalyzePeak peak1;    //xy=1851.3332901000977,1288.6667175292969
-AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
-
-AudioConnection patchCord1(i2s1, 0, mixer1, 0);
-AudioConnection patchCord2(i2s1, 1, mixer1, 1);
-AudioConnection patchCord3(mixer1, amp1);
-AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
-AudioConnection patchCord5(amp1, HPF1);
-AudioConnection patchCord6(HPF1, peak1);
-AudioConnection patchCordUSB1(HPF1, 0, output_usb, 0);
-AudioConnection patchCord8(HPF1, fft1);
-#endif
 
 // #if ARTEFACT_GENUS == EXPLORATOR
 double calculateColorFromCentroid(FFTManager1024 *_fft_manager)
@@ -1075,134 +1074,6 @@ void printArtefactInfo()
   printMinorDivide();
 }
 
-#if ARTEFACT_GENUS == LEGATUS
-
-uint8_t colors[3] = {155, 70, 200};
-float fcolors[3];
-
-void brightnessWipe(double b)
-{
-  // uses the currently stored color, adjusts the brightness
-  neos[0].colorWipe(constrain((int)(colors[0] * b), 0, 255), constrain((int)(colors[1] * b), 0, 255), constrain((int)(colors[2] * b), 0, 255), user_brightness_scaler);
-}
-
-void updateLegatusPassiveLEDs()
-{
-  if (fft1.available())
-  {
-    fcolors[2] = fft1.read(1, 8) * 4;   // 172  - 1536  Hz
-    fcolors[1] = fft1.read(8, 23) * 4;  // 1536 - 4416  Hz
-    fcolors[0] = fft1.read(23, 93) * 4; // 1536 - 15996 Hz
-    for (int i = 0; i < 3; i++)
-    {
-      if (colors[i] > 1.0)
-      {
-        colors[i] = 1.0;
-      }
-    }
-    for (int i = 0; i < 3; i++)
-    {
-      colors[i] = (uint8_t)(fcolors[i] * 255);
-    }
-    // Serial.print(colors[0]);
-    // Serial.print("\t");
-    // Serial.print(colors[1]);
-    // Serial.print("\t");
-    // Serial.println(colors[2]);
-  }
-  if (peak1.available())
-  {
-    int c = (int)(peak1.read() * 4096) * user_brightness_scaler;
-    float f = (float)constrain(c, 0, 255) / 255.0;
-    brightnessWipe(f);
-    // Serial.println(f);
-  }
-}
-
-
-float mix_gains[3] = {0.0, 0.0, 0.0};
-
-void fadeMixer(float c1_current, float c2_current, float c1_target, float c2_target)
-{
-  /*
-   * Function for automating mixer fade in and fade out
-   */
-  float slice1 = (c1_target - c1_current) * 0.01;
-  float slice2 = (c2_target - c2_current) * 0.01;
-
-  for (int i = 0; i < 100; i++)
-  {
-
-    c1_current = c1_current + slice1;
-    c2_current = c2_current + slice2;
-
-    mixer2.gain(0, c1_current);
-    mixer2.gain(1, c1_current);
-    mixer2.gain(2, c2_current);
-    delay(10);
-  }
-}
-
-void playFile(const char *filename, float rate)
-{
-  Serial.print("Playing file: ");
-  Serial.println(filename);
-  amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
-  amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
-  audio_player.play(filename);
-#if USE_RAW_AUDIO_PLAYER == true
-  audio_player.setPlaybackRate(rate);
-#endif
-  // first two numbers are mixing in the sample playback with the "starting gain" and "ending gain"
-  // the second two numbers are handling the microphone gain 
-  // but please note, that if the microphone gain is lowered to 0.0 the feedback leds will cease to function...
-  fadeMixer(0, 0.5, 0.5, 0.1);
-  Serial.print("file length : ");
-  Serial.println(audio_player.lengthMillis());
-  Serial.print("Playback Rate : ");
-  Serial.println(rate);
-  Serial.print("Amplitude : ");
-  Serial.println(USER_CONTROL_PLAYBACK_GAIN);
-  // Start playing the file.  This sketch continues to
-  // run while the file plays.  audio_player.play(filename);
-
-  // A brief delay for the library read WAV info
-  delay(15);
-
-  // Simply wait for the file to finish playing.
-  last_playback_tmr = 0;
-  while (audio_player.isPlaying())
-  {
-    PLAYBACK_INTERVAL = audio_player.lengthMillis();
-    // readUserControls();
-    #if USER_CONTROLS_ACTIVE
-    if (uimanager.update())
-    {
-      if (P_USER_CONTROLS)
-      {
-        uimanager.printAll();
-      }
-      amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
-      amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
-      Serial.print("Updated the user control playback gain: ");
-      Serial.println(USER_CONTROL_PLAYBACK_GAIN);
-    }
-    #endif // USER_CONTROLS_ACTIVE
-
-    updateLegatusPassiveLEDs();
-    if (last_playback_tmr % 1000 == 0){
-      Serial.print("playtime : ");
-      Serial.println(last_playback_tmr/1000);
-    }
-  }
-  // change the mixer levels back so the microphone is dominate
-  fadeMixer(0.5, 0.0, 0.2, 0.5);
-  Serial.println("Finished playing back file...");
-  Serial.print("Next playback interval is: ");
-  last_playback_tmr = 0;
-  Serial.println(PLAYBACK_INTERVAL);
-}
-#endif // playback mode
 
 ////////////////////////////////////////////////////////////////////////////
 #if ONSET_DETECTION_ACTIVE
@@ -1640,8 +1511,7 @@ void setup()
     if (BOOT_DELAY_ACTIVE)
     {
       delay(segment);
-#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#else
+#if USER_CONTROLS_ACTIVE
       uimanager.update();
 #endif // only update UIManager if it exists
     }

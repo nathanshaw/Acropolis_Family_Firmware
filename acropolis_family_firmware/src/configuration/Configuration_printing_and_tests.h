@@ -58,7 +58,7 @@ int BOOT_DELAY_ACTIVE    =           false;
 #define P_NEO_COLORS                    true
 
 //////////////////////// LuxManager and Ambiant Lighting ///////////////
-#define P_LUX_MANAGER_READINGS          true
+#define P_LUX_MANAGER_READINGS          false
 #define P_EXTREME_LUX                   false
 
 // sets p_lux_readings within the lux_manager but also the NeoPixelManager
@@ -66,16 +66,16 @@ int BOOT_DELAY_ACTIVE    =           false;
 // sets p_lux within the lux_manager
 #define P_LUX_READINGS                  false
 // sets general debug printing for the lux_manager class
-#define P_LUX_MANAGER_DEBUG             true
+#define P_LUX_MANAGER_DEBUG             false
 
 // sets print_brightness_scaler within the lux_manager
-#define P_BS                            true
+#define P_BS                            false
 
 // TODO - what is this?
 #define P_CALCULATE_BRIGHTNESS_LENGTH   false
 
 // this is where the final brightness scaler is applied
-#define P_PACK_COLORS                   true
+#define P_PACK_COLORS                   false
 
 // TODO - what is this?
 #define P_SONG_GENERAL                  false
@@ -107,7 +107,10 @@ elapsedMillis song_update_timer = 0;
 // what the average loop length is
 // TODO - this needs to be implemented
 #define P_LOOP_LENGTH                             false
-///////////////////////// Audio Stuff ///////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////// Audio Analysis///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 #define P_RMS_VALS                                false
 #define P_PEAK_VALS                               false
 // #define P_TONE_VALS                     false
@@ -115,6 +118,13 @@ elapsedMillis song_update_timer = 0;
 #define P_AUDIO_USAGE_MAX                         false
 #define P_DOMINATE_CHANNEL                        false
 
+//////////////////////////// Audio Playback ///////////////////////////////////
+#define P_AUDIO_PLAYBACK                          true
+// prints feedback from the function of the same name used to calculate the
+// vocalisation lock period which prevents the artefact from vocalising too often
+#define P_CALCULATE_PLAYBACK_INTERVAL             true
+
+//////////////////////////// Audio Memory Usage ///////////////////////////////
 // prints the max audio memory usage (to help calibrate how much is allocated to the system)
 #if P_AUDIO_USAGE_MAX == true
 elapsedMillis last_audio_usage_print;
@@ -130,7 +140,9 @@ elapsedMillis last_audio_usage_print;
 #define P_CENTROID_VALS                           false
 // will print highest energy bin in FFT
 
+///////////////////////////////////////////////////////////////////////////////
 //////////////////// General Purpose //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // activates some printing which will print out how long different functions calls take
 // TODO - this needs implementation to prove real-time operation
 #define P_FUNCTION_TIMES                          false

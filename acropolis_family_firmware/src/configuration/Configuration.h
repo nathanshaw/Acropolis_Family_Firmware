@@ -11,9 +11,11 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_GENUS to one of these types
 /////////////////// TODO
-#define ARTEFACT_GENUS            SPECULATOR
+#define ARTEFACT_GENUS            LEGATUS
 
-////////////////////// Artefact Species //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+////////////////////// Artefact Species //////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // Speculator Species include: SPEC_MINOR and SPEC_MAJOR
 // Explorator Species include: EX_CHIPPER, EX_CHIRPER, EX_CLAPPER, EX_SPINNER, and EX_WINDER
 // Legatus Species include: LEG_MAJOR
@@ -26,6 +28,60 @@
 #define ARTEFACT_SPECIES                 SPEC_MINOR
 
 #endif
+//////////////////////////////////////////////////////////////////////
+////////////////////// Behaviour Routine /////////////////////////////
+//////////////////////////////////////////////////////////////////////
+/* each species can operate using at least one behaviour routine
+   the behaviour routine determines the artefact's feedback mapping and general operation
+   outside of basic sensor polling 
+
+   Speculator major and Speculator minor curenty have two available behaviour routines
+   ------------------------------------------------------------------------------------
+   B_TARGETED_FEEDBACK : "cicada" installation where feedback filtering is hard coded to target specific sounds
+   B_ADAPTIVE_FEEDBACK : feedback filtering is generated during runtime by firmware to adapt to unknown sonic env.
+
+   Each Explorator Species currently has one Behaviour routine
+   ------------------------------------------------------------------------------------
+
+   Legatus major currently support four operating modes
+   ------------------------------------------------------------------------------------
+   B_LEG_MATCH_PITCH 
+   B_LEG_FEEDBACK
+   B_LEG_FM_FEEDBACK
+   B_LEG_SAMP_PLAYBACK
+
+*/
+
+#if ARTEFACT_GENUS == SPECULATOR
+#define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
+// #define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
+
+#elif ARTEFACT_GENUS == EXPLORATOR
+#if ARTEFACT_SPECIES == EX_CHIRPER
+#define BEHAVIOUR_ROUTINE             B_CHIRPER_BASIC
+#elif ARTEFACT_SPECIES == EX_CHIPPER
+#define BEHAVIOUR_ROUTINE             B_CHIPPER_BASIC
+#elif ARTEFACT_SPECIES == EX_CLAPPER
+#define BEHAVIOUR_ROUTINE             B_CLAPPER_BASIC
+#elif ARTEFACT_SPECIES == EX_SPINNER
+#define BEHAVIOUR_ROUTINE             B_SPINNER_BASIC
+#elif ARTEFACT_SPECIES == EX_WINDER
+#define BEHAVIOUR_ROUTINE             B_WINDER_BASIC
+#endif // EXPLORATOR species behavour routines
+
+#elif ARTEFACT_GENUS == LEGATUS
+
+// #define BEHAVIOUR_ROUTINE         B_LEG_MATCH_PITCH
+// #define BEHAVIOUR_ROUTINE         B_LEG_FEEDBACK
+// #define BEHAVIOUR_ROUTINE         B_LEG_FM_FEEDBACK
+#define BEHAVIOUR_ROUTINE            B_LEG_SAMP_PLAYBACK
+
+// this variable is used to allow Legatus artefact's to switch between behaviour routines
+// after initialisation
+int ARTEFACT_BEHAVIOUR =          BEHAVIOUR_ROUTINE;
+// this needs to be a number which does not correspond to a mode so the audio system connects properly when needed
+int LAST_ARTEFACT_BEHAVIOR =      -1;
+#endif // genearting the artefact behaviour based on genus and species
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Hardware Revision /////////////////////////////
@@ -76,50 +132,6 @@
 #define HV_MINOR                  2
 #else
 #error ARTEFACT_SPECIES is not set to supported species
-#endif
-
-#if ARTEFACT_GENUS == LEGATUS
-float USER_CONTROL_PLAYBACK_GAIN             = 0.0;
-#endif
-
-//////////////////////////////////////////////////////////////////////////////////////////
-////////////////////// Behaviour Routine /////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////
-
-/* This is where the run-time behaviour of the artefact is determined, each genus provides
-    several Behaviour Routines to select from:
-
-Speculator:
-   CICADA_MODE
-   PITCH_MODE
-   TEST_MODE
-
-Explorator:
-    TODO
-
-Legatus:
- MATCH_PITCH_ACTIVE = false;
- FEEDBACK_ACTIVE = false;
- FM_FEEDBACK_ACTIVE = true;
- PLAYBACK_ACTIVE = false;
-
-*/
-
-// TODO - these need to be replaced with Macros to fix the mode-selection for Legatus
-int MATCH_PITCH_ACTIVE = false;
-int FEEDBACK_ACTIVE = false;
-int FM_FEEDBACK_ACTIVE = false;
-int PLAYBACK_ACTIVE = true;
-
-#if ARTEFACT_GENUS == SPECULATOR
-#define BEHAVIOUR_ROUTINE             PITCH_MODE
-#elif ARTEFACT_GENUS == LEGATUS
-#define BEHAVIOUR_ROUTINE             MODULAR_LEGATUS_MODE
-int ARTEFACT_BEHAVIOUR =          PLAYBACK_MODE;
-// this needs to be a number which does not correspond to a mode so the audio system connects properly when needed.
-int LAST_ARTEFACT_BEHAVIOR =      -1;
-#else //
-#define BEHAVIOUR_ROUTINE             PLAYBACK_MODE
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -355,11 +367,11 @@ uint32_t lux_min_reading_delay =        1000 * 2;       // ten seconds
 #define USER_BRIGHT_THRESH_OVERRIDE            false
 #endif//HV_MAJOR
 
-#if BEHAVIOUR_ROUTINE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 float user_brightness_cuttoff = 0.15;
-#elif BEHAVIOUR_ROUTINE == PITCH_MODE && HV_MAJOR == 2
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 2
 float user_brightness_cuttoff = 0.01;
-#elif BEHAVIOUR_ROUTINE == PITCH_MODE && HV_MAJOR == 3
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 3
 float user_brightness_cuttoff = 0.05;
 #else 
 float user_brightness_cuttoff = 0.0;
@@ -374,9 +386,9 @@ float user_brightness_cuttoff = 0.0;
 
 /////////////////////////// Onsets //////////////////////
 #if ARTEFACT_GENUS == SPECULATOR
-#if BEHAVIOUR_ROUTINE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 #define ONSET_DETECTION_ACTIVE        true
-#elif BEHAVIOUR_ROUTINE == PITCH_MODE
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
 #define ONSET_DETECTION_ACTIVE        false
 #endif// BEHAVIOUR_ROUTINE
 #elif ARTEFACT_GENUS == EXPLORATOR
@@ -539,7 +551,7 @@ int FLASH_DOMINATES =                  false;
 // if this is true then the brightness will b = (b + b) * b; in order to reduce its value, and make loud events even more noticable
 int SQUARE_BRIGHTNESS =                false;
 
-#if BEHAVIOUR_ROUTINE == CICADA_MODE
+#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 bool SATURATED_COLORS =                 false;
 #else
 bool SATURATED_COLORS =                 true;
@@ -712,15 +724,6 @@ int AUTOGAIN_ACTIVE      =                               true;
 #define AUTOGAIN_MIN_GAIN                               (double)1.0
 #define AUTOGAIN_MAX_GAIN                               (double)3000.0
 
-#if ARTEFACT_GENUS == LEGATUS && BEHAVIOUR_ROUTINE == FM_FEEDBACK_MODE
-const float min_playback_gain = 0.0001;
-const float mid_playback_gain = 0.15;
-const float max_playback_gain = 1.0;
-#elif ARTEFACT_GENUS == LEGATUS
-const float min_playback_gain = 0.02;
-const float mid_playback_gain = 0.25;
-const float max_playback_gain = 1.0;
-#endif // playback gains for legatus
 
 ////////////////////////////// Dominate Channel /////////////////////
 #define CALCULATE_DOMINATE_CHANNEL                      false
@@ -736,10 +739,10 @@ int dominate_channel =                                  0;
 ///////////////////////// FFT Manager //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == CICADA_MODE
+#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 #define CENTROID_FEATURE_MIN                            4000
 #define CENTROID_FEATURE_MAX                            16000
-#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == PITCH_MODE
+#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
 #define CENTROID_FEATURE_MIN                            200
 #define CENTROID_FEATURE_MAX                            20000
 #elif ARTEFACT_GENUS == EXPLORATOR
@@ -753,12 +756,14 @@ int dominate_channel =                                  0;
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// User Controls ////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
+
 ///////////////////////////// P1 - Brightness Overide ////////////////////////
 
 // TODO - buttons should be linked to inturrupts
 
 // in ms, how often will theUI controls update?
-#if ((ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 2))
+#if USER_CONTROLS_ACTIVE
+#if ARTEFACT_SPECIES == SPECULATOR_MAJOR
 #define UI_POLLING_RATE                 1000
 #elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
 #define UI_POLLING_RATE                 500
@@ -773,7 +778,6 @@ int dominate_channel =                                  0;
 #endif // UI_POLLING_RATE
 
 // TODO - also check for if this scaling is actually mapped
-#if USER_CONTROLS_ACTIVE
 const float min_user_brightness_scaler           = 0.01;
 const float mid_user_brightness_scaler           = 0.7;
 const float max_user_brightness_scaler           = 2.0;
@@ -786,14 +790,14 @@ const float max_user_brightness_cuttoff           = 1.3;
 // this will determine if the USER will have control over the brightness scaler
 // at this point v2.1 does this via jumpers and v3.0 does this via a pot
 // so the default value is true
-#if ARTEFACT_GENUS == LEGATUS
+#if USER_CONTROLS_ACTIVE
+int but_test[NUM_BUTTONS];
+float pot_test[NUM_POTS];
 #define USER_BS_ACTIVE                        false
 #else
 #define USER_BS_ACTIVE                        false
-#endif
+#endif // USER_CONTROLS_ACTIVE
 
-int but_test[NUM_BUTTONS];
-float pot_test[NUM_POTS];
 
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Neo Manager //////////////////////////////////////
@@ -907,7 +911,7 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 float starting_gain = STARTING_GAIN * ENCLOSURE_GAIN_FACTOR;
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == CICADA_MODE
+#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 // SONG HP
 #define LBQ1_THRESH         4000
 #define LBQ1_Q              0.85
@@ -925,7 +929,7 @@ float starting_gain = STARTING_GAIN * ENCLOSURE_GAIN_FACTOR;
 #define RBQ2_Q              0.85
 #define RBQ2_DB             -12
 
-#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == PITCH_MODE
+#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
 // Mix HP
 #define LBQ1_THRESH         400
 #define LBQ1_Q              1.0

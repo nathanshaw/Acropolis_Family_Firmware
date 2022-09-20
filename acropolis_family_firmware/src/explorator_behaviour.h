@@ -375,7 +375,9 @@ void manualWinding()
     while (WIND_FORWARD == true)
     {
       updateFeedbackLEDs(&fft_manager[0]);
+      #if USER_CONTROLS_ACTIVE
       uimanager.update();
+      #endif // USER_CONTROLS_ACTIVE
       delay(10);
     }
     motors.disableDrivers();
@@ -390,7 +392,9 @@ void manualWinding()
     while (WIND_FORWARD == true)
     {
       updateFeedbackLEDs(&fft_manager[0]);
+      #if USER_CONTROLS_ACTIVE
       uimanager.update();
+      #endif // USER_CONTROLS_ACTIVE
       delay(10);
     }
     motors.disableDrivers();

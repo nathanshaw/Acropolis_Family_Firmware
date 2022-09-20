@@ -56,23 +56,33 @@
 
 // the current modes, or software driven functionality in which 
 // the firmware should use.
-#define TEST_MODE                       9
-// speculator modes
-#define CICADA_MODE                     0
-#define PITCH_MODE                      1
-#define CICADA_MODE_NEW                 2
+#define B_HARDWARE_TEST           0
 
-// Explorator modes
-#define CLAP_BACK_MODE            101
+// speculator behaviour routines
+#define B_TARGETED_FEEDBACK       100
+#define B_ADAPTIVE_FEEDBACK       101
 
-// Legatus modes
-#define ECHO_FEEDBACK_MODE        200
-#define MATCH_PITCH_MODE          201
-#define FEEDBACK_MODE             202
-#define FM_FEEDBACK_MODE          203
-#define PLAYBACK_MODE             204
-#define REACTIVE_MODE             205
-#define MODULAR_LEGATUS_MODE      206
+// Explorator behaviour routines
+#define B_CHIPPER_BASIC           200
+#define B_CHIRPER_BASIC           210
+#define B_CLAPPER_BASIC           220
+#define B_SPINNER_BASIC           230
+#define B_WINDER_BASIC            240
+
+// Legatus behaviour routines
+#define B_LEG_MODULAR             300
+#define B_LEG_SAMP_PLAYBACK       301
+#define B_LEG_FM_FEEDBACK         302
+#define B_LEG_FEEDBACK            303
+#define B_LEG_MATCH_PITCH         304
+
+// #define ECHO_FEEDBACK_MODE        200
+// #define MATCH_PITCH_MODE          201
+// #define FEEDBACK_MODE             202
+// #define FM_FEEDBACK_MODE          203
+// #define PLAYBACK_MODE             204
+// #define REACTIVE_MODE             205
+// #define MODULAR_LEGATUS_MODE      206
 
 ///////////////////// ENCLOSURE_TYPES /////////////////////
 #define ORB_ENCLOSURE_WITH_HOLE         0

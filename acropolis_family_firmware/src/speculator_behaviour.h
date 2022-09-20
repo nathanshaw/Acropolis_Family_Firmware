@@ -1,6 +1,6 @@
 #if ARTEFACT_GENUS == SPECULATOR
-/////////////////////////// CICADA_MODE /////////////////////////////////////////////////
-#if BEHAVIOUR_ROUTINE == CICADA_MODE
+/////////////////////////// B_TARGETED_FEEDBACK /////////////////////////////////////////////////
+#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 void updateBehaviour()
 {
   Serial.println("WARNING LOOP NOT IMPLEMENTED");
@@ -78,9 +78,9 @@ void getSongBrightness(FFT_Manager1024 *_fft_manager)
   }
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////// PITCH_MODE ////////////////////////////////////////////////////
+///////////////////////////// B_ADAPTIVE_FEEDBACK ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
-#elif BEHAVIOUR_ROUTINE == PITCH_MODE
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
 
 void updateBehaviour()
 {
@@ -235,7 +235,7 @@ void updateBehaviour()
     Serial.println("ERROR = that color mode is not implemented in update neos");
   }
 }
-#endif // BEHAVIOUR_ROUTINE for pitch_mode
+#endif // BEHAVIOUR_ROUTINE for B_ADAPTIVE_FEEDBACK
 
 void setupSpeciesAudio()
 {
