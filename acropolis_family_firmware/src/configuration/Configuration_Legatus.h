@@ -1,13 +1,9 @@
 #ifndef __CONFIGURATION_LEGATUS_H__
 #define __CONFIGURATION_LEGATUS_H__
 
-#ifndef __MACROS_H__
 #include "Macros.h"
-#endif
 
-#if ARTEFACT_GENUS == LEGATUS
 float USER_CONTROL_PLAYBACK_GAIN             = 1.0;
-#endif
 
 // should correspond to the serial number on the PCB
 #define SERIAL_ID                 13
@@ -80,10 +76,22 @@ elapsedMillis last_playback_tmr;
 
 #if BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
 #define MIN_PLAYBACK_GAIN       0.0001
-#define MID_PLAYBACK_GAIN       0.15
-#define MAX_PLAYBACK_GAIN       1.0
-#else
-#define MIN_PLAYBACK_GAIN       0.001
+#define MID_PLAYBACK_GAIN       0.05
+#define MAX_PLAYBACK_GAIN       0.5
+#define SD_PRESENT              false
+#elif BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
+#define SD_PRESENT              true
+#define MIN_PLAYBACK_GAIN       0.0001
+#define MID_PLAYBACK_GAIN       0.05
+#define MAX_PLAYBACK_GAIN       0.5
+#elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
+#define SD_PRESENT              true
+#define MIN_PLAYBACK_GAIN       0.0001
+#define MID_PLAYBACK_GAIN       0.01
+#define MAX_PLAYBACK_GAIN       0.05
+#elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH
+#define SD_PRESENT              false
+#define MIN_PLAYBACK_GAIN       0.0001
 #define MID_PLAYBACK_GAIN       0.05
 #define MAX_PLAYBACK_GAIN       0.2
 #endif // playback gains for legatus

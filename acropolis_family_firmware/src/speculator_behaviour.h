@@ -1,72 +1,22 @@
-#if ARTEFACT_GENUS == SPECULATOR
+#ifndef __SPECULATOR_BEHAVIOUR_H__
+#define __SPECULATOR_BEHAVIOUR_H__
 /////////////////////////// B_TARGETED_FEEDBACK /////////////////////////////////////////////////
 #if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
-void updateBehaviour()
+
+uint32_t getSongColor(FeatureCollector *_feature_collector, FFTManager1024 *_fft_manager)
 {
-  Serial.println("WARNING LOOP NOT IMPLEMENTED");
-  delay(200);
+  // TODO - WARNING NOT IMPLEMENTED
+  Serial.print("WARNING getSongColor() in speculator_behaviour.h is not implemented");
+  uint32_t _value = 0;
+  return _value;
 }
 
-void updateAugmentations(*FeatureCollector feature_collector, *FFTManager fft_manager)
-{
-  uint8_t rgb[3]; // red, green, and blue
-  float brightness;
-
-  // get brightness according to relative level of cicada song amplitude (0 - 1.0)
-  brightness = getBrightness();
-  // scale brightness according to most recent ambient light brightness scaler
-  // and the current user brightness scaler (determined by physical controls)
-  // note this process intentionally can increase the brightness value above 1.0
-  brightness = brightness * lux_manager.getLuxScaler() * user_brightness_scaler;
-  // getColor sets the values of red, green, and blue (0 - 255) according to
-  // relative pitch of cicada song where high pitch corresponds to high color values
-  rgb = getColor(&feature_collector, &fft_manager[0]);
-  // scale rgb values according to brightness (will limit values to between 0 - starting value)
-  // will return 0's if the brightness is lower than the MINIMUM_BRIGHTNESS_THRESHOLD variable
-  rgb = scaleRGB(rgb, brightness);
-  // update neopixels with the expected color information
-  neos.updateFeedback(rgb[0], rgb[1], rgb[2]);
-}
-
-uint8_t *getColor(*FeatureCollector feature_collector, *fft_manager)
-{
-}
-
-void getSongBrightness(FFT_Manager1024 *_fft_manager)
+double getSongBrightness(FFTManager1024 *_fft_manager)
 {
   if (last_led_update_tmr > led_refresh_rate)
   {
     double target_brightness = 0.0;
     // calculate the target brightness ///////////////////////////////////
-    double calculateFeedbackBrightness(FFTManager1024 * _fft_manager)
-    {
-      // how much energy is stored in the range of 4000 - 16000 compared to  the entire spectrum?
-      double target_brightness = _fft_manager->getFFTRangeByFreq(100, 16000) * user_brightness_scaler * lux_brightness_scaler;
-      if (target_brightness < 0.01)
-      {
-        target_brightness = 0.0;
-      }
-      else if (target_brightness > 1.0)
-      {
-        target_brightness = 1.0;
-      }
-      if (target_brightness < brightness_feature_min)
-      {
-        brightness_feature_min = (target_brightness * 0.15) + (brightness_feature_min * 0.85);
-        target_brightness = brightness_feature_min;
-      }
-      if (target_brightness > brightness_feature_max)
-      {
-        brightness_feature_max = (target_brightness * 0.15) + (brightness_feature_max * 0.85);
-        // to ensure that loud clipping events do not skew things too much
-        if (brightness_feature_max > 1.0)
-        {
-          brightness_feature_max = 1.0;
-        }
-        target_brightness = brightness_feature_max;
-      }
-      target_brightness = (target_brightness - brightness_feature_min) / (brightness_feature_max - brightness_feature_min);
-    }
     /////////////////////////// Apply user brightness scaler ////////////////////////
     if (USER_BS_ACTIVE > 0)
     {
@@ -76,7 +26,39 @@ void getSongBrightness(FFT_Manager1024 *_fft_manager)
     // current brightness is a global variable
     current_brightness = (target_brightness * 0.5) + (current_brightness * 0.5);
   }
+  return current_brightness;
 }
+
+void updateAugmentations(FeatureCollector *feature_collector, FFTManager1024 *_fft_manager)
+{
+  uint32_t rgb; // red, green, and blue
+  float brightness;
+
+  // get brightness according to relative level of cicada song amplitude (0 - 1.0)
+  brightness = getSongBrightness(_fft_manager);
+  // scale brightness according to most recent ambient light brightness scaler
+  // and the current user brightness scaler (determined by physical controls)
+  // note this process intentionally can increase the brightness value above 1.0
+  brightness = brightness * lux_manager.getBrightnessScaler() * user_brightness_scaler;
+  // getColor sets the values of red, green, and blue (0 - 255) according to
+  // relative pitch of cicada song where high pitch corresponds to high color values
+  rgb = getSongColor(feature_collector, _fft_manager);
+  // scale rgb values according to brightness (will limit values to between 0 - starting value)
+  // will return 0's if the brightness is lower than the MINIMUM_BRIGHTNESS_THRESHOLD variable
+  // rgb = scaleRGB(rgb, brightness);
+
+  // update neopixels with the expected color information
+  Serial.println("WARNING UPDATEAUGMENTIONS FUNCTINO IS SPECULATOR BEHAVIOUR IS BROKEN");
+  // neos.updateFeedback(rgb[0], rgb[1], rgb[2]);
+}
+
+void updateBehaviour()
+{
+  updateAugmentations(&feature_collector, &fft_manager[0]);
+  Serial.println("WARNING LOOP NOT IMPLEMENTED");
+  delay(200);
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// B_ADAPTIVE_FEEDBACK ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////

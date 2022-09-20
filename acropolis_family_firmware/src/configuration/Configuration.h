@@ -26,8 +26,8 @@
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
 #define ARTEFACT_SPECIES                 SPEC_MINOR
-
 #endif
+
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Behaviour Routine /////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -49,13 +49,17 @@
    B_LEG_FEEDBACK
    B_LEG_FM_FEEDBACK
    B_LEG_SAMP_PLAYBACK
-
 */
 
+// Speculator behaviours
 #if ARTEFACT_GENUS == SPECULATOR
-#define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
-// #define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
-
+// #define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
+// WARNING - TARGETED FEEDBACK IS CURRENTLY BROKEN!!!!!
+#define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
+#if BEHAVIOUR_ROUTINE != B_TARGETED_FEEDBACK && BEHAVIOUR_ROUTINE != B_ADAPTIVE_FEEDBACK
+#error "WRONG BEHAVIOUR_ROUTINE GIVEN, UNABLE TO COMPILE"
+#endif // error for wrong behaviour
+// Explorator behaviours
 #elif ARTEFACT_GENUS == EXPLORATOR
 #if ARTEFACT_SPECIES == EX_CHIRPER
 #define BEHAVIOUR_ROUTINE             B_CHIRPER_BASIC
@@ -68,13 +72,14 @@
 #elif ARTEFACT_SPECIES == EX_WINDER
 #define BEHAVIOUR_ROUTINE             B_WINDER_BASIC
 #endif // EXPLORATOR species behavour routines
-
+// Legatus behaviours
 #elif ARTEFACT_GENUS == LEGATUS
 
+// TODO - warning this behaviour is currently buggy and needs fixing 
 // #define BEHAVIOUR_ROUTINE         B_LEG_MATCH_PITCH
-// #define BEHAVIOUR_ROUTINE         B_LEG_FEEDBACK
+// #define BEHAVIOUR_ROUTINE           B_LEG_FEEDBACK
 // #define BEHAVIOUR_ROUTINE         B_LEG_FM_FEEDBACK
-#define BEHAVIOUR_ROUTINE            B_LEG_SAMP_PLAYBACK
+#define BEHAVIOUR_ROUTINE         B_LEG_SAMP_PLAYBACK
 
 // this variable is used to allow Legatus artefact's to switch between behaviour routines
 // after initialisation
@@ -405,6 +410,38 @@ double ONSET_THRESH =                   1.0;
 #define ONSET_GREEN                     200
 #define ONSET_BLUE                      255
 
+////////////////////////////////////////////////////////////////////////////
+#if ONSET_DETECTION_ACTIVE
+//////////////////////////////// Onset ////////////////////////////////////
+elapsedMillis onset_feature_reset_tmr;
+const unsigned long onset_feature_reset_time = (1000 * 60 * 1);// every 5 minute?
+
+double last_range_rms = 0.0;
+double min_rms = 1.0;
+double max_rms = 0.1;
+
+double last_flux = 0.0;
+double min_flux = 1.0;
+double max_flux = 0.1;
+
+double last_cent_degd = 0.0;
+double min_cent_negd = 1.0;
+double max_cent_negd = 0.0;
+
+double min_onset_feature = 1.0;
+double max_onset_feature = 0.0;
+
+double onset_flux = 0.0;
+double onset_rms = 0.0;
+double onset_cent = 1000.0;
+double onset_feature = 0.0;
+
+ValueTrackerDouble onset_tracker = ValueTrackerDouble((String) "Onset Feature", &onset_feature, 0.1, 3000, 1.0);
+ValueTrackerDouble cent_tracker = ValueTrackerDouble((String) "Cent", &onset_cent, 0.1, 3000, 1.0);
+ValueTrackerDouble rms_tracker = ValueTrackerDouble((String) "RMS", &onset_rms, 0.1, 3000, 1.0);
+
+#endif // ONSET_DETECTION_ACTIVE
+
 ////////////////////////// LED MAPPING MODES ////////////////
 #define LED_MAPPING_STANDARD      0
 #define LED_MAPPING_INSIDE_OUT    1
@@ -423,38 +460,6 @@ int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #else
 int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
 #endif //HV_MAJOR
-
-#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-// Which pin on the Arduino is connected to the NeoPixels? 8 for old board
-#define LED1_PIN 8
-// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
-#define LED2_PIN 5
-#define LED3_PIN 10
-
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
-// Which pin on the Arduino is connected to the NeoPixels? 8 for old board
-#define LED1_PIN 10
-// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
-#define LED2_PIN 8
-#define LED3_PIN 10
-
-#elif ARTEFACT_GENUS == EXPLORATOR && HV_MAJOR == 2
-#define LED1_PIN 5
-#define LED2_PIN 10
-#define LED3_PIN 25
-
-#elif ARTEFACT_GENUS == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
-#define LED1_PIN 5
-#define LED2_PIN 24
-#define LED3_PIN 25
-
-#else
-#define LED1_PIN 5
-// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
-#define LED2_PIN 8
-#define LED3_PIN 10
-
-#endif
 
 // what the names of the neopixel strips will be
 #if (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIRPER)
@@ -881,6 +886,9 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define TDK_MICROPHONE                        1
 #define MICROPHONE_TYPE                       TDK_MICROPHONE
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////// Starting Gain //////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 #if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 2
 #define STARTING_GAIN                         12.0
 #elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
@@ -898,18 +906,26 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define STARTING_GAIN                         240.0
 
 #elif ARTEFACT_GENUS == LEGATUS
+#if ARTEFACT_BEHAVIOUR == B_LEG_FEEDBACK
+#define STARTING_GAIN                         0.5
+#else
 #define STARTING_GAIN                         6.0
 #endif
+#endif // makeup_gain
 
+// makeup gain
 #if ARTEFACT_GENUS == SPECULATOR
 #define MAKEUP_GAIN                            2.0
 #else
 #define MAKEUP_GAIN                            2.0
-#endif // makeup_gain
+#endif
+
 
 //////////////////////////////// STARTING GAIN //////////////////////////////////////////////
 float starting_gain = STARTING_GAIN * ENCLOSURE_GAIN_FACTOR;
 /////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 // SONG HP

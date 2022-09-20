@@ -260,26 +260,28 @@ WS2812Serial leds[1] = {WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory
 NeoGroup neos[1] = {NeoGroup(&leds[0], 0, LED1_COUNT - 1, "All Neos", MIN_FLASH_TIME, MAX_FLASH_TIME)};
 
 #elif ARTEFACT_GENUS == EXPLORATOR
-int max_leds = max(LED1_COUNT, LED2_COUNT);
-max_leds = max(max_leds, LED3_COUNT);
+// no idea why I have to make a temporary int here, but I do....
+int _max_leds = max(LED1_COUNT, LED2_COUNT);
+int max_leds = max(_max_leds, LED3_COUNT);
 // byte drawingMemory[3][max_leds*3];         //  3 bytes per LED
 // DMAMEM byte displayMemory[3][max_leds*12]; // 12 bytes per LED
 
 // TODO - dynamically create these objects based on info in the configuration file
 WS2812Serial leds[num_active_led_channels] = {
-#if LED1_ACTIVE == true
+#if LED1_ACTIVE
   WS2812Serial(LED1_COUNT, displayMemory[0], drawingMemory[0], LED1_PIN, WS2812_GRB)
-#if LED2_ACTIVE + LED3_ACTIVE > 0
+#if LED2_ACTIVE + LED3_ACTIVE > 0 || LED1_ACTIVE > 0
+  , // very important to add a comma, as there is more than one NeoPixel control object
 #endif
 #endif
 
-#if LED2_ACTIVE == true
+#if LED2_ACTIVE 
   WS2812Serial(LED2_COUNT, displayMemory[1], drawingMemory[1], LED2_PIN, WS2812_GRB)
-#if LED3_ACTIVE == true
+#if LED3_ACTIVE 
   ,
 #endif
 #endif
-#if LED3_ACTIVE == true
+#if LED3_ACTIVE
   WS2812Serial(LED3_COUNT, displayMemory[2], drawingMemory[2], LED3_PIN, WS2812_GRB)
 #endif
 };
@@ -1077,18 +1079,6 @@ void printArtefactInfo()
 
 ////////////////////////////////////////////////////////////////////////////
 #if ONSET_DETECTION_ACTIVE
-
-#define LISTENING_STATE 0
-#define ACTUATING_STATE 1
-
-double onset_cent = 1000.0;
-double onset_rms = 0.0;
-double onset_feature = 0.0;
-
-ValueTrackerDouble onset_tracker = ValueTrackerDouble((String) "Onset Feature", &onset_feature, 0.1, 3000, 1.0);
-ValueTrackerDouble cent_tracker = ValueTrackerDouble((String) "Cent", &onset_cent, 0.1, 3000, 1.0);
-ValueTrackerDouble rms_tracker = ValueTrackerDouble((String) "RMS", &onset_rms, 0.1, 3000, 1.0);
-
 bool updateOnset()
 {
   // for a onset in theory the spectral flux will be high, the
@@ -1150,9 +1140,6 @@ bool updateOnset()
 }
 #endif // ONSET_DETECTION is active
 //////////////////////////////////////////
-
-
-
 
 void setupLuxManager()
 {
@@ -1261,8 +1248,6 @@ void extremeTemperatureShutdown()
   Serial.println("TEMPERATURE SHUTDOWN LIFTED - resuming normal operation");
 }
 #endif // WEATHER_MANAGER_ACTIVE == true
-
-
 
 #if P_AUDIO_USAGE_MAX == true
 void printAudioUsage()
@@ -1536,8 +1521,9 @@ void setup()
     }
   */
   printMajorDivide("Now starting main() loop");
+  neos[0].colorWipe(10, 15, 10, 0.5);
+  delay(1000);
 }
-
 
   ////////////////////////////////////////////////////////////
   ///////////////// Main Loop ////////////////////////////////
@@ -1600,15 +1586,13 @@ void loop()
   {
     extremeTemperatureShutdown();
   }
-  else
-  {
 #endif // WEATHER_MANAGER_ACTIVE
-////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
-//////////////// Audio Analysis ///////////////////////////
-////////////////////////////////////////////////////////////
-updateAudioAnalysis();
+  ////////////////////////////////////////////////////////////
+  //////////////// Audio Analysis ///////////////////////////
+  ////////////////////////////////////////////////////////////
+  updateAudioAnalysis();
 #if CALCULATE_DOMINATE_CHANNEL == true
   // Serial.println("Calculating dominate channel");
   // delay(10000);
@@ -1622,23 +1606,22 @@ updateAudioAnalysis();
 #if P_AUDIO_USAGE_MAX == true
   printAudioUsage();
 #endif
-////////////////////////////////////////////////////////////
-// TODO - autogain is missing here
-////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  // TODO - autogain is missing here
+  ////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
-//////////////// Species-Specific Behaviour ////////////////
-////////////////////////////////////////////////////////////
-updateBehaviour();
-////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  //////////////// Species-Specific Behaviour ////////////////
+  ////////////////////////////////////////////////////////////
+  updateBehaviour();
+  ////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////
-//////////////// Datalogging ///////////////////////////////
-////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
+  //////////////// Datalogging ///////////////////////////////
+  ////////////////////////////////////////////////////////////
 #if DATALOG_ACTIVE
-if (data_logging_active) {
-  updateDatalog();
-}
-#endif
+  if (data_logging_active) {
+    updateDatalog();
   }
+#endif
 }

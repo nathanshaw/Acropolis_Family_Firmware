@@ -18,7 +18,7 @@ void brightnessWipe(double b)
   neos[0].colorWipe(constrain((int)(colors[0] * b), 0, 255), constrain((int)(colors[1] * b), 0, 255), constrain((int)(colors[2] * b), 0, 255), user_brightness_scaler);
 }
 
-void updateLegatusPassiveLEDs()
+void updateLegatusPassiveLEDs(bool _p = false)
 {
   if (fft1.available())
   {
@@ -36,18 +36,18 @@ void updateLegatusPassiveLEDs()
     {
       colors[i] = (uint8_t)(fcolors[i] * 255);
     }
-    // Serial.print(colors[0]);
-    // Serial.print("\t");
-    // Serial.print(colors[1]);
-    // Serial.print("\t");
-    // Serial.println(colors[2]);
+     dprint(_p,colors[0]);
+     dprint(_p,"\t");
+     dprint(_p,colors[1]);
+     dprint(_p,"\t");
+     dprintln(_p,colors[2]);
   }
   if (peak1.available())
   {
     int c = (int)(peak1.read() * 4096) * user_brightness_scaler;
     float f = (float)constrain(c, 0, 255) / 255.0;
     brightnessWipe(f);
-    // Serial.println(f);
+    dprintln(_p, f);
   }
 }
 
@@ -208,6 +208,9 @@ void legatusLoopSamplePlayback()
 
 void activateFeedback(float amp, float dur)
 {
+  mixer1.gain(0, 0.5);
+  mixer1.gain(1, 0.5);
+  amp3.gain(1.0); /// derrr, not sure what amp3 is actually doing! TODO
   amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
   if (amp < 0.01)
   {
@@ -242,10 +245,12 @@ void activateFeedback(float amp, float dur)
       } else if (amp > 0.04) {
       amp = 0.04;
       }
-      uimanager.update();
       amp3.gain(amp);
     */
-    updateLegatusPassiveLEDs();
+    uimanager.update();
+    amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
+    amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
+    updateLegatusPassiveLEDs(P_UPDATE_LEGATUS_PASSIVE_LEDS);
     delay(10);
   }
 
@@ -260,11 +265,12 @@ void activateFeedback(float amp, float dur)
     Serial.println(i);
   }
   amp3.gain(0.0);
+  mixer1.gain(0, 0.0);
+  mixer1.gain(1, 0.0); 
 }
 
 void legatusLoopFeedback()
 {
-  updateLegatusPassiveLEDs();
   #if USER_CONTROLS_ACTIVE
   uimanager.update();
   #endif // USER_CONTROLS_ACTIVE
@@ -359,7 +365,6 @@ void activateFM(int t, float freq, float amp)
 int avg_time = 1000 * 60 * 2.0;
 void legatusLoopFM()
 {
-  updateLegatusPassiveLEDs();
   #if USER_CONTROLS_ACTIVE
   uimanager.update();
   #endif // USER_CONTROLS_ACTIVE
@@ -485,8 +490,8 @@ void setupSpeciesAudio()
     }
   }
   #else
-  Serial.println("WARNING SD_PRESENT IS SET TO FALSE!!!!");
-  delay(400000);
+  // Serial.println("WARNING SD_PRESENT IS SET TO FALSE!!!!");
+  // delay(100);
 #endif
 
   /////////////////////////////////////////////////////////////////////
@@ -530,8 +535,8 @@ void setupSpeciesAudio()
     printMinorDivide();
 
     //////////////////////////////////////////////////////////////////////////////////
-    amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
-    amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
+    amp1.gain(0.0);
+    amp2.gain(0.0);
     Serial.print("playback gains are set to : ");
     Serial.println(USER_CONTROL_PLAYBACK_GAIN);
 
@@ -560,14 +565,20 @@ void setupSpeciesAudio()
   else if (ARTEFACT_BEHAVIOUR == B_LEG_FEEDBACK)
   {
     audio_delay1.delay(0, 0);
-    mixer1.gain(0, starting_gain);
-    mixer1.gain(1, starting_gain);
+    mixer1.gain(0, 0.0);
+    mixer1.gain(1, 0.0);
   }
+}
+
+void legatusLoopMatchPitch() {
+  // TODO
+  Serial.println("ERROR - this behaviour is not implemented");
+  delay(1000);
 }
 
 void updateBehaviour(){
   // TODO
-  updateLegatusPassiveLEDs();
+  updateLegatusPassiveLEDs(P_UPDATE_LEGATUS_PASSIVE_LEDS);
   // ARTEFACT_BEHAVIOUR = determineLegatusBehavior();
   if (ARTEFACT_BEHAVIOUR == B_LEG_SAMP_PLAYBACK)
   {
@@ -580,6 +591,13 @@ void updateBehaviour(){
   else if (ARTEFACT_BEHAVIOUR == B_LEG_FM_FEEDBACK)
   {
     legatusLoopFM();
+  }
+  else if (ARTEFACT_BEHAVIOUR == B_LEG_MATCH_PITCH)
+  {
+    legatusLoopMatchPitch();
+  }
+  else {
+    Serial.println("ERROR, ARTEFACT_BEHAVIOUR IS NOT SET CORRECTLY!!!");
   }
 }
 
@@ -636,6 +654,8 @@ void setupSpecies() {
     audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
     audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
     #endif // AUDIO_USB
+    last_playback_tmr = 99999999;
+
   }
   else if (ARTEFACT_BEHAVIOUR == B_LEG_FM_FEEDBACK)
   {
@@ -654,6 +674,26 @@ void setupSpecies() {
     audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
     audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
     #endif  // AUDIO_USB
+  }
+  else if (ARTEFACT_BEHAVIOUR == B_LEG_MATCH_PITCH)
+  {
+    audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+    audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+    audio_connections[3] = new AudioConnection(mixer1, biquad3);
+    audio_connections[4] = new AudioConnection(biquad3, biquad4);
+    audio_connections[5] = new AudioConnection(biquad4, amp3);
+    audio_connections[6] = new AudioConnection(amp3, rms1);
+    audio_connections[7] = new AudioConnection(amp3, fft1);
+    audio_connections[8] = new AudioConnection(amp3, peak1);
+    audio_connections[10] = new AudioConnection(amp3, sine_fm);
+    audio_connections[11] = new AudioConnection(sine_fm, 0, audioOutput, 0);
+
+    #if AUDIO_USB
+    audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
+    audio_connections[2] = new AudioConnection(mixer1, 0, output_usb, 1);
+    #endif  // AUDIO_USB
+    Serial.println("WARNING - AUDIO ROUTING FOR THIS BEHAVIOUR ROUTINE IS NOT FINISHED");
+    delay(3000);
   }
   // setup up some value tracker stuff
   brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);

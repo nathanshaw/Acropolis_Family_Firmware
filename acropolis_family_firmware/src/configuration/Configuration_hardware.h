@@ -20,18 +20,18 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 // the ARTEFACT_GENUS and ENCLOSURE_TYPE
 #if ARTEFACT_GENUS == SPECULATOR
 #if ENCLOSURE_TYPE == ORB_ENCLOSURE_WITH_HOLE
-double ENCLOSURE_GAIN_FACTOR =        1.0;
+#define ENCLOSURE_GAIN_FACTOR         1.0
 #elif ENCLOSURE_TYPE == ORB_ENCLOSURE_WITHOUT_HOLE
-double ENCLOSURE_GAIN_FACTOR =        2.0;
+#define ENCLOSURE_GAIN_FACTOR         2.0
 #elif ENCLOSURE_TYPE == GROUND_ENCLOSURE
-double ENCLOSURE_GAIN_FACTOR =        3.0;
+#define ENCLOSURE_GAIN_FACTOR         3.0
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
-double ENCLOSURE_GAIN_FACTOR =        0.5;
+#define ENCLOSURE_GAIN_FACTOR         0.5
 #endif // ENCLOSURE_TYPE
 #elif ARTEFACT_GENUS == EXPLORATOR
-double ENCLOSURE_GAIN_FACTOR =        1.0;
+#define ENCLOSURE_GAIN_FACTOR         1.0
 #elif ARTEFACT_GENUS == LEGATUS
-double ENCLOSURE_GAIN_FACTOR =        1.0;
+#define ENCLOSURE_GAIN_FACTOR         1.0
 #endif // ARTEFACT_GENUS
 
 //////////////////////////////////////////////////////////////////
@@ -703,13 +703,11 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 
 //////////////////////////////// SD Card Stuff /////////////////////
 #if ARTEFACT_GENUS == LEGATUS
-#define SD_PRESENT                            true
 #define SD_MOSI                               7
 #define SD_MISO                               12
 #define SD_CLK                                14
 #define SD_CS                                 10
 #else
-#define SD_PRESENT                            false
 #endif// ARTEFACT_GENUS == LEGATUS for SD card stuff
 
 /////////////////////////////// DOF Sensors ////////////////////////
@@ -720,4 +718,36 @@ double ENCLOSURE_GAIN_FACTOR =        1.0;
 #define DOF_PRESENT                           false
 #endif // DOF sensor stuff
 
+/////////////////////// NeoPixels /////////////////////////////////
+#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
+// Which pin on the Arduino is connected to the NeoPixels? 8 for old board
+#define LED1_PIN 8
+// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
+#define LED2_PIN 5
+#define LED3_PIN 10
+
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
+// Which pin on the Arduino is connected to the NeoPixels? 8 for old board
+#define LED1_PIN 10
+// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
+#define LED2_PIN 8
+#define LED3_PIN 10
+
+#elif ARTEFACT_GENUS == EXPLORATOR && HV_MAJOR == 2
+#define LED1_PIN 5
+#define LED2_PIN 10
+#define LED3_PIN 25
+
+#elif ARTEFACT_GENUS == LEGATUS && HV_MAJOR == 1 && HV_MINOR == 1
+#define LED1_PIN 5
+#define LED2_PIN 24
+#define LED3_PIN 25
+
+#else
+#define LED1_PIN 5
+// note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
+#define LED2_PIN 8
+#define LED3_PIN 10
+
+#endif
 #endif // CONFIGURATION_HARDWARE_H__

@@ -1,90 +1,181 @@
+#ifndef _LEGATUS_BEHAVIOUR_H__
+#define _LEGATUS_BEHAVIOUR_H__
 
-#if ARTEFACT_GENUS == EXPLORATOR 
 
-void configurePlaybackEngine()
-{
-  // freq, length, onset delay (since last note), velocity
-#if ARTEFACT_SPECIES == EX_CHIRPER
-  rhythm[0].addPitchedNote(500.0, 40, 0, 0.6);
-  rhythm[0].addPitchedNote(500.0, 40, 100, 0.8);
-  rhythm[0].addPitchedNote(500.0, 30, 150, 1.0);
-  rhythm[0].addPitchedNote(1000.0, 30, 400, 1.0);
-  rhythm[0].addPitchedNote(1000.0, 20, 1000, 1.0);
-  rhythm[0].addPitchedNote(1000.0, 50, 1500, 1.0);
-
-  rhythm[0].addPitchedNote(100.0, 30, 100, 0.3);
-  rhythm[0].addPitchedNote(500.0, 40, 600, 0.4);
-  rhythm[0].addPitchedNote(1000.0, 30, 150, 0.5);
-  rhythm[0].addPitchedNote(100.0, 20, 700, 0.4);
-  rhythm[0].addPitchedNote(500.0, 40, 800, 0.3);
-  rhythm[0].addPitchedNote(1000.0, 30, 1500, 0.2);
-
-  rhythm[0].addPitchedNote(100.0, 40, 200, 1.0);
-  rhythm[0].addPitchedNote(500.0, 30, 70, 1.0);
-  rhythm[0].addPitchedNote(1000.0, 40, 90, 1.0);
-  rhythm[0].addPitchedNote(100.0, 40, 60, 1.0);
-  rhythm[0].addPitchedNote(500.0, 30, 150, 1.0);
-  rhythm[0].addPitchedNote(1000.0, 30, 100, 1.0);
-
-  rhythm[1].addPitchedNote(50.0, 50, 0, 1.05);
-  rhythm[1].addPitchedNote(150.0, 50, 500, 1.01);
-  rhythm[1].addPitchedNote(250.0, 60, 1000, 1.15);
-  rhythm[1].addPitchedNote(550.0, 60, 1500, 1.20);
-  rhythm[1].addPitchedNote(450.0, 50, 2000, 1.20);
-  rhythm[1].addPitchedNote(1550.0, 40, 2500, 1.20);
-  rhythm[1].addPitchedNote(1650.0, 30, 3000, 1.20);
-
-  rhythm[2].addPitchedNote(50.0, 40, 0, 1.35);
-  rhythm[2].addPitchedNote(150.0, 30, 400, 1.31);
-  rhythm[2].addPitchedNote(250.0, 30, 800, 1.35);
-  rhythm[2].addPitchedNote(1350.0, 40, 1200, 1.30);
-  rhythm[2].addPitchedNote(450.0, 30, 2000, 1.30);
-  rhythm[2].addPitchedNote(550.0, 50, 2400, 1.30);
-  rhythm[2].addPitchedNote(1650.0, 20, 2600, 1.30);
-
-  rhythm[3].addPitchedNote(150.0, 40, 0, 1.35);
-  rhythm[3].addPitchedNote(150.0, 50, 400, 1.31);
-  rhythm[3].addPitchedNote(250.0, 60, 600, 1.35);
-  rhythm[3].addPitchedNote(1350.0, 40, 700, 1.30);
-  rhythm[3].addPitchedNote(450.0, 40, 800, 1.30);
-  rhythm[3].addPitchedNote(550.0, 50, 500, 1.30);
-  rhythm[3].addPitchedNote(1650.0, 40, 1000, 1.30);
-
-  rhythm_bank.addRhythm(&rhythm[0]);
-  rhythm_bank.addRhythm(&rhythm[1]);
-  rhythm_bank.addRhythm(&rhythm[2]);
-  rhythm_bank.addRhythm(&rhythm[3]);
-  * /
-
-  playback_engine.linkBellMechanism(&bells[0]);
-  playback_engine.linkBellMechanism(&bells[1]);
-  playback_engine.linkBellMechanism(&bells[2]);
-
-  playback_engine.linkNeoGroup(&neos[0]);
-  playback_engine.linkNeoGroup(&neos[1]);
-  playback_engine.linkNeoGroup(&neos[2]);
-
-#elif ARTEFACT_SPECIES == EX_CHIPPER
-  for (int i = 0; i < 10; i++)
-  {
-    uint32_t quarter = random(120, 750);
-    buildPeckRhythm(i, quarter);
-    if (random(0, 100) < 30)
-    {
-      rhythm[i].addUnpitchedNote(quarter * 4, 0.75);
-      buildPeckRhythm(i, quarter);
-    }
-    rhythm[i].addMotorMove(1, 70, 100);
-    rhythm[i].print();
-    rhythm_bank.addRhythm(&rhythm[i]);
+void triggerSolenoid(uint8_t num, uint16_t on_time) {
+  // if the solenoid in question is not currently active
+  if (sol_active[num] == false) {
+    dprint(P_SOLENOID_DEBUG, "WARNING EXITING FROM TIGGER SOLENOID DUE TO INVALID SOLENOID NUMBER OF ");
+    dprintln(P_SOLENOID_DEBUG, num);
+    return;
   }
-  playback_engine.linkMechanism(&pecker[0]);
-  playback_engine.linkNeoGroup(&neos[1]);
-
-#endif // ARTEFACT_SPECIES == EX_CHIRPER
+  if (sol_state[num] == false && last_sol_action[num] > SOL_COOLDOWN) {
+    digitalWrite(s_pins[num], HIGH);
+    last_sol_action[num] = 0;
+    sol_timers[num] = on_time;
+    sol_state[num] = true;
+    dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
+    dprint(P_SOLENOID_DEBUG, " solenoid ");
+    dprint(P_SOLENOID_DEBUG, num);
+    dprintln(P_SOLENOID_DEBUG, " enguaged");
+  } else if (sol_state[num] == true) {
+    dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
+    dprint(P_SOLENOID_DEBUG, " did not trigger solenoid ");
+    dprint(P_SOLENOID_DEBUG, num);
+    dprintln(P_SOLENOID_DEBUG, " as it is already active");
+  } else if (last_sol_action[num] < SOL_COOLDOWN) {
+    dprintln(P_SOLENOID_DEBUG, "did not trigger solenoids as last_sol_action is less than SOL_COOLDOWN");
+  }
 }
 
-#if ARTEFACT_SPECIES == EX_CHIPPER
+void updateSolenoids() {
+  // function which should be in the main loop to constantly turn off active solenoids
+  for (int i = 0; i < NUM_SOLENOIDS; i++) {
+    // if the solenoid is currently enguaged
+    if (sol_active[i] == true && sol_state[i] == true) {
+      // and it has been enguaged for the right period of time
+      if (last_sol_action[i] > sol_timers[i]) {
+        // turn it off
+        digitalWrite(s_pins[i], LOW);
+        // set the solenoid as inactive in the code
+        sol_state[i] = false;
+        dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
+        dprint(P_SOLENOID_DEBUG, " solenoid ");
+        dprint(P_SOLENOID_DEBUG, i);
+        dprint(P_SOLENOID_DEBUG, " disenguaged after a total of ");
+        dprint(P_SOLENOID_DEBUG, last_sol_action[i]);
+        dprint(P_SOLENOID_DEBUG, " ms with a target of ");
+        dprint(P_SOLENOID_DEBUG, sol_timers[i]);
+        dprintln(P_SOLENOID_DEBUG, " ms");
+        // note this as an action
+        last_sol_action[i] = 0;
+        // turn off the "on" timer
+        sol_timers[i] = 0;
+      }
+    }
+  }
+}
+
+void setOutputs()
+{
+  /////////////// Solenoid Outputs /////////////////////////////////////////
+  for (int i = 0; i < NUM_SOLENOIDS; i++)
+  {
+    pinMode(s_pins[i], OUTPUT);
+    digitalWrite(s_pins[i], LOW); // turns them off
+  }
+
+#if TEST_SOLENOIDS == true
+  Serial.println("TEST_SOLENOIDS is set to true, system will just test solenoids over and over again forever");
+  testSolenoids(1000); // let the system settle
+  Serial.println("Finished setting solenoid pins to outputs");
+#endif
+
+#if (NUM_MOTORS > 0)
+  Serial.println("Starting Motor Set-up");
+  motors.flipM1(M1_POLARITY);
+  motors.flipM2(M2_POLARITY);
+  motors.flipM3(M3_POLARITY);
+  motors.enableDrivers();
+  motors.setM1Speed(0);
+  motors.setM2Speed(0);
+  motors.setM3Speed(0);
+  delay(500);
+  Serial.println("Finished setting up motors");
+  Serial.println("-------------------------------------------------------------");
+  delay(2500); // let the system settle
+#endif
+}
+
+#if TEST_SOLENOIDS == true
+void testSolenoids(unsigned int len)
+{
+  elapsedMillis t = 0;
+  Serial.print("Testing Solenoids - ");
+  while (t < len)
+  {
+    for (int i = 0; i < NUM_SOLENOIDS; i++)
+    {
+      if (sol_active[i] == true)
+      {
+        Serial.print(i);
+        digitalWrite(s_pins[i], HIGH); // LOW is on for these transistors as a low opens the gate
+        delay(30);
+        Serial.print(" ");
+        digitalWrite(s_pins[i], LOW);
+      }
+    }
+    Serial.println();
+  }
+  Serial.println("Finished testing solenoids");
+  Serial.println("--------------------------");
+};
+#endif // test_solenoids, ARTEFACT_GENUS explorator
+#if ARTEFACT_SPECIES == EX_CHIRPER
+/* Mechatronic Creatures
+  "Bowl Bot" Genus
+  using the Adafruit Huzzah ESP8266 Microcontroller
+*/
+/////////////////////////////// Playback Engine  /////////////////////////////////
+// the playback engine handles the playback of melodies and rhythms through motors
+// and solenoids, as of right now, the only bot which makes use of this is the
+// Explorator
+Rhythm rhythm[10] = {
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+  Rhythm()
+};
+
+RhythmBank rhythm_bank = RhythmBank();
+PlaybackEngine playback_engine = PlaybackEngine();
+
+// actuator pin, dampener pin, frequency, on_time
+BellMechanism bells[3] = {
+  BellMechanism(s_pins[0], s_pins[1], 20, 100.0, 40),
+  BellMechanism(s_pins[2], s_pins[3], 20, 500.0, 40),
+  BellMechanism(s_pins[4], s_pins[5], 20, 1000.0, 40)
+};
+
+void updateBehaviour()
+{
+  ///////////////// Actuator Outputs //////////////////
+  updateSolenoids(); // turns off all solenoids which have
+  playback_engine.update();
+  ACTUATION_DELAY = (30000) + ((weather_manager.getTemperature() + weather_manager.getHumidity()) * lux_manager.getGlobalLux());
+  if (last_playback_tmr > ACTUATION_DELAY)
+  {
+    Serial.print("actuation_delay : ");
+    Serial.println(ACTUATION_DELAY);
+    Serial.println("playing rhythm through playback_engine");
+    playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
+    last_playback_tmr = 0;
+  }
+  updateFeedbackLEDs(&fft_manager[0]);
+}
+
+
+#elif ARTEFACT_SPECIES == EX_CHIPPER
+/////////////////////////////// Playback Engine  /////////////////////////////////
+// the playback engine handles the playback of melodies and rhythms through motors
+// and solenoids, as of right now, the only bot which makes use of this is the
+// Explorator
+Rhythm rhythm[3] = {
+  Rhythm(),
+  Rhythm(),
+  Rhythm(),
+};
+RhythmBank rhythm_bank = RhythmBank();
+PlaybackEngine playback_engine = PlaybackEngine();
+// actuator pin, reference to motor, motor number, minimum_on_time for the solenoid
+// maximum on time for the solenoid, min_time between actuations for the solenoid
+WoodpeckerMechanism pecking_mechanism[1] = {WoodpeckerMechanism(s_pins[0], &motors, 0, S1_MIN, S1_MAX, S1_BETWEEN)};
 void buildPeckRhythm(int idx, uint32_t quarter)
 {
   uint32_t t = 0;
@@ -159,10 +250,41 @@ void buildPeckRhythm(int idx, uint32_t quarter)
     t = quarter;
   }
 }
-#endif // ARTEFACT_SPECIES == EX_CHIPPER
-#endif // ARTEFACT_GENUS == EXPLORATOR
+void updateBehaviour()
+{
+  /* Behaviour update for Explorator Pecker's standard operating behaviour */
 
-#if ARTEFACT_SPECIES == EX_WINDER
+  ///////////////// Actuator Outputs //////////////////
+  playback_engine.update(); // will also update all linked mechanisms
+
+  ///////////////// Passive Visual Feedback ///////////
+  updateFeedbackLEDs(&fft_manager[dominate_channel]);
+
+  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
+  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
+  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
+  // activity level adds a base of up to five minutes
+  // ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
+  // uint16_t t = random(45, 150);
+  // TODO
+  ACTUATION_DELAY = 1000;
+  if (last_playback_tmr > ACTUATION_DELAY)
+  {
+    Serial.print("ACTUATION_DELAY is : ");
+    Serial.println(ACTUATION_DELAY);
+    if (playback_engine.isActive() == false)
+    {
+      playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
+      last_playback_tmr = 0;
+    }
+    else
+    {
+      Serial.println("Skipping rhythm as a rhythm is already playing");
+    }
+  }
+}
+
+#elif ARTEFACT_SPECIES == EX_WINDER
 
 void windBack(float rotations, int backward_rate)
 {
@@ -460,7 +582,6 @@ void updateBehaviour()
   */
 }
 
-
 #elif ARTEFACT_SPECIES == EX_SPINNER
 
 int motor_speed = 0;
@@ -470,6 +591,51 @@ int motor_time = 0;
 int next_motor_time = 0;
 const int max_motor_speed = 450;
 const int min_motor_speed = -450;
+
+void rampSpinnerMotor(int16_t start, int16_t target, int ramp_total_time)
+{
+  Serial.print("Ramping Motor (start, target, time) - ");
+  Serial.print(start);
+  Serial.print("\t");
+  Serial.print(target);
+  Serial.print("\t");
+  Serial.println(ramp_total_time);
+
+  int difference = target - start;
+  float step_delay = abs(difference / ramp_total_time) * 1.0;
+
+  Serial.print(" dif: ");
+  Serial.print(difference);
+  Serial.print(" stepd: ");
+  Serial.print(step_delay);
+  motors.enableDrivers(0);
+
+  if (difference > 0)
+  {
+    for (int16_t i = start; i <= target; i++)
+    {
+      motors.setM1Speed(i);
+      // Serial.println(i);
+      delayMicroseconds(step_delay);
+    }
+  }
+  else
+  {
+    for (int16_t i = start; i > target; i--)
+    {
+      motors.setM1Speed(i);
+      delayMicroseconds(step_delay);
+      // Serial.println(i);
+    }
+  }
+
+  if (target == 0)
+  {
+    motors.setM1Speed(0);
+    motors.disableDrivers(0);
+  }
+  Serial.println("Disabled Drivers");
+}
 
 void shake(int on_speed, int on_time, int rev_speed, int rev_time)
 {
@@ -518,51 +684,6 @@ void shake(int on_speed, int on_time, int rev_speed, int rev_time)
   // enc_pos = enc.read();
   // Serial.print(enc_pos);
   neos[0].colorWipe(0, 0, 0, 1.0);
-}
-
-void rampSpinnerMotor(int16_t start, int16_t target, int ramp_total_time)
-{
-  Serial.print("Ramping Motor (start, target, time) - ");
-  Serial.print(start);
-  Serial.print("\t");
-  Serial.print(target);
-  Serial.print("\t");
-  Serial.println(ramp_total_time);
-
-  int difference = target - start;
-  float step_delay = abs(difference / ramp_total_time) * 1.0;
-
-  Serial.print(" dif: ");
-  Serial.print(difference);
-  Serial.print(" stepd: ");
-  Serial.print(step_delay);
-  motors.enableDrivers(0);
-
-  if (difference > 0)
-  {
-    for (int16_t i = start; i <= target; i++)
-    {
-      motors.setM1Speed(i);
-      // Serial.println(i);
-      delayMicroseconds(step_delay);
-    }
-  }
-  else
-  {
-    for (int16_t i = start; i > target; i--)
-    {
-      motors.setM1Speed(i);
-      delayMicroseconds(step_delay);
-      // Serial.println(i);
-    }
-  }
-
-  if (target == 0)
-  {
-    motors.setM1Speed(0);
-    motors.disableDrivers(0);
-  }
-  Serial.println("Disabled Drivers");
 }
 
 void sustainedShake(int on_speed, int ramp_time, int on_time, int deviation) {
@@ -637,105 +758,8 @@ void updateBehaviour()
   }
 }
 
-#elif ARTEFACT_SPECIES == EX_CHIPPER
-/////////////////////////////// Playback Engine  /////////////////////////////////
-// the playback engine handles the playback of melodies and rhythms through motors
-// and solenoids, as of right now, the only bot which makes use of this is the
-// Explorator
-Rhythm rhythm[3] = {
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-};
-RhythmBank rhythm_bank = RhythmBank();
-PlaybackEngine playback_engine = PlaybackEngine();
-// actuator pin, reference to motor, motor number, minimum_on_time for the solenoid
-// maximum on time for the solenoid, min_time between actuations for the solenoid
-WoodpeckerMechanism pecker[1] = {WoodpeckerMechanism(s_pins[0], &motors, 0, S1_MIN, S1_MAX, S1_BETWEEN)};
-#endif // ARTEFACT_GENUS and ARTEFACT_SPECIES for playback objects
-
-void updateBehaviour()
-{
-  ///////////////// Actuator Outputs //////////////////
-  playback_engine.update(); // will also update all linked mechanisms
-
-  ///////////////// Passive Visual Feedback ///////////
-  updateFeedbackLEDs(&fft_manager[dominate_channel]);
-
-  // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
-  // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
-  // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
-  // activity level adds a base of up to five minutes
-  // ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
-  // uint16_t t = random(45, 150);
-  // TODO
-  ACTUATION_DELAY = 1000;
-  if (last_playback_tmr > ACTUATION_DELAY)
-  {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
-    if (playback_engine.isActive() == false)
-    {
-      playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
-      last_playback_tmr = 0;
-    }
-    else
-    {
-      Serial.println("Skipping rhythm as a rhythm is already playing");
-    }
-  }
-}
-
-#elif ARTEFACT_SPECIES == EX_CHIRPER
-/* Mechatronic Creatures
-  "Bowl Bot" Genus
-  using the Adafruit Huzzah ESP8266 Microcontroller
-*/
-/////////////////////////////// Playback Engine  /////////////////////////////////
-// the playback engine handles the playback of melodies and rhythms through motors
-// and solenoids, as of right now, the only bot which makes use of this is the
-// Explorator
-Rhythm rhythm[10] = {
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm(),
-  Rhythm()
-};
-
-RhythmBank rhythm_bank = RhythmBank();
-PlaybackEngine playback_engine = PlaybackEngine();
-
-// actuator pin, dampener pin, frequency, on_time
-BellMechanism bells[3] = {
-  BellMechanism(s_pins[0], s_pins[1], 20, 100.0, 40),
-  BellMechanism(s_pins[2], s_pins[3], 20, 500.0, 40),
-  BellMechanism(s_pins[4], s_pins[5], 20, 1000.0, 40)
-};
-
-void updateBehaviour()
-{
-  ///////////////// Actuator Outputs //////////////////
-  updateSolenoids(); // turns off all solenoids which have
-  playback_engine.update();
-  ACTUATION_DELAY = (30000) + ((weather_manager.getTemperature() + weather_manager.getHumidity()) * lux_manager.getGlobalLux());
-  if (last_playback_tmr > ACTUATION_DELAY)
-  {
-    Serial.print("actuation_delay : ");
-    Serial.println(ACTUATION_DELAY);
-    Serial.println("playing rhythm through playback_engine");
-    playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
-    last_playback_tmr = 0;
-  }
-  updateFeedbackLEDs(&fft_manager[0]);
-}
-
 #elif ARTEFACT_SPECIES == EX_CLAPPER
+
 
 void updateBehaviour()
 {
@@ -848,116 +872,87 @@ void createPeckRhythm(uint8_t num, uint16_t on_time, uint16_t str ) {
 }
 */
 
-void triggerSolenoid(uint8_t num, uint16_t on_time) {
-  // if the solenoid in question is not currently active
-  if (sol_active[num] == false) {
-    dprint(P_SOLENOID_DEBUG, "WARNING EXITING FROM TIGGER SOLENOID DUE TO INVALID SOLENOID NUMBER OF ");
-    dprintln(P_SOLENOID_DEBUG, num);
-    return;
-  }
-  if (sol_state[num] == false && last_sol_action[num] > SOL_COOLDOWN) {
-    digitalWrite(s_pins[num], HIGH);
-    last_sol_action[num] = 0;
-    sol_timers[num] = on_time;
-    sol_state[num] = true;
-    dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
-    dprint(P_SOLENOID_DEBUG, " solenoid ");
-    dprint(P_SOLENOID_DEBUG, num);
-    dprintln(P_SOLENOID_DEBUG, " enguaged");
-  } else if (sol_state[num] == true) {
-    dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
-    dprint(P_SOLENOID_DEBUG, " did not trigger solenoid ");
-    dprint(P_SOLENOID_DEBUG, num);
-    dprintln(P_SOLENOID_DEBUG, " as it is already active");
-  } else if (last_sol_action[num] < SOL_COOLDOWN) {
-    dprintln(P_SOLENOID_DEBUG, "did not trigger solenoids as last_sol_action is less than SOL_COOLDOWN");
-  }
-}
-
-void updateSolenoids() {
-  // function which should be in the main loop to constantly turn off active solenoids
-  for (int i = 0; i < NUM_SOLENOIDS; i++) {
-    // if the solenoid is currently enguaged
-    if (sol_active[i] == true && sol_state[i] == true) {
-      // and it has been enguaged for the right period of time
-      if (last_sol_action[i] > sol_timers[i]) {
-        // turn it off
-        digitalWrite(s_pins[i], LOW);
-        // set the solenoid as inactive in the code
-        sol_state[i] = false;
-        dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
-        dprint(P_SOLENOID_DEBUG, " solenoid ");
-        dprint(P_SOLENOID_DEBUG, i);
-        dprint(P_SOLENOID_DEBUG, " disenguaged after a total of ");
-        dprint(P_SOLENOID_DEBUG, last_sol_action[i]);
-        dprint(P_SOLENOID_DEBUG, " ms with a target of ");
-        dprint(P_SOLENOID_DEBUG, sol_timers[i]);
-        dprintln(P_SOLENOID_DEBUG, " ms");
-        // note this as an action
-        last_sol_action[i] = 0;
-        // turn off the "on" timer
-        sol_timers[i] = 0;
-      }
-    }
-  }
-}
-
-void setOutputs()
+void configurePlaybackEngine()
 {
-  /////////////// Solenoid Outputs /////////////////////////////////////////
-  for (int i = 0; i < NUM_SOLENOIDS; i++)
+  // freq, length, onset delay (since last note), velocity
+#if ARTEFACT_SPECIES == EX_CHIRPER
+  rhythm[0].addPitchedNote(500.0, 40, 0, 0.6);
+  rhythm[0].addPitchedNote(500.0, 40, 100, 0.8);
+  rhythm[0].addPitchedNote(500.0, 30, 150, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 30, 400, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 20, 1000, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 50, 1500, 1.0);
+
+  rhythm[0].addPitchedNote(100.0, 30, 100, 0.3);
+  rhythm[0].addPitchedNote(500.0, 40, 600, 0.4);
+  rhythm[0].addPitchedNote(1000.0, 30, 150, 0.5);
+  rhythm[0].addPitchedNote(100.0, 20, 700, 0.4);
+  rhythm[0].addPitchedNote(500.0, 40, 800, 0.3);
+  rhythm[0].addPitchedNote(1000.0, 30, 1500, 0.2);
+
+  rhythm[0].addPitchedNote(100.0, 40, 200, 1.0);
+  rhythm[0].addPitchedNote(500.0, 30, 70, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 40, 90, 1.0);
+  rhythm[0].addPitchedNote(100.0, 40, 60, 1.0);
+  rhythm[0].addPitchedNote(500.0, 30, 150, 1.0);
+  rhythm[0].addPitchedNote(1000.0, 30, 100, 1.0);
+
+  rhythm[1].addPitchedNote(50.0, 50, 0, 1.05);
+  rhythm[1].addPitchedNote(150.0, 50, 500, 1.01);
+  rhythm[1].addPitchedNote(250.0, 60, 1000, 1.15);
+  rhythm[1].addPitchedNote(550.0, 60, 1500, 1.20);
+  rhythm[1].addPitchedNote(450.0, 50, 2000, 1.20);
+  rhythm[1].addPitchedNote(1550.0, 40, 2500, 1.20);
+  rhythm[1].addPitchedNote(1650.0, 30, 3000, 1.20);
+
+  rhythm[2].addPitchedNote(50.0, 40, 0, 1.35);
+  rhythm[2].addPitchedNote(150.0, 30, 400, 1.31);
+  rhythm[2].addPitchedNote(250.0, 30, 800, 1.35);
+  rhythm[2].addPitchedNote(1350.0, 40, 1200, 1.30);
+  rhythm[2].addPitchedNote(450.0, 30, 2000, 1.30);
+  rhythm[2].addPitchedNote(550.0, 50, 2400, 1.30);
+  rhythm[2].addPitchedNote(1650.0, 20, 2600, 1.30);
+
+  rhythm[3].addPitchedNote(150.0, 40, 0, 1.35);
+  rhythm[3].addPitchedNote(150.0, 50, 400, 1.31);
+  rhythm[3].addPitchedNote(250.0, 60, 600, 1.35);
+  rhythm[3].addPitchedNote(1350.0, 40, 700, 1.30);
+  rhythm[3].addPitchedNote(450.0, 40, 800, 1.30);
+  rhythm[3].addPitchedNote(550.0, 50, 500, 1.30);
+  rhythm[3].addPitchedNote(1650.0, 40, 1000, 1.30);
+
+  rhythm_bank.addRhythm(&rhythm[0]);
+  rhythm_bank.addRhythm(&rhythm[1]);
+  rhythm_bank.addRhythm(&rhythm[2]);
+  rhythm_bank.addRhythm(&rhythm[3]);
+
+  playback_engine.linkMechanism(&bells[0]);
+  playback_engine.linkMechanism(&bells[1]);
+  playback_engine.linkMechanism(&bells[2]);
+
+  playback_engine.linkNeoGroup(&neos[0]);
+  playback_engine.linkNeoGroup(&neos[1]);
+  playback_engine.linkNeoGroup(&neos[2]);
+
+#elif ARTEFACT_SPECIES == EX_CHIPPER
+  for (int i = 0; i < 10; i++)
   {
-    pinMode(s_pins[i], OUTPUT);
-    digitalWrite(s_pins[i], LOW); // turns them off
-  }
-
-#if TEST_SOLENOIDS == true
-  Serial.println("TEST_SOLENOIDS is set to true, system will just test solenoids over and over again forever");
-  testSolenoids(1000); // let the system settle
-  Serial.println("Finished setting solenoid pins to outputs");
-#endif
-
-#if (NUM_MOTORS > 0)
-  Serial.println("Starting Motor Set-up");
-  motors.flipM1(M1_POLARITY);
-  motors.flipM2(M2_POLARITY);
-  motors.flipM3(M3_POLARITY);
-  motors.enableDrivers();
-  motors.setM1Speed(0);
-  motors.setM2Speed(0);
-  motors.setM3Speed(0);
-  delay(500);
-  Serial.println("Finished setting up motors");
-  Serial.println("-------------------------------------------------------------");
-  delay(2500); // let the system settle
-#endif
-}
-
-#if TEST_SOLENOIDS == true
-void testSolenoids(unsigned int len)
-{
-  elapsedMillis t = 0;
-  Serial.print("Testing Solenoids - ");
-  while (t < len)
-  {
-    for (int i = 0; i < NUM_SOLENOIDS; i++)
+    uint32_t quarter = random(120, 750);
+    buildPeckRhythm(i, quarter);
+    if (random(0, 100) < 30)
     {
-      if (sol_active[i] == true)
-      {
-        Serial.print(i);
-        digitalWrite(s_pins[i], HIGH); // LOW is on for these transistors as a low opens the gate
-        delay(30);
-        Serial.print(" ");
-        digitalWrite(s_pins[i], LOW);
-      }
+      rhythm[i].addUnpitchedNote(quarter * 4, 0.75);
+      buildPeckRhythm(i, quarter);
     }
-    Serial.println();
+    rhythm[i].addMotorMove(1, 70, 100);
+    rhythm[i].print();
+    rhythm_bank.addRhythm(&rhythm[i]);
   }
-  Serial.println("Finished testing solenoids");
-  Serial.println("--------------------------");
-};
-#endif // test_solenoids, ARTEFACT_GENUS explorator
+  playback_engine.linkMechanism(&pecking_mechanism[0]);
+  playback_engine.linkNeoGroup(&neos[1]);
 
+#endif // ARTEFACT_SPECIES == EX_CHIRPER
+}
 void setupSpeciesAudio() {
   HPF1.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
   HPF1.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
@@ -971,7 +966,7 @@ void setupSpecies() {
   printMajorDivide("starting exploratorSetup() loop");
 
 #if ARTEFACT_SPECIES == EX_CHIPPER
-  pecker[0].setMotorSpeeds(70, -30);
+  pecking_mechanism[0].setMotorSpeeds(70, -30);
 #endif // ARTEFACT_SPECIES == EX_CHIPPER
 
   /////////////// User Controls ////////////////////////////////////////////

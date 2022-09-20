@@ -150,6 +150,9 @@
 // turned off in order to get an accurate reading
 #define LUX_SHDN_LEN                    50
 
+///////////////////////////// Explorator States ///////////////////////////
+#define LISTENING_STATE 0
+#define ACTUATING_STATE 1
 
 /*
   //updateLoopLength();

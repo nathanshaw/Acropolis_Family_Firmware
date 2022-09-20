@@ -124,6 +124,9 @@ elapsedMillis song_update_timer = 0;
 // vocalisation lock period which prevents the artefact from vocalising too often
 #define P_CALCULATE_PLAYBACK_INTERVAL             true
 
+// prints information within the function of the same name
+#define P_UPDATE_LEGATUS_PASSIVE_LEDS             true
+
 //////////////////////////// Audio Memory Usage ///////////////////////////////
 // prints the max audio memory usage (to help calibrate how much is allocated to the system)
 #if P_AUDIO_USAGE_MAX == true

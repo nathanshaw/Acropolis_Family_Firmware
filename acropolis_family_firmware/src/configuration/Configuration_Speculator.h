@@ -197,28 +197,6 @@ int ONSET_FEATURE =                           PEAK_DELTA;
    TODO
 */
 
-//////////////////////////////// Onset ////////////////////////////////////
-elapsedMillis onset_feature_reset_tmr;
-const unsigned long onset_feature_reset_time = (1000 * 60 * 1);// every 5 minute?
-
-double last_range_rms = 0.0;
-double min_rrms = 1.0;
-double max_rrms = 0.1;
-
-double last_flux = 0.0;
-double min_flux = 1.0;
-double max_flux = 0.1;
-
-double last_cent_degd = 0.0;
-double min_cent_negd = 1.0;
-double max_cent_negd = 0.0;
-
-double min_onset_feature = 1.0;
-double max_onset_feature = 0.0;
-
-double onset_flux = 0.0;
-double onset_rrms = 0.0;
-double onset_cent = 0.0;
 
 ////////////////////////////////// RANDOM stuff ///////////////////////////////////
 // this is a high value to force jumper readings in the setup() loop
