@@ -4,7 +4,11 @@
  * contains all the Serial printing options along
  * with the options for initalising setup and boot tests
 */
-#include "Macros.h"
+#include <Macros.h>
+
+
+// prints high-level data from the behaviourUpdateLoop
+#define P_BEHAVIOUR_UPDATE       false
 
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ////////////////////////// Boot Tests ///////////////////////////////////////////////////////
@@ -55,7 +59,7 @@ int BOOT_DELAY_ACTIVE    =           false;
 #define P_HUE                           false
 #define P_BRIGHTNESS                    false
 
-#define P_NEO_COLORS                    true
+#define P_NEO_COLORS                    false
 
 //////////////////////// LuxManager and Ambiant Lighting ///////////////
 #define P_LUX_MANAGER_READINGS          false
@@ -148,7 +152,8 @@ elapsedMillis last_audio_usage_print;
 ///////////////////////////////////////////////////////////////////////////////
 // activates some printing which will print out how long different functions calls take
 // TODO - this needs implementation to prove real-time operation
-#define P_FUNCTION_TIMES                          false
+
+#define P_FUNCTION_TIMES                          true
 
 //////////////////////////// EEPROM ///////////////////////////////////
 // set to true if you want to print out data stored in EEPROM on boot

@@ -6,9 +6,9 @@
 */
 
 #include "Configuration_hardware.h"
-#include "../lib/ValueTracker/ValueTrackerDouble.h"
+#include <ValueTrackerLong.h>
 #include <Audio.h>
-#include "Macros.h"
+#include <Macros.h>
 #include "../lib/PrintUtils/PrintUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,6 @@
 ////////////////////////////////////////////////////////////////////////////
 #define MAX_FPS                         60.0
 
-uint32_t loop_length = (uint32_t)((double)1000.0 / (double)MAX_FPS);
 
 ////////////////////////////////////////////////////////////////////////////
 /////////////////////////// jumper Pins ////////////////////////////////////
@@ -203,9 +202,6 @@ int ONSET_FEATURE =                           PEAK_DELTA;
 elapsedMillis last_audio_use_print = 0;
 #define AUDIO_USE_RESET_RATE         20000
 
-#if P_FUNCTION_TIMES == true
-elapsedMillis function_times = 0;
-#endif // P_FUNCTION_TIMES
 
 
 #endif // CONFIGURATION_H

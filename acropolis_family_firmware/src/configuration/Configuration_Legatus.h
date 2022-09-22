@@ -1,7 +1,7 @@
 #ifndef __CONFIGURATION_LEGATUS_H__
 #define __CONFIGURATION_LEGATUS_H__
 
-#include "Macros.h"
+#include <Macros.h>
 
 float USER_CONTROL_PLAYBACK_GAIN             = 1.0;
 

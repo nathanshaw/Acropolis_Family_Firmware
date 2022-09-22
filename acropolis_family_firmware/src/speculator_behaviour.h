@@ -72,11 +72,11 @@ void updateBehaviour()
     // TODO - erm, look into this code, what does it do again, should it be a part of the
     dominate_channel = feature_collector.getDominateChannel();
     // Serial.print("dominate channel is : ");
-    // Serial.println(dominate_channel);
+    // dprintln(P_BEHAVIOUR_UPDATE, dominate_channel);
   }
-  Serial.print("color map mode: ");
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB) {
-    Serial.println("COLOR_MAPPING_HSB");
+  // Serial.print("color map mode: ");
+  if (color_map_mode == COLOR_MAPPING_HSB) {
+    dprintln(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_HSB");
 
     s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
@@ -95,26 +95,33 @@ void updateBehaviour()
       Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
     }
   }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR) {
-    Serial.println("COLOR_MAPPING_EXPLORATOR");
+  else if (color_map_mode == COLOR_MAPPING_EXPLORATOR) {
+    dprintln(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_EXPLORATOR");
     updateFeedbackLEDs(&fft_manager[dominate_channel]);
     // Serial.println("Finished running updateFeedbackLEDs()");
     // delay(2000);
   }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_FFT) {
-    Serial.println("COLOR_MAPPING_FFT");
+  else if (color_map_mode == COLOR_MAPPING_FFT) {
+    dprintln(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_FFT");
     // determine the amount of energy contained in each of the three bands
     float total_energy = fft_manager[0].getFFTTotalEnergy() * 0.16;
+    #if ARTEFACT_SPECIES == SPEC_MINOR
+    const int array_size = 20;
     int front_inside_out_order[20] = {16, 17, 18, 19, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     int rear_inside_out_order[20] = {36, 37, 38, 39, 30, 31, 32, 33, 34, 35, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
-    Serial.print("total energy : ");
-    Serial.print(total_energy, 6);
+    #elif ARTEFACT_SPECIES == SPEC_MAJOR
+    const int array_size = 5;
+    int front_inside_out_order[5] = {0, 1, 2, 3, 4};
+    int rear_inside_out_order[5] = {5, 6, 7, 8, 9};
+    #endif
+    dprint(P_BEHAVIOUR_UPDATE, "total energy : ");
+    dprint(P_BEHAVIOUR_UPDATE, total_energy, 6);
     total_energy = constrainf(total_energy, 0.0, 1.0);
-    Serial.print("\t");
-    Serial.println(total_energy, 6);
+    dprint(P_BEHAVIOUR_UPDATE, "\t");
+    dprintln(P_BEHAVIOUR_UPDATE, total_energy, 6);
 
     // map each individual LED to a range of four bins
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < array_size; i++)
     {
       int idx_start = (i * 6) + 10;
 
@@ -135,7 +142,7 @@ void updateBehaviour()
       r = constrainf(r, 0.0, 0.75);
       Serial.print(r);
       Serial.print("\t");
-      Serial.println(user_brightness_cuttoff);
+      dprintln(P_BEHAVIOUR_UPDATE, user_brightness_cuttoff);
 
       g = constrainf(g / 3, 0.0, 0.75);
       g = g - user_brightness_cuttoff;
@@ -164,12 +171,12 @@ void updateBehaviour()
 
       if (i == 10)
       {
-        Serial.print(" h,s,b : ");
-        Serial.print(h);
-        Serial.print("\t");
-        Serial.print(s);
-        Serial.print("\t");
-        Serial.println(br);
+        dprint(P_BEHAVIOUR_UPDATE, " h,s,b : ");
+        dprint(P_BEHAVIOUR_UPDATE, h);
+        dprint(P_BEHAVIOUR_UPDATE, "\t");
+        dprint(P_BEHAVIOUR_UPDATE, s);
+        dprint(P_BEHAVIOUR_UPDATE, "\t");
+        dprintln(P_BEHAVIOUR_UPDATE, br);
       }
       #if USER_CONTROLS_ACTIVE
       neos[0].colorWipeHSB(h, s, br, user_brightness_scaler, front_inside_out_order[i], front_inside_out_order[i]);
@@ -270,7 +277,7 @@ void setupSpeciesAudio()
   Serial.print("\t");
   Serial.println(RBQ2_DB);
   
-  // Dynamic audio routing for Speculator 
+  #if ARTEFACT_BEHAVIOUR == B_ADAPTIVE_FEEDBACK
   audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
   audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
   audio_connections[2] = new AudioConnection(mixer1, HPF1);
@@ -279,23 +286,36 @@ void setupSpeciesAudio()
   audio_connections[5] = new AudioConnection(HPF2, LPF2);
   audio_connections[6] = new AudioConnection(LPF1, amp1);
   audio_connections[7] = new AudioConnection(LPF2, amp2);
-  audio_connections[9] = new AudioConnection(amp1, peak1);
+  #elif ARTEFACT_BEHAVIOUR == B_TARGETED_FEEDBACK
+  audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+  audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+  audio_connections[2] = new AudioConnection(mixer1, HPF1);
+  audio_connections[3] = new AudioConnection(mixer1, HPF2);
+  audio_connections[4] = new AudioConnection(HPF1, LPF1);
+  audio_connections[5] = new AudioConnection(HPF2, LPF2);
+  audio_connections[6] = new AudioConnection(LPF1, amp1);
+  audio_connections[7] = new AudioConnection(LPF2, amp2);
+  #endif // species
+
+  #if NUM_PEAK_ANAS > 0
+  audio_connections[15] = new AudioConnection(amp1, peak1);
+  #endif
 
   #if NUM_PEAK_ANAS == 2
-  audio_connections[12] = new AudioConnection(amp2, peak2);
+  audio_connections[16] = new AudioConnection(amp2, peak2);
   #endif
 
   #if NUM_RMS_ANAS > 0
-  audio_connections[10] = new AudioConnection(amp1, rms1);
+  audio_connections[17] = new AudioConnection(amp1, rms1);
   #endif
   #if NUM_RMS_ANAS == 2
-  audio_connections[13] = new AudioConnection(amp2, rms2);
+  audio_connections[18] = new AudioConnection(amp2, rms2);
   #endif
   #if NUM_FFT > 0
-  audio_connections[8] = new AudioConnection(amp1, fft1);
+  audio_connections[19] = new AudioConnection(i2s1, 0, fft1, 0);
   #endif
   #if NUM_FFT == 2
-  audio_connections[11] = new AudioConnection(amp2, fft2);
+  audio_connections[20] = new AudioConnection(i2s2, 2, fft2, 0);
   #endif
 }
 
@@ -312,11 +332,11 @@ void setupSpecies() {
     delay(2000);
   }
   // setup up some value tracker stuff
-#if COLOR_MAP_MODE == COLOR_MAPPING_HSB
+#if color_map_mode == COLOR_MAPPING_HSB
   brightness_tracker.setMinMaxUpdateFactor(BGT_MIN_UPDATE_FACTOR, BGT_MAX_UPDATE_FACTOR);
   hue_tracker.setMinMaxUpdateFactor(HUE_MIN_UPDATE_FACTOR, HUE_MAX_UPDATE_FACTOR);
   saturation_tracker.setMinMaxUpdateFactor(SAT_MIN_UPDATE_FACTOR, SAT_MAX_UPDATE_FACTOR);
-#endif // COLOR_MAP_MODE == COLOR_MAPPING_HSB
+#endif // color_map_mode == COLOR_MAPPING_HSB
 
 
   /////////////// User Controls ////////////////////////////////////////////
@@ -357,7 +377,7 @@ void setupSpecies() {
   uimanager.addPotRange(3, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
 #elif HV_MAJOR == 2
-  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &COLOR_MAP_MODE, BUT1_NAME);
+  uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &color_map_mode, BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &SQUARE_BRIGHTNESS, BUT2_NAME);
   uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &USE_TARGET_BRIGHTNESS, BUT3_NAME);
   uimanager.addBut(BUT4_PIN, BUT4_PULLUP, BUT4_LOW_VAL, BUT4_HIGH_VAL, BUT4_LOW_CHANGES, &REVERSE_SATURATION, BUT4_NAME);

@@ -71,12 +71,27 @@ AudioFilterBiquad        LPF1;           //xy=619,196
 AudioFilterBiquad        LPF2;           //xy=621,233
 AudioAmplifier           amp1;           //xy=736,198
 AudioAmplifier           amp2;           //xy=738,232
-AudioAnalyzeFFT1024      fft1;           //xy=902,160
+
+#if NUM_PEAK_ANAS > 0
 AudioAnalyzePeak         peak1;          //xy=902,231
+#endif
+#if NUM_PEAK_ANAS > 1
 AudioAnalyzePeak         peak2;          //xy=902,266
+#endif
+
+#if NUM_RMS_ANAS > 0
 AudioAnalyzeRMS          rms1;          //xy=902,231
+#endif
+#if NUM_RMS_ANAS > 1
 AudioAnalyzeRMS          rms2;          //xy=902,266
+#endif
+
+#if NUM_FFT > 0
+AudioAnalyzeFFT1024      fft1;           //xy=902,160
+#endif
+#if NUM_FFT > 1
 AudioAnalyzeFFT1024      fft2;           //xy=903,196
+#endif
 
 #if AUDIO_USB
 AudioOutputUSB           output_usb;     //xy=916,300
@@ -332,83 +347,6 @@ FeatureCollector feature_collector = FeatureCollector(NUM_MICROPHONES, "All");
 #if WEATHER_MANAGER_ACTIVE
 WeatherManager weather_manager = WeatherManager(HUMID_EXTREME_THRESH, TEMP_EXTREME_THRESH, TEMP_HISTERESIS, WEATHER_MANAGER_UPDATE_RATE);
 
-float applyWeatherToHue(float _hue) {
-  if (HUMID_OFFSETS_FEEDBACK && HUMID_OFFSETS_HUE){
-    // constrain value to ensure proper scaling
-    float h = constrain(weather_manager.getHumidity(), HUMID_OFFSET_MIN_VAL, HUMID_OFFSET_MAX_VAL);
-    float h_offset = map(h, HUMID_OFFSET_MIN_VAL, HUMID_OFFSET_MAX_VAL, MIN_HUMID_OFFSET, MAX_HUMID_OFFSET);
-    if (HUMID_FEEDBACK_SCALING == EXP_SCALING) {
-      if (h_offset > 0) {
-        h_offset = h_offset * h_offset;
-      }else {
-        // to maintain the negative sign
-        h_offset = h_offset * h_offset * -1;
-      }
-    }
-    _hue += h_offset;
-  }
-  if (HUMID_SCALES_FEEDBACK && HUMID_SCALES_HUE) {
-    // to ensure there is not more scaling than intended we constrain
-    float h = constrain(weather_manager.getHumidity(), HUMID_OFFSET_MIN_VAL, HUMID_OFFSET_MAX_VAL);
-    // this is assuming that our values for these macros will not
-    // produce anything below 0.0 or above 1.0
-    float c_min = HUMID_SCALE_CENTER - (1 - (HUMID_SCALE_AMOUNT * 0.5));
-    float c_max = HUMID_SCALE_CENTER + (1 - (HUMID_SCALE_AMOUNT * 0.5));
-    _hue = map(_hue, 0.0, 1.0, c_min, c_max);
-  }
-  if (TEMP_OFFSETS_FEEDBACK && TEMP_OFFSETS_HUE) {
-    // constrain value to ensure proper scaling
-    float t = constrain(weather_manager.getTemperature(), TEMP_OFFSET_MIN_VAL, TEMP_OFFSET_MAX_VAL);
-    float t_offset = map(t, TEMP_OFFSET_MIN_VAL, TEMP_OFFSET_MAX_VAL, MIN_TEMP_OFFSET, MAX_TEMP_OFFSET);
-    if (TEMP_FEEDBACK_SCALING == EXP_SCALING) {
-      if (t_offset > 0) {
-        t_offset = t_offset * t_offset;
-      }else {
-        // to maintain the negative sign
-        t_offset = t_offset * t_offset * -1;
-      }
-    }
-    _hue += t_offset;
-  }
-  if (TEMP_SCALES_FEEDBACK && TEMP_SCALES_HUE) {
-  // to ensure there is not more scaling than intended we constrain
-  // TODO - temp is not doing anything here?
-    float t = constrain(weather_manager.getTemperature(), TEMP_OFFSET_MIN_VAL, TEMP_OFFSET_MAX_VAL);
-    // this is assuming that our values for these macros will not
-    // produce anything below 0.0 or above 1.0
-    float t_min = TEMP_SCALE_CENTER - (1 - (TEMP_SCALE_AMOUNT * 0.5));
-    float t_max = TEMP_SCALE_CENTER + (1 - (TEMP_SCALE_AMOUNT * 0.5));
-    _hue = map(_hue, 0.0, 1.0, t_min, t_max);
-  }
-  if (_hue > 1.0){
-    _hue -= 1.0;
-  } else if (_hue < 0.0) {
-    _hue += 1.0;
-  }
-  return _hue;
-}
-
-float applyWeatherToFloat(float val) {
-    // now apply temperature and humidity offsets if appropiate
-    // TODO - need to finish this code...
-    if (TEMP_OFFSETS_FEEDBACK == true){
-
-    } 
-
-    if (HUMID_OFFSETS_FEEDBACK == true) {
-
-    }
-
-    if (TEMP_SCALES_FEEDBACK == true){
-
-    } 
-
-    if (HUMID_SCALES_FEEDBACK == true) {
-
-    }
-    return val;
-}
-
 #endif // WEATHER_MANAGER_ACTIVE
 
 //////////////////////////////////////////////////////////////////////
@@ -594,8 +532,6 @@ bool getColorFromFFTSingleRange(FFTManager1024 * f, uint8_t s, uint8_t e)
   return 1;
 }
 
-#if COLOR_MAPPING == COLOR_MAPPING_HSB
-
 double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
 {
   double b = 0.0;
@@ -625,6 +561,12 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
     case (FEATURE_FFT_ENERGY):
       dprintln(P_BRIGHTNESS, "feature is FFT_ENERGY");
       b = _fft->getFFTTotalEnergy() * 50;
+      break;
+    case (FEATURE_FFT_RELATIVE_ENERGY):
+      // get how much energy is stored in the max bin, get the amount of energy stored in all bins
+      b = _fft->getRelativeEnergy(_fft->getHighestEnergyIdx());
+      // Serial.print("highestEnergyIdx: ");Serial.println(_fft->getHighestEnergyIdx());
+      // Serial.print("relative energy in highest energy bin: ");Serial.println(sat);
       break;
     case (FEATURE_STRONG_FFT):
       // range index is what the highest energy bin is within the range we care about
@@ -666,11 +608,11 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
         target_brightness = brightness;
       }
     }
-    Serial.print("brightness changed due to target: ");
-    Serial.print(brightness);
-    Serial.print(" = ");
+    dprint(P_BRIGHTNESS, "brightness changed due to target: ");
+    dprint(P_BRIGHTNESS, brightness);
+    dprint(P_BRIGHTNESS, " = ");
     brightness = target_brightness;
-    Serial.println(brightness);
+    dprintln(P_BRIGHTNESS, brightness);
   }
 
   /////////////////////////// Reverse ////////////////////////
@@ -783,12 +725,15 @@ double calculateHue(FeatureCollector * f, FFTManager1024 * _fft)
   switch (HUE_FEATURE)
   {
     case FEATURE_FFT_BIN_RANGE:
+      dprint(P_HUE, "Hue feature FEATURE_FFT_BIN_RANGE");
       h = getColorFromFFTSingleRange(_fft, 3, 20);
       break;
     case FEATURE_FFT:
+      dprint(P_HUE, "Hue feature FEATURE_FFT");
       h = (double)constrain(_fft->getHighestEnergyIdx(), 7, 255);
       break;
     case FEATURE_FFT_MAX_BIN:
+      dprint(P_HUE, "Hue feature FEATURE_FFT_MAX_BIN");
       // calculate the bin with the most energy,
       // Serial.print("Highest energy bin is: ");Serial.println(f->getHighestEnergyBin(FFT_LOWEST_BIN, FFT_HIGHEST_BIN));
       // map the bin  index to a hue value
@@ -796,33 +741,39 @@ double calculateHue(FeatureCollector * f, FFTManager1024 * _fft)
       // Serial.print("max bin hu e is : ");Serial.println(hue);
       break;
     case FEATURE_PEAK_AVG:
+      dprint(P_HUE, "Hue feature FEATURE_PEAK_AVG");
       h = f->getDominatePeakAvg();
       f->resetDominatePeakAvg();
       break;
     case FEATURE_PEAK:
+      dprint(P_HUE, "Hue feature FEATURE_PEAK");
       h = f->getDominatePeak();
       break;
     case FEATURE_RMS_AVG:
+      dprint(P_HUE, "Hue feature FEATURE_RMS_AVG");
       h = f->getDominateRMSAvg();
       break;
     case FEATURE_RMS:
+      dprint(P_HUE, "Hue feature FEATURE_RMS");
       h = f->getDominateRMS();
       break;
     case FEATURE_CENTROID:
+      dprint(P_HUE, "Hue feature FEATURE_CENTROID");
       // the centroid will be a frequency between about 200 and 50000
       // first I need to move it to a more linear scale
       h = (double)_fft->getCentroid();
       // next I need to scale down to a value between 0.0 and 1.0
       break;
     case FEATURE_FLUX:
+      dprint(P_HUE, "Hue feature FEATURE_FLUX");
       h = _fft->getFlux();
       break;
     default:
       Serial.println("ERROR - calculateHue() does not accept that HUE_FEATURE");
       break;
   }
-  dprint(P_HUE, "Hue is: ");
-  dprint(P_HUE, hue);
+  dprint(P_HUE, " Initial value is: ");
+  dprintln(P_HUE, hue);
   hue = h;
   hue_tracker.update();
   hue = hue_tracker.getRAvg();
@@ -839,7 +790,7 @@ double calculateHue(FeatureCollector * f, FFTManager1024 * _fft)
   {
     hue = 0.0;
   }
-  dprint(P_HUE, "\t");
+  dprint(P_HUE, " after processing ");
   dprintln(P_HUE, hue);
   return hue;
 }
@@ -856,8 +807,6 @@ void printHSB()
     Serial.println(brightness);
   }
 }
-
-#endif // if color mapping is HSB
 
 void printRGB()
 {
@@ -938,35 +887,34 @@ void updateAudioAnalysis()
 {
   // update the feature collectors
 #if P_FUNCTION_TIMES == true
-  Serial.print("time between updateAudioAnalysis() function calls is ");
-  Serial.print(function_times);
-  Serial.println(" micro seconds");
-  function_times = 0;
+  //Serial.print("time between updateAudioAnalysis() function calls is ");
+  //Serial.print(function_times);
+  //Serial.println(" micro seconds");
+  //function_times = 0;
 #endif // P_FUNCTION_TIMES
   for (int i = 0; i < NUM_FFT; i++)
   {
-    fft_manager[i].printFFTVals();
+    // fft_manager[i].printFFTVals();
     if (fft_manager[i].update())
     {
 #if P_FUNCTION_TIMES == true
-      Serial.print("fft_manager update took ");
-      Serial.print(function_times);
-      Serial.println(" micro seconds to update");
-      delay(1000);
+      // Serial.print("fft_manager update took ");
+      // Serial.print(function_times);
+      // Serial.println(" micro seconds to update");
 #endif // P_FUNCTION_TIMES
     }
   }
 
 #if P_FUNCTION_TIMES == true
-  function_times = 0;
+  // function_times = 0;
 #endif // P_FUNCTION_TIMES
 
   if (feature_collector.update(fft_manager))
   {
 #if P_FUNCTION_TIMES == true
-    Serial.print("feature_collector update took ");
-    Serial.print(function_times);
-    Serial.println(" micro seconds to update");
+    // Serial.print("feature_collector update took ");
+    // Serial.print(function_times);
+    // Serial.println(" micro seconds to update");
 #endif // P_FUNCTION_TIMES
   }
 #if P_AUDIO_MEMORY_MAX > 0
@@ -1152,7 +1100,7 @@ void setupLuxManager()
   Serial.println("LEDS off");
   delay(100);
 
-  lux_manager.setLuxThresholds(LOW_LUX_THRESHOLD, MID_LUX_THRESHOLD, HIGH_LUX_THRESHOLD, EXTREME_LUX_THRESHOLD);
+  lux_manager.setLuxThresholds(NIGHT_LUX_THRESHOLD, LOW_LUX_THRESHOLD, MID_LUX_THRESHOLD, HIGH_LUX_THRESHOLD, EXTREME_LUX_THRESHOLD);
   lux_manager.setPrintBrightnessScaler(P_BS);
   Serial.print("lux_manager print_brightness_scaler is set to   : \t");
   Serial.println(P_BS);
@@ -1168,10 +1116,12 @@ void setupLuxManager()
   Serial.println("Starting LuxManager");
   lux_manager.add6030Sensors(2, 25);
   Serial.println("Finished starting LuxManager");
-#elif (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 2)
+#elif ARTEFACT_SPECIES == SPEC_MAJOR
   Serial.println("Starting LuxManager");
-  lux_manager.addSensorTcaIdx("Front", 0);
-  lux_manager.addSensorTcaIdx("Rear", 1);
+  // lux_manager.addSensorTcaIdx("Front", 0);
+  // lux_manager.addSensorTcaIdx("Rear", 1);
+  lux_manager.add7700Sensor((String) "Front");
+  lux_manager.add7700Sensor((String) "Rear");
   lux_manager.startTCA7700Sensors(VEML7700_GAIN_1, VEML7700_IT_25MS); // todo add this to config_adv? todo
   Serial.println("Finished starting LuxManager");
 #elif (ARTEFACT_GENUS == EXPLORATOR)
@@ -1396,6 +1346,25 @@ void setup()
     Serial.print(LED3_COUNT);
     Serial.println(" LEDs in the third group");
 
+    neos[i].activateTempScaling(TEMP_SCALES_HUE, TEMP_SCALES_SAT, TEMP_SCALES_BGT);
+    neos[i].activateHumidScaling(HUMID_SCALES_HUE, HUMID_SCALES_SAT, HUMID_SCALES_BGT);
+    neos[i].activateTempOffsets(TEMP_OFFSETS_HUE, TEMP_OFFSETS_SAT, TEMP_OFFSETS_BGT);
+    neos[i].activateHumidOffsets(HUMID_OFFSETS_HUE, HUMID_OFFSETS_SAT, HUMID_OFFSETS_BGT);
+    Serial.println("Temperature and Humidity Offsets have been set:");
+    Serial.print("TEMP_SCALES_HUE: ");Serial.println(TEMP_SCALES_HUE);
+    Serial.print("TEMP_SCALES_SAT: ");Serial.println(TEMP_SCALES_SAT);
+    Serial.print("TEMP_SCALES_BGT: ");Serial.println(TEMP_SCALES_BGT);
+    Serial.print("HUMID_SCALES_HUE: ");Serial.println(HUMID_SCALES_HUE);
+    Serial.print("HUMID_SCALES_SAT: ");Serial.println(HUMID_SCALES_SAT);
+    Serial.print("HUMID_SCALES_BGT: ");Serial.println(HUMID_SCALES_BGT);
+    Serial.print("TEMP_OFFSETS_HUE: ");Serial.println(TEMP_OFFSETS_HUE);
+    Serial.print("TEMP_OFFSETS_SAT: ");Serial.println(TEMP_OFFSETS_SAT);
+    Serial.print("TEMP_OFFSETS_BGT: ");Serial.println(TEMP_OFFSETS_BGT);
+    Serial.print("HUMID_OFFSETS_HUE: ");Serial.println(HUMID_OFFSETS_HUE);
+    Serial.print("HUMID_OFFSETS_SAT: ");Serial.println(HUMID_OFFSETS_SAT);
+    Serial.print("HUMID_OFFSETS_BGT: ");Serial.println(HUMID_OFFSETS_BGT);
+
+
     Serial.print("NeoGroup p_lux and p_extreme_lux are both set to : \t");
     Serial.println(P_LUMIN);
     neos[i].setPrintLux(P_LUMIN);
@@ -1531,6 +1500,10 @@ void setup()
 
 void loop()
 {
+  #if P_FUNCTION_TIMES
+  // make sure we dont update the value tracker until we have our second loop
+  updateFunctionTimeStats();
+  #endif
   ////////////////////////////////////////////////////////////
   ///////////////// Ambient Lighting /////////////////////////
   ////////////////////////////////////////////////////////////
@@ -1574,17 +1547,19 @@ void loop()
 ///////////////// WeatherManager ///////////////////////////
 ////////////////////////////////////////////////////////////
 #if WEATHER_MANAGER_ACTIVE == true
-  if (weather_manager.update() && P_WEATHER_MANAGER_READINGS)
-  {
-    weather_manager.print();
-  }
-  if (weather_manager.getHumidityShutdown() == true)
-  {
-    extremeHumidityShutdown();
-  }
-  else if (weather_manager.getTempShutdown() == true)
-  {
-    extremeTemperatureShutdown();
+  if (weather_manager.update()) { 
+    if (P_WEATHER_MANAGER_READINGS)
+    {
+      weather_manager.print();
+    }
+    if (weather_manager.getHumidityShutdown() == true)
+    {
+      extremeHumidityShutdown();
+    }
+    else if (weather_manager.getTempShutdown() == true)
+    {
+      extremeTemperatureShutdown();
+    }
   }
 #endif // WEATHER_MANAGER_ACTIVE
   ////////////////////////////////////////////////////////////
@@ -1623,5 +1598,5 @@ void loop()
   if (data_logging_active) {
     updateDatalog();
   }
-#endif
+ #endif
 }

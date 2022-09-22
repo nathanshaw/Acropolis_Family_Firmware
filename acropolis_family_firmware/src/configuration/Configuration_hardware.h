@@ -2,7 +2,7 @@
 #define __CONFIGURATION_HARDWARE_H__
 
 #include <ValueTrackerDouble.h>
-#include "Macros.h"
+#include <Macros.h>
 
 #define FLIP_SWITCHES             true
 
@@ -340,7 +340,7 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 
 // TODO name these properly
 // name        (what is the name for the buttons)
-#define BUT1_NAME       "COLOR_MAP_MODE"
+#define BUT1_NAME       "color_map_mode"
 #define BUT2_NAME       "SQUARE_BRIGHTNESS"
 #define BUT3_NAME       "USE_TARGET_BRIGHTNESS"
 #define BUT4_NAME       "REVERSE_HUE"

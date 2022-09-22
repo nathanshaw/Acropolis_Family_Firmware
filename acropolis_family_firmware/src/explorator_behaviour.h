@@ -529,7 +529,7 @@ void updateBehaviour()
 {
   /*
   ///////////////// Passive Visual Feedback ///////////
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB)
+  if (color_map_mode == COLOR_MAPPING_HSB)
   {
     double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
@@ -545,7 +545,7 @@ void updateBehaviour()
     // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
     // }
   }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR)
+  else if (color_map_mode == COLOR_MAPPING_EXPLORATOR)
   {
     updateFeedbackLEDs(&fft_manager[dominate_channel]);
     // Serial.println("Finished running updateFeedbackLEDs()");
@@ -781,7 +781,7 @@ void updateBehaviour()
     last_playback_tmr = 0;
   }
 
-  if (COLOR_MAP_MODE == COLOR_MAPPING_HSB)
+  if (color_map_mode == COLOR_MAPPING_HSB)
   {
     double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
@@ -796,7 +796,7 @@ void updateBehaviour()
     // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
     // }
   }
-  else if (COLOR_MAP_MODE == COLOR_MAPPING_EXPLORATOR)
+  else if (color_map_mode == COLOR_MAPPING_EXPLORATOR)
   {
     updateFeedbackLEDs(&fft_manager[dominate_channel]);
     // Serial.println("Finished running updateFeedbackLEDs()");

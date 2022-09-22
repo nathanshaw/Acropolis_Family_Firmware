@@ -2,7 +2,7 @@
 #define __CONFIGURATION_H__
 
 // to get some definitions such as SPECULATOR
-#include "Macros.h"
+#include <Macros.h>
 #include <ValueTrackerDouble.h>
 #include "Configuration_printing_and_tests.h"
 
@@ -11,7 +11,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_GENUS to one of these types
 /////////////////// TODO
-#define ARTEFACT_GENUS            LEGATUS
+#define ARTEFACT_GENUS            SPECULATOR
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Artefact Species //////////////////////////////
@@ -25,7 +25,8 @@
 #elif ARTEFACT_GENUS == LEGATUS 
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
-#define ARTEFACT_SPECIES                 SPEC_MINOR
+// #define ARTEFACT_SPECIES                 SPEC_MINOR
+#define ARTEFACT_SPECIES                 SPEC_MAJOR
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -53,9 +54,9 @@
 
 // Speculator behaviours
 #if ARTEFACT_GENUS == SPECULATOR
-// #define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
+#define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
 // WARNING - TARGETED FEEDBACK IS CURRENTLY BROKEN!!!!!
-#define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
+// #define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
 #if BEHAVIOUR_ROUTINE != B_TARGETED_FEEDBACK && BEHAVIOUR_ROUTINE != B_ADAPTIVE_FEEDBACK
 #error "WRONG BEHAVIOUR_ROUTINE GIVEN, UNABLE TO COMPILE"
 #endif // error for wrong behaviour
@@ -158,13 +159,7 @@ user_brightness_scaler ranges from TODO to TODO and is determined by position of
 // if USER_BS_ACTIVE is set to true the user will scale the natural
 // brightness levels (in pitch mode only) before being sent to the neopixel
 // manager (which then might constrain according to Lux levels)
-#if ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
 float user_brightness_scaler               = 1.0;
-#elif ARTEFACT_GENUS == LEGATUS 
-float user_brightness_scaler               = 0.0;
-#else
-float user_brightness_scaler               = 1.0;
-#endif
 
 ///////////////////////// Saturation  /////////////////////////////////////
 // TODO finish integrating this
@@ -204,31 +199,33 @@ float ADDED_SATURATION  = 0.4;
 
 // if LUX_MAPPING_SCHEMA is set to LUX_ADJUSTS_BS, the ambient light sensor's readings will generate a brightness-scaler that
 // influences the brightness of all artefact visual feedback
-#define LUX_ADJUSTS_BS                  0
 //  if LUX_MAPPING_SCHEMA is set to LUX_ADJUSTS_MIN_MAX, the ambient light sensor's readings will adjust 
 // the minimum and maximum display brightness values for all feedback
-#define LUX_ADJUSTS_MIN_MAX             1
 //  if LUX_MAPPING_SCHEMA is set to LUX_ADJUSTS_BS_AND_MIN_MAX, the ambient light sensor's readings will generate a brightness-scaler
 // that influences the brightness of all artefact feedback AND adjusts 
 // the minimum and maximum display brightness values for all feedback
-#define LUX_ADJUSTS_BS_AND_MIN_MAX      2
-
 // it is generally reccomdended that both options are left active for most species
 // LUX_MAPPING_SCHEMA is a global varaible instead of a constant to allow 
 // for user controls to toggle between different mapping options during runtime if wanted
-uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
+// uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
+uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
+// uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_MIN_MAX;
 
 ////////////////////////////////// Lux Ambiant Lighting Thresholds /////////////////////
-#if (ARTEFACT_GENUS == SPECULATOR) && HV_MAJOR == 2
+#if ARTEFACT_SPECIES == SPEC_MAJOR
+// lux below this threshold triggers a shutdown routines an a bs of 0.0
+// lux between night and low result in a reading of min_bs
 #define NIGHT_LUX_THRESHOLD             0.25
-// this is the threshold in which anything below will just be treated as the lowest reading
-#define LOW_LUX_THRESHOLD               5.0
-// when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
-#define MID_LUX_THRESHOLD               20.0
+// readings between low and mid result in a scaling between min_bs and 1.0
+#define LOW_LUX_THRESHOLD               10.0
+// readings between mid and high result in a scaling between 1.0 and max_bs
+#define MID_LUX_THRESHOLD               400.0
+// readings between high and extreme high result in a scaling of max_bs
 #define HIGH_LUX_THRESHOLD              1200.0
-#define EXTREME_LUX_THRESHOLD           5000.0
+// readings above extreme result in a scaling of 0.0 and a shutdown routine
+#define EXTREME_LUX_THRESHOLD           4000.0
 
-#elif (ARTEFACT_GENUS == SPECULATOR) && HV_MAJOR == 3
+#elif ARTEFACT_SPECIES == SPEC_MINOR
 // the v3 hardware needs higher thresholds as it is brighter and thus needs to decrease its brightness sooner
 #define NIGHT_LUX_THRESHOLD             1.0
 // this is the threshold in which anything below will just be treated as the lowest reading
@@ -258,13 +255,74 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
 
 #endif // ARTEFACT_GENUS for Lux thresholds
 
+///////////////////////////////// Lux Adjusts Min Max /////////////////////////////////
+// These are determined by the LUX_READINGS, any values se here will just serve as a
+// default value which will be overwriten once a lux reading is taken.
+// PLEASE NOTE: the MAX_BRIGHTNEESS is for all three color channels not just a single channel
+// so for instance if rgb = 150, 150, 150. that would be limited if the MAX_BRIGHTNESS IS 450
+// that makes it so a MAX_BRIGHTNESS is actually 765
+// lux_manager, luxmanager, lux manager
+uint16_t  MIN_BRIGHTNESS =              0;
+
+#if (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 3)
+// uint16_t  MAX_BRIGHTNESS =              765;
+uint16_t  MAX_BRIGHTNESS =              765;
+#else
+uint16_t  MAX_BRIGHTNESS =              765;
+#endif
+
+///////////////////////////////// Lux Adjusts Brightness Scaler /////////////////////////////////
+// on scale of 0-1.0 what is the min multiplier for the user defined brightness scaler
+// 0.05 was too low, did not provide good enough feedback for the night time
+#if ARTEFACT_GENUS == LEGATUS
+#define LUX_BS_MIN                      0.1
+#define LUX_BS_MAX                      1.50
+#elif ARTEFACT_GENUS == SPECULATOR
+#define LUX_BS_MIN                      0.01
+#define LUX_BS_MAX                      2.50
+#else
+#define LUX_BS_MIN                      0.75
+#define LUX_BS_MAX                      1.50
+#endif
+/////////////////////////////// Update Regularity //////////////////////////
+uint32_t lux_max_reading_delay =        1000 * 10;   // every 10 seconds
+uint32_t lux_min_reading_delay =        1000 * 1;    // one seconds
+
+#if USER_CONTROLS_ACTIVE
+#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR > 2
+#define USER_BRIGHT_THRESH_OVERRIDE            true
+#else
+#define USER_BRIGHT_THRESH_OVERRIDE            false
+#endif//HV_MAJOR
+
+#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
+float user_brightness_cuttoff = 0.00;
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 2
+float user_brightness_cuttoff = 0.00;
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 3
+float user_brightness_cuttoff = 0.05;
+#else 
+float user_brightness_cuttoff = 0.0;
+#endif//BEHAVIOUR_ROUTINE
+#endif // USER_CONTROLS_ACTIVE
+
+/////////////////////////////// Lighting Conditions ///////////////////////////////////
+// TODO this should be triggered by the light sensor and then determine the mapping
+// TODO use this properly
+// #define LC_NIGHT                        0
+// #define LC_DIM                          1
+// #define LC_NORMAL                       2
+// #define LC_BRIGHT                       3
+// uint8_t LIGHTING_CONDITION = LC_NORMAL;
+
+
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Weather Manager //////////////////////
 ////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
+#if ARTEFACT_SPECIES == SPEC_MINOR
 #define WEATHER_MANAGER_ACTIVE true
-#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 1 && HV_MINOR == 1
-#define WEATHER_MANAGER_ACTIVE true
+#elif ARTEFACT_SPECIES == SPEC_MAJOR
+#define WEATHER_MANAGER_ACTIVE false
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
 #define WEATHER_MANAGER_ACTIVE false
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIRPER
@@ -284,10 +342,10 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS_AND_MIN_MAX;
 ///////////////////////////////////////////////////////////
 ////////////////// Weather Manager Effecting Feedback /////
 ///////////////////////////////////////////////////////////
-bool HUMID_OFFSETS_FEEDBACK                  =  false;
+bool HUMID_OFFSETS_FEEDBACK                  =  true;
 #define HUMID_OFFSETS_HUE                       true
-#define HUMID_OFFSETS_SAT                       true
-#define HUMID_OFFSETS_BGT                       true
+#define HUMID_OFFSETS_SAT                       false
+#define HUMID_OFFSETS_BGT                       false
 #define HUMID_OFFSET_MIN_VAL                    0.2
 #define HUMID_OFFSET_MAX_VAL                    0.8
 #define MIN_HUMID_OFFSET                        -0.1
@@ -326,62 +384,6 @@ bool TEMP_SCALES_FEEDBACK               =  false;
 // where the contrain will focus it's center
 #define TEMP_SCALE_CENTER                  0.5
 
-/////////////////////////////// Lighting Conditions ///////////////////////////////////
-// TODO this should be triggered by the light sensor and then determine the mapping
-#define LC_NIGHT                        0
-#define LC_DIM                          1
-#define LC_NORMAL                       2
-#define LC_BRIGHT                       3
-// TODO use this properly
-uint8_t LIGHTING_CONDITION = LC_NORMAL;
-
-///////////////////////////////// Lux Adjusts Min Max /////////////////////////////////
-// These are determined by the LUX_READINGS, any values se here will just serve as a
-// default value which will be overwriten once a lux reading is taken.
-// PLEASE NOTE: the MAX_BRIGHTNEESS is for all three color channels not just a single channel
-// so for instance if rgb = 150, 150, 150. that would be limited if the MAX_BRIGHTNESS IS 450
-// that makes it so a MAX_BRIGHTNESS is actually 765
-// lux_manager, luxmanager, lux manager
-uint16_t  MIN_BRIGHTNESS =              0;
-
-#if (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 3)
-// uint16_t  MAX_BRIGHTNESS =              765;
-uint16_t  MAX_BRIGHTNESS =              765;
-#else
-uint16_t  MAX_BRIGHTNESS =              765;
-#endif
-
-///////////////////////////////// Lux Adjusts Brightness Scaler /////////////////////////////////
-// on scale of 0-1.0 what is the min multiplier for the user defined brightness scaler
-// 0.05 was too low, did not provide good enough feedback for the night time
-#if (ARTEFACT_GENUS == SPECULATOR) || (ARTEFACT_GENUS == LEGATUS)
-#define LUX_BS_MIN                      0.1
-#define LUX_BS_MAX                      1.50
-#else
-#define LUX_BS_MIN                      0.75
-#define LUX_BS_MAX                      1.50
-#endif
-/////////////////////////////// Update Regularity //////////////////////////
-uint32_t lux_max_reading_delay =        1000 * 60 * 1;   // every 3 minute
-uint32_t lux_min_reading_delay =        1000 * 2;       // ten seconds
-
-#if USER_CONTROLS_ACTIVE
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR > 2
-#define USER_BRIGHT_THRESH_OVERRIDE            true
-#else
-#define USER_BRIGHT_THRESH_OVERRIDE            false
-#endif//HV_MAJOR
-
-#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
-float user_brightness_cuttoff = 0.15;
-#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 2
-float user_brightness_cuttoff = 0.01;
-#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 3
-float user_brightness_cuttoff = 0.05;
-#else 
-float user_brightness_cuttoff = 0.0;
-#endif//BEHAVIOUR_ROUTINE
-#endif // USER_CONTROLS_ACTIVE
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// Neopixel LEDs /////////////////////////////////////
@@ -882,19 +884,26 @@ elapsedMillis last_usage_print =              0;// for keeping track of audio me
 float USER_CONTROL_GAIN_ADJUST               = 1.0;
 
 // TODO - implement this
-#define SPH_MICROPHONE                        0
+#define SPH_MICROPHONE                        10
 #define TDK_MICROPHONE                        1
+#if ARTEFACT_SPECIES == SPECULATOR_MAJOR
+#define MICROPHONE_TYPE                       SPH_MICROPHONE
+#else
 #define MICROPHONE_TYPE                       TDK_MICROPHONE
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// Starting Gain //////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 2
-#define STARTING_GAIN                         12.0
-#elif ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
+#if ARTEFACT_GENUS == SPECULATOR 
+#if ARTEFACT_SPECIES == SPEC_MAJOR
+// most Speculator Major artefacts use the old microphones that require huge amounts of gain...
+#define STARTING_GAIN                         1.0
+#elif ARTEFACT_SPECIES == SPEC_MINOR
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 // 240.00 is good for the better mics?
 #define STARTING_GAIN                         40.0
+#endif // types of speculator species
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
@@ -913,7 +922,7 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #endif
 #endif // makeup_gain
 
-// makeup gain
+// makeup gain, applied after the filtering stage to boost signal
 #if ARTEFACT_GENUS == SPECULATOR
 #define MAKEUP_GAIN                            2.0
 #else
@@ -1061,9 +1070,15 @@ double hue_max =                                0.0;
 
 // When the color mapping is using HSB, this will be where the features used are determined
 #if ARTEFACT_GENUS == SPECULATOR
+#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
-uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_ENERGY;
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_RMS;
+#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
+uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
+uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_RELATIVE_ENERGY;
+#endif // speculator behaviour routines
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
@@ -1075,27 +1090,26 @@ int REVERSE_BRIGHTNESS     =               false;
 int REVERSE_HUE            =               false;
 
 // These are different color mapping modes
-// #define COLOR_MAPPING_FFT                     0
 // originated with the pitch mode for the speculator
-#define COLOR_MAPPING_HSB                     0
+#define COLOR_MAPPING_HSB                     1
 // the simple but effective explorator mapping strategy
-#define COLOR_MAPPING_EXPLORATOR              1
+#define COLOR_MAPPING_EXPLORATOR              0
 // a RGB based color mapping which delegates the energy in a frequency
 // range as determining the brightness of the red, green, and blue elements
 #define COLOR_MAPPING_FFT                     2
 
 // For the neopixels will the color mapping exist within the RGB or HSB domain?
 #if ARTEFACT_GENUS == SPECULATOR
-#define COLOR_MAP_MODE                    COLOR_MAPPING_HSB
+int color_map_mode          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-// int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
-int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+// int color_map_mode          =             COLOR_MAPPING_HSB;
+int color_map_mode          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+int color_map_mode          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-int COLOR_MAP_MODE          =             COLOR_MAPPING_HSB;
+int color_map_mode          =             COLOR_MAPPING_HSB;
 #else
-int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
+int color_map_mode          =             COLOR_MAPPING_EXPLORATOR;
 #endif
 
 // for the COLOR_MAPPING_FFT mode
@@ -1118,5 +1132,81 @@ int COLOR_MAP_MODE          =             COLOR_MAPPING_EXPLORATOR;
 #define SV_MINOR                  1
 #define SV_REVISION               12
 
+#if P_FUNCTION_TIMES == true
+elapsedMillis function_times = 0;
+long loop_num = 0;
+long loop_length = 15;
+// for tracking percentage of loops within given bounds
+long under_ten = 0;
+long over_ninty_nine = 0;
+long over_fourty = 0;
+long over_twenty = 0;
+long over_fifteen= 0;
+long max_loop_length = 0;
+long min_loop_length = 1000;
+
+ValueTrackerLong loop_length_value_tracker = ValueTrackerLong("loop_length", &loop_length, 0, 0, 0.0);
+
+void updateFunctionTimeStats() {
+   if (loop_num != 0) {
+      loop_length = function_times;
+      loop_length_value_tracker.update();
+      if (loop_length < 10) {
+         under_ten++;
+      }
+      if (loop_length > 99){
+         over_ninty_nine++;
+         over_fourty++;
+         over_twenty++;
+         over_fifteen++;
+      }else if (loop_length > 40) {
+         over_fourty++;
+         over_twenty++;
+         over_fifteen++;
+      }else if (loop_length > 20) {
+         over_twenty++;
+         over_fifteen++;
+      }else if (loop_length > 15) {
+         over_fifteen++;
+      }
+   }
+   else{loop_length_value_tracker.resetMinMax();}
+   if (loop_length > max_loop_length){
+      max_loop_length = loop_length;
+   } else if (loop_length < min_loop_length) {
+      min_loop_length = loop_length;
+   }
+    if (loop_num % 100 == 0) {
+      loop_length_value_tracker.printStats();
+      Serial.print("after a total of ");
+      Serial.print(loop_num);
+      Serial.println(" loops, the firmware identified ");
+      Serial.print(over_ninty_nine);
+      Serial.println(" loops over 99ms");
+      Serial.print(over_fourty);
+      Serial.println(" loops over 40ms");
+      Serial.print(over_twenty);
+      Serial.println(" loops over 20ms");
+      Serial.print(over_fifteen);
+      Serial.println(" loops over 15ms");
+      Serial.print(under_ten);
+      Serial.println(" loops under 10ms");
+      Serial.print(max_loop_length);
+      Serial.println(" was the longest identified loop length");
+      Serial.print(min_loop_length);
+      Serial.println(" was the shortest identified loop length");
+      Serial.println("-----------------------------------");
+      if (loop_length == 100000){
+         Serial.println("------------- TEST COMPLETE -----------------")
+         Serial.println("|||||||||||||||||||||||||||||||||||||||||||||")
+         delay(9999999);
+      }
+    }
+    loop_num++;
+    function_times = 0;
+}
+
+
+#endif // P_FUNCTION_TIMES
 
 #endif // __CONFIGURATION_H__
