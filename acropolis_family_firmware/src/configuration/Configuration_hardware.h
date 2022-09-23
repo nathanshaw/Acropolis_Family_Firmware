@@ -750,4 +750,91 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 #define LED3_PIN 10
 
 #endif
+
+// what the names of the neopixel strips will be
+#if (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIRPER)
+#define LED1_NAME      "small"
+#define LED2_NAME      "medium"
+#define LED3_NAME      "large"
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIPPER)
+#define LED1_NAME      "Eye Stock"
+#define LED2_NAME      "Pecker"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CLAPPER)
+#define LED1_NAME      "Inside Ring"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_WINDER)
+#define LED1_NAME      "Main PCB"
+#define LED2_NAME      "Sensor Stock"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_SPINNER)
+#define LED1_NAME      "Bottom Ring"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A"
+#elif (ARTEFACT_GENUS == SPECULATOR)
+#define LED1_NAME      "All"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A"
+#elif ARTEFACT_GENUS == LEGATUS
+#define LED1_NAME      "All"
+#define LED2_NAME      "N/A"
+#define LED3_NAME      "N/A" 
+#endif
+
+// How many NeoPixels are attached to the Arduino?
+// if no LEDs are connected to the line then set this to 0
+#if (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR < 3)
+#define LED1_COUNT 16
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 3)
+#define LED1_COUNT 40
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIRPER)
+#define LED1_COUNT 10
+#define LED2_COUNT 10
+#define LED3_COUNT 10
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CLAPPER)
+#define LED1_COUNT 20
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIPPER)
+#define LED1_COUNT 10
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_SPINNER)
+#define LED1_COUNT 10
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_WINDER)
+#define LED1_COUNT 20
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#elif ARTEFACT_GENUS == LEGATUS
+#define LED1_COUNT 20
+#define LED2_COUNT 0
+#define LED3_COUNT 0
+#endif
+
+#if LED1_COUNT > 0
+#define LED1_ACTIVE     true
+#else
+#define LED1_ACTIVE     false
+#endif //LED1_COUNT
+
+#if LED2_COUNT > 0
+#define LED2_ACTIVE     true
+#else
+#define LED2_ACTIVE     false
+#endif //LED2_COUNT
+
+#if LED3_COUNT > 0
+#define LED3_ACTIVE     true
+#else
+#define LED3_ACTIVE     false
+#endif //LED3_COUNT
+
+#define LED_ACTIVE_CHANNELS (LED1_ACTIVE + LED2_ACTIVE + LED3_ACTIVE)
 #endif // CONFIGURATION_HARDWARE_H__

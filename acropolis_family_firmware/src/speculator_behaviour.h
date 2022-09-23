@@ -1,5 +1,7 @@
 #ifndef __SPECULATOR_BEHAVIOUR_H__
 #define __SPECULATOR_BEHAVIOUR_H__
+
+#include <Macros.h>
 /////////////////////////// B_TARGETED_FEEDBACK /////////////////////////////////////////////////
 #if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 
@@ -91,6 +93,13 @@ void updateBehaviour()
       neos[0].colorWipeHSB(h, s, b, _lux_bs); // now colorWipe the LEDs with the HSB value
       // neos[0].colorWipe(0, 0, 0, 0.0, 0.0); // now colorWipe the LEDs with the HSB value
       // neos[0].colorWipe(255, 255, 255, 1.0, 1.0); // now colorWipe the LEDs with the HSB value
+      
+      #if (P_FUNCTION_TIMES && P_SPECULATOR_LED_UPDATE_RATE)
+      // make sure we dont update the value tracker until we have our second loop
+      if (neos[0].leds_on){
+        updateFunctionTimeStats();
+      } else {Serial.println("LEDS not on");}
+      #endif
     } else {
       Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
     }
@@ -312,7 +321,11 @@ void setupSpeciesAudio()
   audio_connections[18] = new AudioConnection(amp2, rms2);
   #endif
   #if NUM_FFT > 0
+  #if ARTEFACT_SPECIES == SPEC_MAJOR
   audio_connections[19] = new AudioConnection(i2s1, 0, fft1, 0);
+  #else
+  audio_connections[19] = new AudioConnection(mixer1, 0, fft1, 0);
+  #endif // fft connection depends on species
   #endif
   #if NUM_FFT == 2
   audio_connections[20] = new AudioConnection(i2s2, 2, fft2, 0);
@@ -342,7 +355,7 @@ void setupSpecies() {
   /////////////// User Controls ////////////////////////////////////////////
   // TODO make buttons do something for the speculators again
 #if USER_CONTROLS_ACTIVE
-#if HV_MAJOR == 3
+#if ARTEFACT_SPECIES == SPEC_MINOR
 
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &but_test[0], BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &but_test[1], BUT2_NAME);
@@ -376,7 +389,7 @@ void setupSpecies() {
   uimanager.addPotRange(2, 0.0, 0.5, 1.0);
   uimanager.addPotRange(3, min_user_brightness_cuttoff, mid_user_brightness_cuttoff, max_user_brightness_cuttoff);
 
-#elif HV_MAJOR == 2
+#elif ARTEFACT_SPCIES == SPEC_MAJOR
   uimanager.addBut(BUT1_PIN, BUT1_PULLUP, BUT1_LOW_VAL, BUT1_HIGH_VAL, BUT1_LOW_CHANGES, &color_map_mode, BUT1_NAME);
   uimanager.addBut(BUT2_PIN, BUT2_PULLUP, BUT2_LOW_VAL, BUT2_HIGH_VAL, BUT2_LOW_CHANGES, &SQUARE_BRIGHTNESS, BUT2_NAME);
   uimanager.addBut(BUT3_PIN, BUT3_PULLUP, BUT3_LOW_VAL, BUT3_HIGH_VAL, BUT3_LOW_CHANGES, &USE_TARGET_BRIGHTNESS, BUT3_NAME);

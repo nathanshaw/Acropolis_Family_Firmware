@@ -25,8 +25,8 @@
 #elif ARTEFACT_GENUS == LEGATUS 
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
-// #define ARTEFACT_SPECIES                 SPEC_MINOR
-#define ARTEFACT_SPECIES                 SPEC_MAJOR
+#define ARTEFACT_SPECIES                 SPEC_MINOR
+// #define ARTEFACT_SPECIES                 SPEC_MAJOR
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -140,35 +140,6 @@ int LAST_ARTEFACT_BEHAVIOR =      -1;
 #error ARTEFACT_SPECIES is not set to supported species
 #endif
 
-//////////////////////////////////////////////////////////////////////////////////
-//////////////// Visual Feedback System //////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////// Brightness Scaling /////////////////////////////////////
-/* There are several stages in which the brightness of LED feedback is scaled:
-
-LED lighting events are determined by the artefact's species-specific firmware
-lighting events are calculated in the HSB or RGBW colour space
-
-lux_brightness_scaler ranges from TODO to TODO and is determine by ambient lighting conditions
-user_brightness_scaler ranges from TODO to TODO and is determined by position of physical user controls
-
-*/
-
-// which pot will be used to control thebrightness overide
-// if USER_BS_ACTIVE is set to true the user will scale the natural
-// brightness levels (in pitch mode only) before being sent to the neopixel
-// manager (which then might constrain according to Lux levels)
-float user_brightness_scaler               = 1.0;
-
-///////////////////////// Saturation  /////////////////////////////////////
-// TODO finish integrating this
-/*
-When the code is within the HSB colour space, there is an option to 
-offset the saturation level according to this value
-*/
-float ADDED_SATURATION  = 0.4;
-
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////// 
 // Including the Appropiate configuration files depending on
@@ -227,12 +198,12 @@ uint8_t LUX_MAPPING_SCHEMA =            LUX_ADJUSTS_BS;
 
 #elif ARTEFACT_SPECIES == SPEC_MINOR
 // the v3 hardware needs higher thresholds as it is brighter and thus needs to decrease its brightness sooner
-#define NIGHT_LUX_THRESHOLD             1.0
+#define NIGHT_LUX_THRESHOLD             0.5
 // this is the threshold in which anything below will just be treated as the lowest reading
 #define LOW_LUX_THRESHOLD               20.0
 // when a lux of this level is detected the LEDs will be driven with a brightness scaler of 1.0
 #define MID_LUX_THRESHOLD               500.0
-#define HIGH_LUX_THRESHOLD              1000.0
+#define HIGH_LUX_THRESHOLD              1500.0
 #define EXTREME_LUX_THRESHOLD           5000.0
 
 #elif (ARTEFACT_GENUS == EXPLORATOR)
@@ -300,7 +271,7 @@ float user_brightness_cuttoff = 0.00;
 #elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 2
 float user_brightness_cuttoff = 0.00;
 #elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK && HV_MAJOR == 3
-float user_brightness_cuttoff = 0.05;
+float user_brightness_cuttoff = 0.00;
 #else 
 float user_brightness_cuttoff = 0.0;
 #endif//BEHAVIOUR_ROUTINE
@@ -386,205 +357,6 @@ bool TEMP_SCALES_FEEDBACK               =  false;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////// Neopixel LEDs /////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-// this is needed for the forced lux
-#define UPDATE_ON_OFF_RATIOS            false
-
-/////////////////////////// Onsets //////////////////////
-#if ARTEFACT_GENUS == SPECULATOR
-#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
-#define ONSET_DETECTION_ACTIVE        true
-#elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
-#define ONSET_DETECTION_ACTIVE        false
-#endif// BEHAVIOUR_ROUTINE
-#elif ARTEFACT_GENUS == EXPLORATOR
-#define ONSET_DETECTION_ACTIVE        true
-#else
-#define ONSET_DETECTION_ACTIVE        false
-#endif // ARTEFACT_GENUS
-
-// when onset detection is active, this will be the threshold
-double ONSET_THRESH =                   1.0;
-
-// this color is used for flashes
-#define ONSET_RED                       200
-#define ONSET_GREEN                     200
-#define ONSET_BLUE                      255
-
-////////////////////////////////////////////////////////////////////////////
-#if ONSET_DETECTION_ACTIVE
-//////////////////////////////// Onset ////////////////////////////////////
-elapsedMillis onset_feature_reset_tmr;
-const unsigned long onset_feature_reset_time = (1000 * 60 * 1);// every 5 minute?
-
-double last_range_rms = 0.0;
-double min_rms = 1.0;
-double max_rms = 0.1;
-
-double last_flux = 0.0;
-double min_flux = 1.0;
-double max_flux = 0.1;
-
-double last_cent_degd = 0.0;
-double min_cent_negd = 1.0;
-double max_cent_negd = 0.0;
-
-double min_onset_feature = 1.0;
-double max_onset_feature = 0.0;
-
-double onset_flux = 0.0;
-double onset_rms = 0.0;
-double onset_cent = 1000.0;
-double onset_feature = 0.0;
-
-ValueTrackerDouble onset_tracker = ValueTrackerDouble((String) "Onset Feature", &onset_feature, 0.1, 3000, 1.0);
-ValueTrackerDouble cent_tracker = ValueTrackerDouble((String) "Cent", &onset_cent, 0.1, 3000, 1.0);
-ValueTrackerDouble rms_tracker = ValueTrackerDouble((String) "RMS", &onset_rms, 0.1, 3000, 1.0);
-
-#endif // ONSET_DETECTION_ACTIVE
-
-////////////////////////// LED MAPPING MODES ////////////////
-#define LED_MAPPING_STANDARD      0
-#define LED_MAPPING_INSIDE_OUT    1
-#define LED_MAPPING_ROUND         2
-#define LED_MAPPING_BOTTOM_UP     3
-#define LED_MAPPING_CLOCK_HAND    4
-#define LED_MAPPING_OUTSIDE_IN    5
-#define LED_MAPPING_CLOCK_FILL    6
-#define LED_MAPPING_CUSTOM        7
-
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
-// PLEASE NOTE - this must be set to standard if the FFT led mapping is used...
-int LED_MAPPING_MODE = LED_MAPPING_INSIDE_OUT;
-#elif COLOR_MAPPING_MODE == LED_MAPPING_FFT
-int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
-#else
-int LED_MAPPING_MODE = LED_MAPPING_STANDARD;
-#endif //HV_MAJOR
-
-// what the names of the neopixel strips will be
-#if (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIRPER)
-#define LED1_NAME      "small"
-#define LED2_NAME      "medium"
-#define LED3_NAME      "large"
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIPPER)
-#define LED1_NAME      "Eye Stock"
-#define LED2_NAME      "Pecker"
-#define LED3_NAME      "N/A"
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CLAPPER)
-#define LED1_NAME      "Inside Ring"
-#define LED2_NAME      "N/A"
-#define LED3_NAME      "N/A"
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_WINDER)
-#define LED1_NAME      "Main PCB"
-#define LED2_NAME      "Sensor Stock"
-#define LED3_NAME      "N/A"
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_SPINNER)
-#define LED1_NAME      "Bottom Ring"
-#define LED2_NAME      "N/A"
-#define LED3_NAME      "N/A"
-#elif (ARTEFACT_GENUS == SPECULATOR)
-#define LED1_NAME      "All"
-#define LED2_NAME      "N/A"
-#define LED3_NAME      "N/A"
-#elif ARTEFACT_GENUS == LEGATUS
-#define LED1_NAME      "All"
-#define LED2_NAME      "N/A"
-#define LED3_NAME      "N/A" 
-#endif
-
-// How many NeoPixels are attached to the Arduino?
-// if no LEDs are connected to the line then set this to 0
-#if (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR < 3)
-#define LED1_COUNT 16
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#elif (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 3)
-#define LED1_COUNT 40
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIRPER)
-#define LED1_COUNT 10
-#define LED2_COUNT 10
-#define LED3_COUNT 10
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CLAPPER)
-#define LED1_COUNT 20
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIPPER)
-#define LED1_COUNT 10
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_SPINNER)
-#define LED1_COUNT 10
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_WINDER)
-#define LED1_COUNT 20
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#elif ARTEFACT_GENUS == LEGATUS
-#define LED1_COUNT 20
-#define LED2_COUNT 0
-#define LED3_COUNT 0
-#endif
-
-#if LED1_COUNT > 0
-#define LED1_ACTIVE     true
-#else
-#define LED1_ACTIVE     false
-#endif //LED1_COUNT
-
-#if LED2_COUNT > 0
-#define LED2_ACTIVE     true
-#else
-#define LED2_ACTIVE     false
-#endif //LED2_COUNT
-
-#if LED3_COUNT > 0
-#define LED3_ACTIVE     true
-#else
-#define LED3_ACTIVE     false
-#endif //LED3_COUNT
-
-#define LED_ACTIVE_CHANNELS (LED1_ACTIVE + LED2_ACTIVE + LED3_ACTIVE)
-
-// if false, a onset detected on either side results in a LED flash on both sides
-// if true, a onset detected on one side will only result in a flash on that side
-int INDEPENDENT_ONSETS =               false; // WARNING NOT IMPLEMENTED - TODO
-int FLASH_DOMINATES =                  false;
-
-// if this is true then the brightness will b = (b + b) * b; in order to reduce its value, and make loud events even more noticable
-int SQUARE_BRIGHTNESS =                false;
-
-#if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
-bool SATURATED_COLORS =                 false;
-#else
-bool SATURATED_COLORS =                 true;
-#endif
-
-// how high the onset flash timer will go up to
-#define MAX_FLASH_TIME                  60
-// where the onset flash timer will start
-#define MIN_FLASH_TIME                  40
-// the amount of time that the LEDs need to be shutdown to allow lux sensors to get an accurate reading
-#define FLASH_DEBOUNCE_TIME             80
-
-const bool led_channel_active[3] = {LED1_ACTIVE, LED2_ACTIVE, LED3_ACTIVE};
-const uint8_t num_active_led_channels = LED1_ACTIVE + LED2_ACTIVE + LED3_ACTIVE;
-const uint16_t max_led_count = max(max(LED1_COUNT, LED2_COUNT), LED3_COUNT);
-
-// these should be 3
-#if ARTEFACT_GENUS == SPECULATOR_GENUS || ARTEFACT_GENUS == LEGATUS_GENUS
-byte drawingMemory[1][max_led_count * 3];       //  3 bytes per LED
-DMAMEM byte displayMemory[1][max_led_count * 12]; // 12 bytes per LED
-#else
-byte drawingMemory[3][max_led_count * 3];       //  3 bytes per LED
-DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
-#endif
-
-///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Weather Manager ////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 #define WM_UPDATE_DELAY                     1000
@@ -599,39 +371,7 @@ DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #define TEMP_HISTERESIS                     0.15
 #define WEATHER_MANAGER_UPDATE_RATE         3000
 
-///////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////      FFTManager  ////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-// When calculating things such as which bin has the most energy and so on,
-// what bin is considered the "1st?" and which one is the last?
-// bin two covers 86 - 129 Hz
-#define FFT_LOWEST_BIN              3
-// this is 16340 Hz
-#define FFT_HIGHEST_BIN             380
-// todo this needs to be calculated better?
-#define FFT_NUM_BINS                (FFT_HIGHEST_BIN - FFT_LOWEST_BIN)
 
-// used the scaled FFT readings or the normal FFT readings, the scaled readings will eensure that
-// all the bins of intrest will have their magnitudes add up to 1, thus is best used for determining the centroid within a sub frequency range (for instance 8k - 14k or something
-#define SCALE_FFT_BIN_RANGE             false
-#define FFT_FEATURES_ACTIVE             1
-
-
-// |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-///////////////////////////////// Datalogging //////////////////////////////////////////////////
-// |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-#define DATALOG_ACTIVE                  false
-#if DATALOG_ACTIVE
-#define PRINT_EEPROM_ON_BOOT            true
-#else
-#define PRINT_EEPROM_ON_BOOT            false
-#endif
-
-#if DATALOG_ACTIVE == true
-#include "Configuration_datalogging.h"
-// perform a write check on everything that is written to EEPROM
-#define EEPROM_WRITE_CHECK              true
-#endif // DATALOG_ACTIVE
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// GLOBAL VARIABLES ////////////////////////////////
@@ -902,7 +642,7 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #elif ARTEFACT_SPECIES == SPEC_MINOR
 // 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
 // 240.00 is good for the better mics?
-#define STARTING_GAIN                         40.0
+#define STARTING_GAIN                         240.0
 #endif // types of speculator species
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
 #define STARTING_GAIN                         20.0
@@ -1145,6 +885,9 @@ long over_fifteen= 0;
 long max_loop_length = 0;
 long min_loop_length = 1000;
 
+// how many times will the test be run before termination
+#define loop_test_period 10000
+
 ValueTrackerLong loop_length_value_tracker = ValueTrackerLong("loop_length", &loop_length, 0, 0, 0.0);
 
 void updateFunctionTimeStats() {
@@ -1196,9 +939,9 @@ void updateFunctionTimeStats() {
       Serial.print(min_loop_length);
       Serial.println(" was the shortest identified loop length");
       Serial.println("-----------------------------------");
-      if (loop_length == 100000){
-         Serial.println("------------- TEST COMPLETE -----------------")
-         Serial.println("|||||||||||||||||||||||||||||||||||||||||||||")
+      if (loop_num == loop_test_period){
+         Serial.println("------------- TEST COMPLETE -----------------");
+         Serial.println("|||||||||||||||||||||||||||||||||||||||||||||");
          delay(9999999);
       }
     }

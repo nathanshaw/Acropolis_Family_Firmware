@@ -1112,7 +1112,7 @@ void setupLuxManager()
   Serial.println(P_LUX_MANAGER_DEBUG);
 
   delay(500);
-#if (ARTEFACT_GENUS == SPECULATOR) && (HV_MAJOR == 3)
+#if ARTEFACT_SPECIES == SPEC_MINOR
   Serial.println("Starting LuxManager");
   lux_manager.add6030Sensors(2, 25);
   Serial.println("Finished starting LuxManager");
@@ -1500,10 +1500,6 @@ void setup()
 
 void loop()
 {
-  #if P_FUNCTION_TIMES
-  // make sure we dont update the value tracker until we have our second loop
-  updateFunctionTimeStats();
-  #endif
   ////////////////////////////////////////////////////////////
   ///////////////// Ambient Lighting /////////////////////////
   ////////////////////////////////////////////////////////////

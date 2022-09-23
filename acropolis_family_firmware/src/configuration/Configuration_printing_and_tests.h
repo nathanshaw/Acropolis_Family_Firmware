@@ -6,7 +6,6 @@
 */
 #include <Macros.h>
 
-
 // prints high-level data from the behaviourUpdateLoop
 #define P_BEHAVIOUR_UPDATE       false
 
@@ -52,7 +51,7 @@ int BOOT_DELAY_ACTIVE    =           false;
 #define P_WEATHER_MANAGER_READINGS      false
 
 ///////////////////////// NeoPixels and Colour ////////////////////////
-#define P_HSB                           false
+#define P_HSB                           true
 #define P_SMOOTH_HSB                    false
 
 #define P_SATURATION                    false
@@ -123,13 +122,13 @@ elapsedMillis song_update_timer = 0;
 #define P_DOMINATE_CHANNEL                        false
 
 //////////////////////////// Audio Playback ///////////////////////////////////
-#define P_AUDIO_PLAYBACK                          true
+#define P_AUDIO_PLAYBACK                          false
 // prints feedback from the function of the same name used to calculate the
 // vocalisation lock period which prevents the artefact from vocalising too often
-#define P_CALCULATE_PLAYBACK_INTERVAL             true
+#define P_CALCULATE_PLAYBACK_INTERVAL             false
 
 // prints information within the function of the same name
-#define P_UPDATE_LEGATUS_PASSIVE_LEDS             true
+#define P_UPDATE_LEGATUS_PASSIVE_LEDS             false
 
 //////////////////////////// Audio Memory Usage ///////////////////////////////
 // prints the max audio memory usage (to help calibrate how much is allocated to the system)
@@ -154,6 +153,7 @@ elapsedMillis last_audio_usage_print;
 // TODO - this needs implementation to prove real-time operation
 
 #define P_FUNCTION_TIMES                          true
+#define P_SPECULATOR_LED_UPDATE_RATE              true
 
 //////////////////////////// EEPROM ///////////////////////////////////
 // set to true if you want to print out data stored in EEPROM on boot

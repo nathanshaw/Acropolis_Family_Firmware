@@ -1,6 +1,22 @@
 #ifndef __CONFIGURATION_DATALOGGING_H__
 #define __CONFIGURATION_DATALOGGING_H__
 
+// |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+///////////////////////////////// Datalogging //////////////////////////////////////////////////
+// |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+#define DATALOG_ACTIVE                  false
+#if DATALOG_ACTIVE
+#define PRINT_EEPROM_ON_BOOT            true
+#else
+#define PRINT_EEPROM_ON_BOOT            false
+#endif
+
+#if DATALOG_ACTIVE == true
+#include "Configuration_datalogging.h"
+// perform a write check on everything that is written to EEPROM
+#define EEPROM_WRITE_CHECK              true
+#endif // DATALOG_ACTIVE
+
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Datalog Settings /////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
