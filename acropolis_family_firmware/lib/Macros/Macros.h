@@ -193,7 +193,32 @@ double constrainf(double val, double _min, double _max) {
 }
 
 double mapf(double val, double in_min, double in_max, double out_min, double out_max) {
+  if (out_min < out_max){
     return (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  } else {
+    return out_min - ((val - in_min) / (in_max - in_min) * (out_min - out_max));
+  }
+}
+
+bool wrap(double & v){
+  // WARNING - this function is dangerous and should only be used
+  // by the wrapValues function
+    if (v > 1.0){
+        v = v - 1.0;
+        return true;
+    } else if (v < 0.0) {
+        v = v + 1.0;
+        return true;
+    }
+    return false;
+}
+
+double wrapValues(double v){
+  // a variation on the constraion function which returns
+  // a value between 0.0 and 1.0, but instead of scaling
+  // it wraps around the values so 1.1 returns 0.1
+    while(wrap(v)){};
+    return v;
 }
 
 #endif //__MACROS_H

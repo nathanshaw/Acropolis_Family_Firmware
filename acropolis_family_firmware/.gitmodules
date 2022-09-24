@@ -1,0 +1,6 @@
+[submodule "lib/ValueTracker"]
+	update = rebase
+[submodule "lib/LuxManager"]
+	update = rebase
+[submodule "lib/NeopixelManager"]
+	update = rebase
