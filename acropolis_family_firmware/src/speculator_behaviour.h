@@ -2,6 +2,7 @@
 #define __SPECULATOR_BEHAVIOUR_H__
 
 #include <Macros.h>
+#include <NeopixelManager.h>
 /////////////////////////// B_TARGETED_FEEDBACK /////////////////////////////////////////////////
 #if BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
 
@@ -73,19 +74,45 @@ void updateBehaviour()
   {
     // TODO - erm, look into this code, what does it do again, should it be a part of the
     dominate_channel = feature_collector.getDominateChannel();
-    // Serial.print("dominate channel is : ");
-    // dprintln(P_BEHAVIOUR_UPDATE, dominate_channel);
+    dprint(P_BEHAVIOUR_UPDATE, "dominate channel is : ");
+    dprintln(P_BEHAVIOUR_UPDATE, dominate_channel);
   }
   // Serial.print("color map mode: ");
   if (color_map_mode == COLOR_MAPPING_HSB) {
-    dprintln(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_HSB");
+    dprint(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_HSB - ");
 
     s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
     h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-
+    dprint(P_BEHAVIOUR_UPDATE, "HSB after calculate() functions: ");
+    dprint(P_BEHAVIOUR_UPDATE, h, 6);
+    dprint(P_BEHAVIOUR_UPDATE, "\t");
+    dprint(P_BEHAVIOUR_UPDATE, s, 6);
+    dprint(P_BEHAVIOUR_UPDATE, "\t");
+    dprintln(P_BEHAVIOUR_UPDATE, b, 6);
     printHSB();
     printRGB();
+
+    // these functions will update the value of the HSB according to weather conditions
+    // variables are passed by reference to allow for their change without the function returning anything
+    if (P_BEHAVIOUR_UPDATE == true) {
+      #if WEATHER_MANAGER_ACTIVE
+      neos[0].applyWeatherOffsets(weather_manager, h, s, b, true); 
+      neos[0].applyWeatherScaling(weather_manager, h, s, b, true);
+      #endif
+      dprint(P_BEHAVIOUR_UPDATE, "HSB after weather scaling and offsets functions: ");
+      dprint(P_BEHAVIOUR_UPDATE, h, 6);
+      dprint(P_BEHAVIOUR_UPDATE, "\t");
+      dprint(P_BEHAVIOUR_UPDATE, s, 6);
+      dprint(P_BEHAVIOUR_UPDATE, "\t");
+      dprintln(P_BEHAVIOUR_UPDATE, b, 6);
+    }
+    else {
+      #if WEATHER_MANAGER_ACTIVE
+      neos[0].applyWeatherOffsets(weather_manager, h, s, b, false); 
+      neos[0].applyWeatherScaling(weather_manager, h, s, b, false);
+      #endif
+    }
 
     if (feature_collector.isActive() == true) {
       // the specific mapping strategy is handled by the NeoPixelManager
@@ -111,7 +138,7 @@ void updateBehaviour()
     // delay(2000);
   }
   else if (color_map_mode == COLOR_MAPPING_FFT) {
-    dprintln(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_FFT");
+    dprint(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_FFT - ");
     // determine the amount of energy contained in each of the three bands
     float total_energy = fft_manager[0].getFFTTotalEnergy() * 0.16;
     #if ARTEFACT_SPECIES == SPEC_MINOR
@@ -286,16 +313,16 @@ void setupSpeciesAudio()
   Serial.print("\t");
   Serial.println(RBQ2_DB);
   
-  #if ARTEFACT_BEHAVIOUR == B_ADAPTIVE_FEEDBACK
+  #if BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
   audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
   audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
   audio_connections[2] = new AudioConnection(mixer1, HPF1);
-  audio_connections[3] = new AudioConnection(mixer1, HPF2);
+  // audio_connections[3] = new AudioConnection(mixer1, HPF2);
   audio_connections[4] = new AudioConnection(HPF1, LPF1);
-  audio_connections[5] = new AudioConnection(HPF2, LPF2);
+  //audio_connections[5] = new AudioConnection(HPF2, LPF2);
   audio_connections[6] = new AudioConnection(LPF1, amp1);
-  audio_connections[7] = new AudioConnection(LPF2, amp2);
-  #elif ARTEFACT_BEHAVIOUR == B_TARGETED_FEEDBACK
+  // audio_connections[7] = new AudioConnection(LPF2, amp2);
+  #elif BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
   audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
   audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
   audio_connections[2] = new AudioConnection(mixer1, HPF1);
@@ -324,7 +351,7 @@ void setupSpeciesAudio()
   #if ARTEFACT_SPECIES == SPEC_MAJOR
   audio_connections[19] = new AudioConnection(i2s1, 0, fft1, 0);
   #else
-  audio_connections[19] = new AudioConnection(mixer1, 0, fft1, 0);
+  audio_connections[19] = new AudioConnection(amp1, 0, fft1, 0);
   #endif // fft connection depends on species
   #endif
   #if NUM_FFT == 2

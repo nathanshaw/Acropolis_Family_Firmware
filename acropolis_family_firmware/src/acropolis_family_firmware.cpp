@@ -560,7 +560,11 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
       break;
     case (FEATURE_FFT_ENERGY):
       dprintln(P_BRIGHTNESS, "feature is FFT_ENERGY");
-      b = _fft->getFFTTotalEnergy() * 50;
+      b = _fft->getFFTTotalEnergy()*10;
+      break;
+    case FEATURE_FFT:
+      dprint(P_BRIGHTNESS, "BGT feature FEATURE_FFT");
+      b = (double)constrain(_fft->getHighestEnergyIdx(), 7, 255);
       break;
     case (FEATURE_FFT_RELATIVE_ENERGY):
       // get how much energy is stored in the max bin, get the amount of energy stored in all bins
@@ -585,7 +589,7 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
 
   // Scale the brightness value according to a rolling average 
   brightness_tracker.update();
-  brightness = brightness_tracker.getRAvg();
+  brightness = brightness_tracker.getScaled();
   dprint(P_BRIGHTNESS, "\t");
   dprintln(P_BRIGHTNESS, brightness);
   ////////////////////////// When using target_brightness
@@ -620,6 +624,10 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
   {
     brightness = 1.0 - brightness;
   }
+
+  #if ADD_B_OFFSET
+  brightness += 0.1;
+  #endif
 
   //////////////////////// Scale down the brightness and make it more exponential for better results //////////////////
   if (SQUARE_BRIGHTNESS == true && brightness < 1.0)
@@ -673,17 +681,20 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
   switch (SATURATION_FEATURE)
   {
     case (FEATURE_PEAK_AVG):
+      dprint(P_SATURATION, "Feature is FEATURE_PEAK_AVG: ");
       sat = f->getDominatePeakAvg();
       // Serial.println(sat);
       // Serial.print("sat set to  : ");Serial.println(hsb[i][1]);
       f->resetDominatePeakAvg();
       break;
     case (FEATURE_RMS_AVG):
+      dprint(P_SATURATION, "Feature is FEATURE_RMS_AVG: ");
       sat = f->getDominateRMSAvg();
       // Serial.print("sat set to  : ");Serial.println(hsb[i][1]);
       f->resetDominateRMSAvg();
       break;
     case (FEATURE_FFT_RELATIVE_ENERGY):
+      dprint(P_SATURATION, "Feature is FEATURE_FFT_RELATIVE_ENERGY: ");
       // get how much energy is stored in the max bin, get the amount of energy stored in all bins
       sat = _fft->getRelativeEnergy(_fft->getHighestEnergyIdx());
       // Serial.print("highestEnergyIdx: ");Serial.println(_fft->getHighestEnergyIdx());
@@ -691,7 +702,8 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
       break;
     case (FEATURE_FLUX):
       // sat = (_fft->getFlux() - 20) / 60;
-      sat = _fft->getFlux();
+      dprint(P_SATURATION, "Feature is FEATURE_FLUX: ");
+      sat = _fft->getScaledFlux();
       break;
     default:
       Serial.print("ERROR - calculateSaturation() does not accept that  SATURATION_FEATURE");

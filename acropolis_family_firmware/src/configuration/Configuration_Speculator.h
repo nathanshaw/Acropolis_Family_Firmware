@@ -122,26 +122,6 @@ bool gain_adjust_active =                false;
 */
 
 /////////////////////////////////////////////////////////////////////////
-//////////////////////// Audio Settings /////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-// if stereo feedback is set to true than only audio from both channels will be used to calculate visual feedback brightness and color
-// not generally recommended...
-#define STEREO_FEEDBACK                       false
-// MIX_AUDIO determines if, when there is no stereo feedback,  if the input from the front and rear microphones
-// should be mixed together or if a dominate microphone will be chosen.
-#define MIX_AUDIO                             false
-
-// how often does the feature collector update
-//33 is 30 times a second
-#define FC_UPDATE_RATE                        10
-#if HV_MAJOR == 2
-#define AUDIO_MEMORY                          12
-#else
-#define AUDIO_MEMORY                          20
-#endif
-bool stereo_audio =                           true;
-
-/////////////////////////////////////////////////////////////////////////
 /////////////////////////      Feature Collector     ////////////////////
 /////////////////////////////////////////////////////////////////////////
 // minimum amount of time between peak-log resets  which is allowed.

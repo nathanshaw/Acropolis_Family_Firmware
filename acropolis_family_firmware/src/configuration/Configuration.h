@@ -291,7 +291,7 @@ float user_brightness_cuttoff = 0.0;
 ///////////////////////// Weather Manager //////////////////////
 ////////////////////////////////////////////////////////////////
 #if ARTEFACT_SPECIES == SPEC_MINOR
-#define WEATHER_MANAGER_ACTIVE true
+#define WEATHER_MANAGER_ACTIVE false
 #elif ARTEFACT_SPECIES == SPEC_MAJOR
 #define WEATHER_MANAGER_ACTIVE false
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
@@ -313,33 +313,48 @@ float user_brightness_cuttoff = 0.0;
 ///////////////////////////////////////////////////////////
 ////////////////// Weather Manager Effecting Feedback /////
 ///////////////////////////////////////////////////////////
-bool HUMID_OFFSETS_FEEDBACK                  =  true;
-#define HUMID_OFFSETS_HUE                       true
+// this is a variable so it can be mapped to user controls if wanted
+bool HUMID_OFFSETS_FEEDBACK                  =  false;
+#define HUMID_OFFSETS_HUE                       false
 #define HUMID_OFFSETS_SAT                       false
 #define HUMID_OFFSETS_BGT                       false
+// what temperature (/100) should the offset scaling occur
+// note anything outside this range will be clipped to the min or max
+// temp offset value
 #define HUMID_OFFSET_MIN_VAL                    0.2
 #define HUMID_OFFSET_MAX_VAL                    0.8
-#define MIN_HUMID_OFFSET                        -0.1
-#define MAX_HUMID_OFFSET                        0.1
+#define MIN_HUMID_OFFSET                        -0.3
+#define MAX_HUMID_OFFSET                        0.3
 #define HUMID_FEEDBACK_SCALING                  LINEAR_SCALING
 
-bool TEMP_OFFSETS_FEEDBACK                   =  true;
-#define TEMP_OFFSETS_HUE                       true
-#define TEMP_OFFSETS_SAT                       true
+// this is a variable so it can be mapped to user controls if wanted
+bool TEMP_OFFSETS_FEEDBACK                   = false;
+#define TEMP_OFFSETS_HUE                       false
+#define TEMP_OFFSETS_SAT                       false
 #define TEMP_OFFSETS_BGT                       false
-#define TEMP_OFFSET_MIN_VAL                     5
-#define TEMP_OFFSET_MAX_VAL                     25
+// what temperature (/100) should the offset scaling occur
+// note anything outside this range will be clipped to the min or max
+// temp offset value
+#define TEMP_OFFSET_MIN_VAL                     0.0
+#define TEMP_OFFSET_MAX_VAL                     0.35
 #define MIN_TEMP_OFFSET                         -0.3
 #define MAX_TEMP_OFFSET                         0.3
+// there is LINEAR_SCALING and EXP_SCALING, exp scaling will square the number
+// while retaining the sign
 #define TEMP_FEEDBACK_SCALING                  LINEAR_SCALING
 
 bool HUMID_SCALES_FEEDBACK               =  false;
 // these are the fo;r the humidity values, not the constraining
-#define HUMID_SCALES_HUE                    true
+// the Hue range is reduced when the humidity is high
+#define HUMID_SCALES_HUE                    false
 #define HUMID_SCALES_SAT                    false
 #define HUMID_SCALES_BGT                    false
+// what humidity (/100) should the offset scaling occur
+// note anything outside this range will be clipped to the min or max
+// temp offset value
 #define HUMID_SCALE_MIN_THRESH              0.2
-#define HUMID_SCALE_MAX_THRESH                0.8
+#define HUMID_SCALE_MAX_THRESH              0.8
+
 #define HUMID_SCALE_AMOUNT                  0.5
 // where the contrain will focus it's center
 #define HUMID_SCALE_CENTER                  0.5
@@ -349,8 +364,11 @@ bool TEMP_SCALES_FEEDBACK               =  false;
 #define TEMP_SCALES_HUE                    false
 #define TEMP_SCALES_SAT                    false
 #define TEMP_SCALES_BGT                    false
+// what temperature (/100) should the offset scaling occur
+// note anything outside this range will be clipped to the min or max
+// temp offset value
 #define TEMP_SCALE_MIN_THRESH              0.2
-#define TEMP_SCALE_MAX_THRESH                0.8
+#define TEMP_SCALE_MAX_THRESH              0.8
 #define TEMP_SCALE_AMOUNT                  0.5
 // where the contrain will focus it's center
 #define TEMP_SCALE_CENTER                  0.5
@@ -370,8 +388,6 @@ bool TEMP_SCALES_FEEDBACK               =  false;
 // drops to 80 degrees
 #define TEMP_HISTERESIS                     0.15
 #define WEATHER_MANAGER_UPDATE_RATE         3000
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////// GLOBAL VARIABLES ////////////////////////////////
@@ -546,239 +562,6 @@ float pot_test[NUM_POTS];
 #endif // USER_CONTROLS_ACTIVE
 
 
-////////////////////////////////////////////////////////////////////////////
-///////////////////////// Neo Manager //////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == SPECULATOR
-#define NUM_NEOP_MANAGERS                               1
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#define NUM_NEOP_MANAGERS                               1
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-#define NUM_NEOP_MANAGERS                               1
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-#define NUM_NEOP_MANAGERS                               1
-#elif ARTEFACT_GENUS == EXPLORATOR
-#define NUM_NEOP_MANAGERS                               3
-#elif ARTEFACT_GENUS == LEGATUS         
-#define NUM_NEOP_MANAGERS                               1
-#endif
-
-// what factor will the new values be scaled by compared to the old values
-// when calculating the song brightness target vs current levels a 1.0 will turn off
-// the low filtering so only the new values will be used while 0.5 will result in the
-// average of the old and new value to be used, a higher value will be a quicker responce
-// the max value is 1.0 and the min value is 0.0
-#define HUE_LP_LEVEL                          0.02
-#define SATURATION_LP_LEVEL                   0.02
-#define BRIGHTNESS_LP_LEVEL                   0.02
-
-// if > 0 then the brightness will be smoothed with a previous value
-// thee higher the value the more it is smoothed
-#define HUE_DECAY_DELAY      15000
-#define HUE_DECAY_FACTOR     0.1
-
-#define SAT_DECAY_DELAY      15000
-#define SAT_DECAY_FACTOR     0.1
-
-#define BGT_DECAY_DELAY      15000
-#define BGT_DECAY_FACTOR     0.1
-
-#define BGT_MIN_UPDATE_FACTOR BRIGHTNESS_LP_LEVEL
-#define BGT_MAX_UPDATE_FACTOR BRIGHTNESS_LP_LEVEL
-
-#define SAT_MIN_UPDATE_FACTOR SATURATION_LP_LEVEL
-#define SAT_MAX_UPDATE_FACTOR SATURATION_LP_LEVEL
-
-#define HUE_MIN_UPDATE_FACTOR HUE_LP_LEVEL
-#define HUE_MAX_UPDATE_FACTOR HUE_LP_LEVEL
-
-double hue = 0.5;
-double brightness = 0.5;
-double saturation = 0.5;// needs to start at 0.0 or else the min/max value tracker has issues
-
-ValueTrackerDouble hue_tracker        = ValueTrackerDouble((String)"HUE", &hue, HUE_DECAY_FACTOR, HUE_DECAY_DELAY, HUE_LP_LEVEL);
-ValueTrackerDouble saturation_tracker = ValueTrackerDouble((String)"SATURATION", &saturation, SAT_DECAY_FACTOR, SAT_DECAY_DELAY, SATURATION_LP_LEVEL);
-ValueTrackerDouble brightness_tracker = ValueTrackerDouble((String)"BRIGHTNESS", &brightness, BGT_DECAY_FACTOR, BGT_DECAY_DELAY, BRIGHTNESS_LP_LEVEL);
-
-////////////////////////////////////////////////////////////////////////////
-// TODO -- need to implement the target hue saturation and brightness mapping schema
-float target_hue = 1.0;
-float target_saturation = 1.0;
-float target_brightness = 1.0;
-////////////////////////////////////////////////////////////////////////////
-// WARNING!!!!!! DO NOT USE THIS FEATURE!!!!!
-int USE_TARGET_BRIGHTNESS = false;
-int USE_TARGET_HUE        = false;
-int USE_TARGET_SATURATION = false;
-
-////////////////////////////////////////////////////////////////////////////
-///////////////////////// Audio System /////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-// for speculator cicada installations channel 1 is song and channel 2 is click?
-// TODO - the input to the two different sides should be the dominate microphones
-
-// audio usage loggings
-elapsedMillis last_usage_print =              0;// for keeping track of audio memory usage
-
-// this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
-float USER_CONTROL_GAIN_ADJUST               = 1.0;
-
-// TODO - implement this
-#define SPH_MICROPHONE                        10
-#define TDK_MICROPHONE                        1
-#if ARTEFACT_SPECIES == SPECULATOR_MAJOR
-#define MICROPHONE_TYPE                       SPH_MICROPHONE
-#else
-#define MICROPHONE_TYPE                       TDK_MICROPHONE
-#endif
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////// Starting Gain //////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////
-#if ARTEFACT_GENUS == SPECULATOR 
-#if ARTEFACT_SPECIES == SPEC_MAJOR
-// most Speculator Major artefacts use the old microphones that require huge amounts of gain...
-#define STARTING_GAIN                         1.0
-#elif ARTEFACT_SPECIES == SPEC_MINOR
-// 30.0 is good for testing when no enclosure is present, but a higher value should be used when an enclosure is present
-// 240.00 is good for the better mics?
-#define STARTING_GAIN                         240.0
-#endif // types of speculator species
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
-#define STARTING_GAIN                         20.0
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-#define STARTING_GAIN                         20.0
-#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-#define STARTING_GAIN                         480.0
-
-#elif ARTEFACT_GENUS == EXPLORATOR
-#define STARTING_GAIN                         240.0
-
-#elif ARTEFACT_GENUS == LEGATUS
-#if ARTEFACT_BEHAVIOUR == B_LEG_FEEDBACK
-#define STARTING_GAIN                         0.5
-#else
-#define STARTING_GAIN                         6.0
-#endif
-#endif // makeup_gain
-
-// makeup gain, applied after the filtering stage to boost signal
-#if ARTEFACT_GENUS == SPECULATOR
-#define MAKEUP_GAIN                            2.0
-#else
-#define MAKEUP_GAIN                            2.0
-#endif
-
-
-//////////////////////////////// STARTING GAIN //////////////////////////////////////////////
-float starting_gain = STARTING_GAIN * ENCLOSURE_GAIN_FACTOR;
-/////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-#if ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_TARGETED_FEEDBACK
-// SONG HP
-#define LBQ1_THRESH         4000
-#define LBQ1_Q              0.85
-#define LBQ1_DB             -12
-// SONG LP
-#define LBQ2_THRESH         16000
-#define LBQ2_Q              0.85
-#define LBQ2_DB             -12
-// CLICK HP
-#define RBQ1_THRESH         1200
-#define RBQ1_Q              0.85
-#define RBQ1_DB             -12
-// CLICK LP
-#define RBQ2_THRESH         3000
-#define RBQ2_Q              0.85
-#define RBQ2_DB             -12
-
-#elif ARTEFACT_GENUS == SPECULATOR && BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
-// Mix HP
-#define LBQ1_THRESH         400
-#define LBQ1_Q              1.0
-#define LBQ1_DB             -12
-// Mix LP
-#define LBQ2_THRESH         20000
-#define LBQ2_Q              1.0
-#define LBQ2_DB             -12
-// Should be Inactive
-#define RBQ1_THRESH         400
-#define RBQ1_Q              1.0
-#define RBQ1_DB             -12
-// Should be Inactive
-#define RBQ2_THRESH         20000
-#define RBQ2_Q              0.85
-#define RBQ2_DB             -12
-//////////////////
-#elif ARTEFACT_GENUS == EXPLORATOR
-// SONG HP
-#define LBQ1_THRESH         400
-#define LBQ1_Q              1.0
-#define LBQ1_DB             -12
-
-// SONG LP
-#define LBQ2_THRESH         20000
-#define LBQ2_Q              1.0
-#define LBQ2_DB             -12
-
-// Should be Inactive
-#define RBQ1_THRESH         400
-#define RBQ1_Q              1.0
-#define RBQ1_DB             -12
-
-// Should be Inactive
-#define RBQ2_THRESH         20000
-#define RBQ2_Q              1.0
-#define RBQ2_DB             -12
-
-//////////////////
-#elif ARTEFACT_GENUS == LEGATUS
-// Microphone HP
-#define LBQ1_THRESH         400
-#define LBQ1_Q              1.0
-#define LBQ1_DB             -12
-// Microphone LP
-#define LBQ2_THRESH         20000
-#define LBQ2_Q              1.0
-#define LBQ2_DB             -12
-
-// playback HP
-#define RBQ1_THRESH         80
-#define RBQ1_Q              1.0
-#define RBQ1_DB             -12
-// playback LQ
-#define RBQ2_THRESH         18000
-#define RBQ2_Q              1.0
-#define RBQ2_DB             -12
-
-#else
-// SONG HP
-#define LBQ1_THRESH         400
-#define LBQ1_Q              1.0
-#define LBQ1_DB             -12
-// SONG LP
-#define LBQ2_THRESH         20000
-#define LBQ2_Q              1.0
-#define LBQ2_DB             -12
-
-// Should be Inactive
-#define RBQ1_THRESH         400
-#define RBQ1_Q              1.0
-#define RBQ1_DB             -12
-// Should be Inactive
-#define RBQ2_THRESH         20000
-#define RBQ2_Q              1.0
-#define RBQ2_DB             -12
-#endif
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////      FFTManager  //////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-// used the scaled FFT readings or the normal FFT readings, the scaled readings will eensure that
-// all the bins of intrest will have their magnitudes add up to 1, thus is best used for determining the centroid within a sub frequency range (for instance 8k - 14k or something
-#define SCALE_FFT_BIN_RANGE                     false
-#define FFT_FEATURES_ACTIVE                     1
 
 /////////////////////////////// Color Mapping /////////////////////////////////////
 // when calculating the hue for the NeoPixel leds, what feature do you want to use?
@@ -817,7 +600,9 @@ uint8_t BRIGHTNESS_FEATURE  =               FEATURE_RMS;
 #elif BEHAVIOUR_ROUTINE == B_ADAPTIVE_FEEDBACK
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
 uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
-uint8_t BRIGHTNESS_FEATURE  =               FEATURE_FFT_RELATIVE_ENERGY;
+// FEATURE_FFT_ENERGY works well when you want to detect onsets
+// but FEATURE_PEAK is best for default
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK;
 #endif // speculator behaviour routines
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
@@ -825,6 +610,7 @@ uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
 uint8_t BRIGHTNESS_FEATURE  =               (FEATURE_FFT_ENERGY);
 #endif // ARTEFACT_GENUS == SPECULATOR
 
+// saturation should be reversed by default
 int REVERSE_SATURATION     =               true;
 int REVERSE_BRIGHTNESS     =               false;
 int REVERSE_HUE            =               false;

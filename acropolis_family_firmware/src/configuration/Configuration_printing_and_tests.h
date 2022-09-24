@@ -51,12 +51,12 @@ int BOOT_DELAY_ACTIVE    =           false;
 #define P_WEATHER_MANAGER_READINGS      false
 
 ///////////////////////// NeoPixels and Colour ////////////////////////
-#define P_HSB                           true
+#define P_HSB                           false
 #define P_SMOOTH_HSB                    false
 
 #define P_SATURATION                    false
 #define P_HUE                           false
-#define P_BRIGHTNESS                    false
+#define P_BRIGHTNESS                    true
 
 #define P_NEO_COLORS                    false
 
@@ -133,6 +133,7 @@ elapsedMillis song_update_timer = 0;
 //////////////////////////// Audio Memory Usage ///////////////////////////////
 // prints the max audio memory usage (to help calibrate how much is allocated to the system)
 #if P_AUDIO_USAGE_MAX == true
+// TODO - this needs to be fully implemented
 elapsedMillis last_audio_usage_print;
 #define AUDIO_USAGE_POLL_RATE                     5000
 #endif
@@ -152,8 +153,12 @@ elapsedMillis last_audio_usage_print;
 // activates some printing which will print out how long different functions calls take
 // TODO - this needs implementation to prove real-time operation
 
-#define P_FUNCTION_TIMES                          true
+#define P_FUNCTION_TIMES                          false
+#if P_FUNCTION_TIMES == false
+#define P_SPECULATOR_LED_UPDATE_RATE              false
+#else
 #define P_SPECULATOR_LED_UPDATE_RATE              true
+#endif // P_FUNCTION_TIMES
 
 //////////////////////////// EEPROM ///////////////////////////////////
 // set to true if you want to print out data stored in EEPROM on boot

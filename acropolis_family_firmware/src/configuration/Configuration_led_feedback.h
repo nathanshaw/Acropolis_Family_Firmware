@@ -34,6 +34,9 @@ offset the saturation level according to this value
 */
 float ADDED_SATURATION  = 0.4;
 
+// for some circumstances, it is useful to always provide feedback
+#define ADD_B_OFFSET true
+
 ////////////////////////// LED MAPPING MODES ////////////////
 #define LED_MAPPING_STANDARD      0
 #define LED_MAPPING_INSIDE_OUT    1
@@ -44,7 +47,7 @@ float ADDED_SATURATION  = 0.4;
 #define LED_MAPPING_CLOCK_FILL    6
 #define LED_MAPPING_CUSTOM        7
 
-#if ARTEFACT_GENUS == SPECULATOR && HV_MAJOR == 3
+#if ARTEFACT_SPECIES == SPEC_MINOR
 // PLEASE NOTE - this must be set to standard if the FFT led mapping is used...
 int LED_MAPPING_MODE = LED_MAPPING_INSIDE_OUT;
 #elif COLOR_MAPPING_MODE == LED_MAPPING_FFT
@@ -87,10 +90,75 @@ DMAMEM byte displayMemory[1][max_led_count * 12]; // 12 bytes per LED
 byte drawingMemory[3][max_led_count * 3];       //  3 bytes per LED
 DMAMEM byte displayMemory[3][max_led_count * 12]; // 12 bytes per LED
 #endif
+////////////////////////////////////////////////////////////////////////////
+///////////////////////// Neo Manager //////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+#if ARTEFACT_GENUS == SPECULATOR
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CLAPPER
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
+#define NUM_NEOP_MANAGERS                               1
+#elif ARTEFACT_GENUS == EXPLORATOR
+#define NUM_NEOP_MANAGERS                               3
+#elif ARTEFACT_GENUS == LEGATUS         
+#define NUM_NEOP_MANAGERS                               1
+#endif
 
-///////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////// Neopixel LEDs /////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
+// what factor will the new values be scaled by compared to the old values
+// when calculating the song brightness target vs current levels a 1.0 will turn off
+// the low filtering so only the new values will be used while 0.5 will result in the
+// average of the old and new value to be used, a higher value will be a quicker responce
+// the max value is 1.0 and the min value is 0.0
+#define HUE_LP_LEVEL                          0.8
+#define SATURATION_LP_LEVEL                   0.8
+#define BRIGHTNESS_LP_LEVEL                   0.8
+
+// if > 0 then the brightness will be smoothed with a previous value
+// thee higher the value the more it is smoothed
+// the delay factor is how much the scaling min and max will be moved together
+// this ensures the artefact maintains a healthy dynamic range when installed
+// 0.02 will result in the min_value increased by 2% of the difference between the min and max value
+// the decay delay determines how often this scalling occurs
+#define HUE_DECAY_DELAY      5000
+#define HUE_DECAY_FACTOR     0.02
+
+#define SAT_DECAY_DELAY      5000
+#define SAT_DECAY_FACTOR     0.02
+
+#define BGT_DECAY_DELAY      1000
+#define BGT_DECAY_FACTOR     0.02
+
+#define BGT_MIN_UPDATE_FACTOR BRIGHTNESS_LP_LEVEL
+#define BGT_MAX_UPDATE_FACTOR BRIGHTNESS_LP_LEVEL
+
+#define SAT_MIN_UPDATE_FACTOR SATURATION_LP_LEVEL
+#define SAT_MAX_UPDATE_FACTOR SATURATION_LP_LEVEL
+
+#define HUE_MIN_UPDATE_FACTOR HUE_LP_LEVEL
+#define HUE_MAX_UPDATE_FACTOR HUE_LP_LEVEL
+
+double hue = 0.5;
+double brightness = 0.5;
+double saturation = 0.5;// needs to start at 0.0 or else the min/max value tracker has issues
+
+ValueTrackerDouble hue_tracker        = ValueTrackerDouble((String)"HUE", &hue, HUE_DECAY_FACTOR, HUE_DECAY_DELAY, HUE_LP_LEVEL);
+ValueTrackerDouble saturation_tracker = ValueTrackerDouble((String)"SATURATION", &saturation, SAT_DECAY_FACTOR, SAT_DECAY_DELAY, SATURATION_LP_LEVEL);
+ValueTrackerDouble brightness_tracker = ValueTrackerDouble((String)"BRIGHTNESS", &brightness, BGT_DECAY_FACTOR, BGT_DECAY_DELAY, BRIGHTNESS_LP_LEVEL);
+
+////////////////////////////////////////////////////////////////////////////
+// TODO -- need to implement the target hue saturation and brightness mapping schema
+float target_hue = 1.0;
+float target_saturation = 1.0;
+float target_brightness = 1.0;
+////////////////////////////////////////////////////////////////////////////
+// WARNING!!!!!! DO NOT USE THIS FEATURE!!!!!
+int USE_TARGET_BRIGHTNESS = false;
+int USE_TARGET_HUE        = false;
+int USE_TARGET_SATURATION = false;
+
 // this is needed for the forced lux
 #define UPDATE_ON_OFF_RATIOS            false
 
