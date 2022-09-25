@@ -52,6 +52,9 @@
 #define EX_SPINNER              13
 #define EX_WINDER               14
 #define LEG_MAJOR               20
+
+/////////////////////////////////
+// All artefact behaviour states
 //////////////////////////////
 #define B_TARGETED_FEEDBACK 100
 #define B_ADAPTIVE_FEEDBACK 101
@@ -63,6 +66,21 @@
 #define B_LEG_FEEDBACK      301
 #define B_LEG_FM_FEEDBACK   302
 #define B_LEG_SAMP_PLAYBACK 303
+#define B_LEG_ECHO_CHAMBER  304
+
+/////////////////////////////////
+// Legatus behaviour states
+/////////////////////////////////
+#define S_START_LISTENING       0
+#define S_CONTINUE_LISTENING    1
+#define S_STOP_LISTENING        2
+#define S_START_RECORDING       3
+#define S_CONTINUE_RECORDING    4
+#define S_STOP_RECORDING        5
+#define S_REFLECTING            6
+#define S_START_PLAYBACK        7
+#define S_CONTINUE_PLAYBACK     8
+#define S_END_PLAYBACK          9
 
 ///////////////////// ENCLOSURE_TYPES /////////////////////
 #define ORB_ENCLOSURE_WITH_HOLE         0

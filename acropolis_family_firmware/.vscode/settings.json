@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "limits": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": true
 }

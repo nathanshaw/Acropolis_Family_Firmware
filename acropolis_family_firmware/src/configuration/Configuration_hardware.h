@@ -58,7 +58,7 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 #elif ARTEFACT_GENUS == EXPLORATOR
 #define NUM_MICROPHONES                 1
 #elif ARTEFACT_GENUS == LEGATUS
-#define NUM_MICROPHONES                 2
+#define NUM_MICROPHONES                 1
 #endif // microphones
 
 //////////////////////////////////////////////////////////////////////

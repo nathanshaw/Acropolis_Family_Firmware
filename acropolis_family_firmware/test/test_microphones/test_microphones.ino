@@ -17,8 +17,11 @@
 #include <SD.h>
 #include <SerialFlash.h>
 
-const int myInput = AUDIO_INPUT_LINEIN;
-//const int myInput = AUDIO_INPUT_MIC;
+#if ARTEFACT_GENUS == LEGATUS
+  const int myInput = AUDIO_INPUT_MIC;
+#else
+  const int myInput = AUDIO_INPUT_LINEIN;
+#endif
 
 // Create the Audio components.  These should be created in the
 // order data flows, inputs/sources -> processing -> outputs

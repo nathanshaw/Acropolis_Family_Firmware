@@ -91,10 +91,13 @@ bool stereo_audio =                           true;
 float USER_CONTROL_GAIN_ADJUST               = 1.0;
 
 // TODO - implement this
+#define NON_MIMS                              0
 #define SPH_MICROPHONE                        10
 #define TDK_MICROPHONE                        1
 #if ARTEFACT_SPECIES == SPECULATOR_MAJOR
 #define MICROPHONE_TYPE                       SPH_MICROPHONE
+#elif ARTEFACT_SPECIES == LEGATUS_MAJOR
+#define MICROPHONE_TYPE                       NON_MIMS
 #else
 #define MICROPHONE_TYPE                       TDK_MICROPHONE
 #endif
@@ -122,10 +125,10 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #define STARTING_GAIN                         240.0
 
 #elif ARTEFACT_GENUS == LEGATUS
-#if ARTEFACT_BEHAVIOUR == B_LEG_FEEDBACK
+#if BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 #define STARTING_GAIN                         0.5
-#else
-#define STARTING_GAIN                         6.0
+#elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH 
+#define STARTING_GAIN                         1.0
 #endif
 #endif // makeup_gain
 

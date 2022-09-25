@@ -355,7 +355,7 @@ void setupSpeciesAudio()
   #endif // fft connection depends on species
   #endif
   #if NUM_FFT == 2
-  audio_connections[20] = new AudioConnection(i2s2, 2, fft2, 0);
+  audio_connections[20] = new AudioConnection(i2s1, 2, fft2, 0);
   #endif
 }
 

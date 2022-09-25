@@ -61,6 +61,10 @@ long enc_pos = 0;
 // Dynamic audio routine connections
 AudioConnection *audio_connections[20];
 
+#if ARTEFACT_GENUS == LEGATUS
+File audio_file;
+#endif
+
 #if ARTEFACT_GENUS == SPECULATOR
 ////////////////////////// Audio Objects //////////////////////////////////////////
 AudioInputI2S            i2s1;           //xy=248,198
@@ -139,7 +143,9 @@ AudioAmplifier amp1; //xy=1130.000015258789,636.0000095367432
 AudioAmplifier amp2; //xy=1132.750015258789,669.0000095367432
 AudioAmplifier amp3; //xy=1295.0000190734863,761.5000114440918
 
-AudioOutputI2S audioOutput; //xy=1356.0000190734863,604.5000095367432
+AudioRecordQueue record_queue;
+// AudioPlayQueue play_queue;
+AudioOutputI2S i2s_output; //xy=1356.0000190734863,604.5000095367432
 
 AudioAnalyzeRMS rms1;     //xy=1578.5000228881836,682.5000114440918
 AudioAnalyzeFFT1024 fft1; //xy=1578.4999885559082,714.2499980926514
@@ -159,11 +165,13 @@ AudioPlaySdWav audio_player; //xy=767.0000267028809,648.750018119812
 #endif
 
 // this should only be created if using the FM mode??
-// #if ARTEFACT_BEHAVIOUR == B_LEG_FM_FEEDBACK
+#if BEHAVOUR_ROUTINE == B_LEG_FM_FEEDBACK
 AudioSynthWaveformSineModulated sine_fm; //xy=1054.285743713379,2268.5713901519775
-//#elif ARTEFACT_BEHAVIOUR == B_LEG_FEEDBACK
+#elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 AudioEffectDelay audio_delay1;
-//#endif
+#elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH
+AudioSynthWaveform waveform;
+#endif
 
 AudioControlSGTL5000 sgtl5000; //xy=997.7500152587891,513.2500104904175
 #endif                         // audio system for legatus modular firmware

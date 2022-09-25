@@ -5,21 +5,35 @@
 
 float USER_CONTROL_PLAYBACK_GAIN             = 1.0;
 
+
 // should correspond to the serial number on the PCB
 #define SERIAL_ID                 13
 
 ////////////////////////////////////////
 #if BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 #define AUDIO_MEMORY              45
+#elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
+#define AUDIO_MEMORY              60
 #else // BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
-#define AUDIO_MEMORY              16
+#define AUDIO_MEMORY              50
 #endif // BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 ////////////////////////////////////////
 
 // TODO - this should be dynamically calculated
+#if BEHAVIOUR_ROUTINE == B_LEG_SAMPLE_PLAYBACK
 #define NUM_AUDIO_FILES           19
+#else
+#define NUM_AUDIO_FILES           1
+#endif
 
+#if BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
+#define USE_RAW_AUDIO_PLAYER      true
+#elif BEHAVIOUR_ROUTINE == B_LEG_SAMPLE_PLAYBACK
+#define USE_RAW_AUDIO_PLAYER      true
+#else
 #define USE_RAW_AUDIO_PLAYER      false
+#endif // determine if RAW_AUDIO_PLAYER is used
+
 
 ////////////////////////////////////////
 #if USE_RAW_AUDIO_PLAYER == false
@@ -94,10 +108,21 @@ elapsedMillis last_playback_tmr;
 #define MIN_PLAYBACK_GAIN       0.0001
 #define MID_PLAYBACK_GAIN       0.05
 #define MAX_PLAYBACK_GAIN       0.2
+#elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
+#define SD_PRESENT              true
+#define MIN_PLAYBACK_GAIN       0.0001
+#define MID_PLAYBACK_GAIN       0.05
+#define MAX_PLAYBACK_GAIN       0.2
 #endif // playback gains for legatus
 
 // TODO - what is this, is this the pin that turns off the artefact?
 #define PWR_KILL_PIN              8
 
+////////////////////// Audio Recording Settings //////////////////////////////
+#define AUDIO_REC_MAX_LENGTH      (1000 * 1)
+elapsedMillis last_state_change;
+// how long does legatus pause before playing back recordings or vocalising
+// TODO - this variable should be determined by the current env. conditions.
+long reflection_time = 1000;
 
 #endif // __CONFIGURATION_LEGATUS_H__

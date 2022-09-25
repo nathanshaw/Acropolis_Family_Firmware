@@ -11,7 +11,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_GENUS to one of these types
 /////////////////// TODO
-#define ARTEFACT_GENUS            SPECULATOR
+#define ARTEFACT_GENUS            LEGATUS
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Artefact Species //////////////////////////////
@@ -77,16 +77,15 @@
 #elif ARTEFACT_GENUS == LEGATUS
 
 // TODO - warning this behaviour is currently buggy and needs fixing 
-// #define BEHAVIOUR_ROUTINE         B_LEG_MATCH_PITCH
+#define BEHAVIOUR_ROUTINE         B_LEG_MATCH_PITCH
 // #define BEHAVIOUR_ROUTINE           B_LEG_FEEDBACK
 // #define BEHAVIOUR_ROUTINE         B_LEG_FM_FEEDBACK
-#define BEHAVIOUR_ROUTINE         B_LEG_SAMP_PLAYBACK
-
+// #define BEHAVIOUR_ROUTINE         B_LEG_SAMP_PLAYBACK
+// still needs a little work
+// #define BEHAVIOUR_ROUTINE            B_LEG_ECHO_CHAMBER 
 // this variable is used to allow Legatus artefact's to switch between behaviour routines
 // after initialisation
-int ARTEFACT_BEHAVIOUR =          BEHAVIOUR_ROUTINE;
 // this needs to be a number which does not correspond to a mode so the audio system connects properly when needed
-int LAST_ARTEFACT_BEHAVIOR =      -1;
 #endif // genearting the artefact behaviour based on genus and species
 
 //////////////////////////////////////////////////////////////////////
@@ -657,6 +656,7 @@ int color_map_mode          =             COLOR_MAPPING_EXPLORATOR;
 #define SV_MAJOR                  0
 #define SV_MINOR                  1
 #define SV_REVISION               12
+
 
 #if P_FUNCTION_TIMES == true
 elapsedMillis function_times = 0;
