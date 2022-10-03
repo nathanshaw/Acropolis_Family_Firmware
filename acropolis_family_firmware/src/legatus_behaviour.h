@@ -22,54 +22,6 @@ void brightnessWipe(double b)
   neos[0].colorWipe(constrain((int)(colors[0] * b), 0, 255), constrain((int)(colors[1] * b), 0, 255), constrain((int)(colors[2] * b), 0, 255), user_brightness_scaler);
 }
 
-void updateLegatusPassiveLEDs2(bool _p = false) {
-
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
-    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-    dprint(P_BEHAVIOUR_UPDATE, "HSB after calculate() functions: ");
-    dprint(P_BEHAVIOUR_UPDATE, h, 6);
-    dprint(P_BEHAVIOUR_UPDATE, "\t");
-    dprint(P_BEHAVIOUR_UPDATE, s, 6);
-    dprint(P_BEHAVIOUR_UPDATE, "\t");
-    dprintln(P_BEHAVIOUR_UPDATE, b, 6);
-    printHSB();
-    printRGB();
-
-    // these functions will update the value of the HSB according to weather conditions
-    // variables are passed by reference to allow for their change without the function returning anything
-    if (P_BEHAVIOUR_UPDATE == true) {
-      #if WEATHER_MANAGER_ACTIVE
-      neos[0].applyWeatherOffsets(weather_manager, h, s, b, true); 
-      neos[0].applyWeatherScaling(weather_manager, h, s, b, true);
-      #endif
-      dprint(P_BEHAVIOUR_UPDATE, "HSB after weather scaling and offsets functions: ");
-      dprint(P_BEHAVIOUR_UPDATE, h, 6);
-      dprint(P_BEHAVIOUR_UPDATE, "\t");
-      dprint(P_BEHAVIOUR_UPDATE, s, 6);
-      dprint(P_BEHAVIOUR_UPDATE, "\t");
-      dprintln(P_BEHAVIOUR_UPDATE, b, 6);
-    }
-    else {
-      #if WEATHER_MANAGER_ACTIVE
-      neos[0].applyWeatherOffsets(weather_manager, h, s, b, false); 
-      neos[0].applyWeatherScaling(weather_manager, h, s, b, false);
-      #endif
-    }
-
-    // the specific mapping strategy is handled by the NeoPixelManager
-    double _lux_bs = lux_manager.getBrightnessScaler();
-    neos[0].colorWipeHSB(h, s, b, _lux_bs); // now colorWipe the LEDs with the HSB value
-    // neos[0].colorWipe(0, 0, 0, 0.0, 0.0); // now colorWipe the LEDs with the HSB value
-    // neos[0].colorWipe(255, 255, 255, 1.0, 1.0); // now colorWipe the LEDs with the HSB value
-    
-    #if (P_FUNCTION_TIMES && P_SPECULATOR_LED_UPDATE_RATE)
-    // make sure we dont update the value tracker until we have our second loop
-    if (neos[0].leds_on){
-      updateFunctionTimeStats();
-    } else {Serial.println("LEDS not on");}
-    #endif
-}
 
 void updateLegatusPassiveLEDs(bool _p = false)
 {
@@ -101,10 +53,11 @@ void updateLegatusPassiveLEDs(bool _p = false)
     float f = (float)constrain(c, 0, 255) / 255.0;
     brightnessWipe(f);
     dprintln(_p, f);
+    updateFunctionTimeStats();
   }
 }
 
-void fadeMixer(float c1_current, float c2_current, float c1_target, float c2_target)
+void fadeMixer(AudioMixer4 & _mixer, float c1_current, float c2_current, float c1_target, float c2_target)
 {
   /*
    * Function for automating mixer fade in and fade out
@@ -118,10 +71,13 @@ void fadeMixer(float c1_current, float c2_current, float c1_target, float c2_tar
     c1_current = c1_current + slice1;
     c2_current = c2_current + slice2;
 
-    mixer2.gain(0, c1_current);
-    mixer2.gain(1, c1_current);
-    mixer2.gain(2, c2_current);
-    delay(10);
+    _mixer.gain(0, c1_current);
+    _mixer.gain(1, c1_current);
+    _mixer.gain(2, c2_current);
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2();
+    delay(5);
   }
 }
 
@@ -152,7 +108,7 @@ long playFile(const char *filename, float rate)
   // first two numbers are mixing in the sample playback with the "starting gain" and "ending gain"
   // the second two numbers are handling the microphone gain 
   // but please note, that if the microphone gain is lowered to 0.0 the feedback leds will cease to function...
-  fadeMixer(0, 0.5, 0.5, 0.1);
+  fadeMixer(mixer2, 0.0, 0.5, 0.5, 0.1);
   dprint(P_AUDIO_PLAYBACK, F("file length : "));
   dprintln(P_AUDIO_PLAYBACK, audio_player.lengthMillis());
   // dprint(P_AUDIO_PLAYBACK, F("Playback Rate : ");
@@ -185,6 +141,8 @@ long playFile(const char *filename, float rate)
     }
     #endif // USER_CONTROLS_ACTIVE
 
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
     updateLegatusPassiveLEDs2();
     if (last_playback_tmr % 1000 == 0){
       dprint(P_AUDIO_PLAYBACK, F("playtime : "));
@@ -194,8 +152,8 @@ long playFile(const char *filename, float rate)
     }
   }
   // change the mixer levels back so the microphone is dominate
-  fadeMixer(0.5, 0.0, 0.2, 0.5);
-  dprint(P_AUDIO_PLAYBACK, F("Finished playing back file for "));
+  fadeMixer(mixer2, 0.5, 0.1, 0.0, 0.5);
+  dprint(P_AUDIO_PLAYBACK, F("Finished playing b124gack file for "));
   dprint(P_AUDIO_PLAYBACK, last_playback_tmr);
   dprintln(P_AUDIO_PLAYBACK, F(" ms"));
   dprint(P_AUDIO_PLAYBACK, F("Next playback interval is: "));
@@ -205,6 +163,7 @@ long playFile(const char *filename, float rate)
   return _return;
 }
 
+byte buffer[512];
 long calculatePlaybackInterval(bool _p = false) {
   long value;
   // this is the "default period" for sample vocalisation delays
@@ -238,96 +197,67 @@ long calculatePlaybackInterval(bool _p = false) {
   return value;
 }
 
-void activateFeedback(float amp, float dur)
-{
-  mixer1.gain(0, 0.5);
-  mixer1.gain(1, 0.5);
-  amp3.gain(1.0); /// derrr, not sure what amp3 is actually doing! TODO
-  amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
-  if (amp < 0.01)
-  {
-    amp = 0.01;
-  }
-  else if (amp > 0.015)
-  {
-    amp = 0.015;
-  }
-  Serial.print(F("activateFeedback(amp, dur) called: "));
-  Serial.print(amp);
-  Serial.print("\t");
-  Serial.println(dur);
-
-  // connect amp to audio output
-  for (float i = 0.0; i < amp; i = i + 0.001)
-  {
-    updateLegatusPassiveLEDs2();
-    Serial.print("gain is : ");
-    Serial.println(i);
-    amp3.gain(i);
-    delay(10);
-  }
-
-  elapsedMillis t;
-  while (t < dur)
-  {
-    /*
-      amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
-      if (amp < 0.01){
-      amp = 0.01;
-      } else if (amp > 0.04) {
-      amp = 0.04;
-      }
-      amp3.gain(amp);
-    */
-    uimanager.update();
-    amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
-    amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
-    updateLegatusPassiveLEDs2(P_UPDATE_LEGATUS_PASSIVE_LEDS);
-    delay(10);
-  }
-
-  Serial.print("waiting for : ");
-  Serial.println(dur);
-  delay(dur);
-
-  for (float i = amp; i > 0.0; i = i - 0.001)
-  {
-    updateLegatusPassiveLEDs2();
-    amp3.gain(i);
-    delay(10);
-    Serial.print("gain is : ");
-    Serial.println(i);
-  }
-  amp3.gain(0.0);
-  mixer1.gain(0, 0.0);
-  mixer1.gain(1, 0.0); 
-}
-
 
 #if BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
-void updateBehviour()
+
+void updateBehaviour()
 {
-  PLAYBACK_INTERVAL = calculatePlaybackInterval(P_CALCULATE_PLAYBACK_INTERVAL);
+  feature_collector.update(fft_manager);
+  fft_manager[0].update();
+  updateLegatusPassiveLEDs2();
+  PLAYBACK_INTERVAL = (calculatePlaybackInterval(P_CALCULATE_PLAYBACK_INTERVAL) * 0.2) + prior_vocalisation_length;
   // PLAYBACK_INTERVAL = avg_time - (weather_manager.getTemperature() * (avg_time / 40)) + (weather_manager.getHumidity() * (avg_time / 100)); // uint16_t t = random(45, 150);
   // erm, WTF is happening right now in code, need to make it conform with what is written in thesis...
-  if (loop_tmr > loop_print_delay)
-  {
-    Serial.print(F("Awaiting playback (recording is TODO) : "));
-    Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
-    loop_tmr = 0;
+  // if it has been too short a period since last vocalisation, the function will exit
+  if (last_playback_tmr < PLAYBACK_INTERVAL) {
+    if (loop_tmr > loop_print_delay)
+    {
+      Serial.print(F("Awaiting playback : "));
+      Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
+      Serial.print(F("PLAYBACK_INTERVAL is : "));
+      Serial.println(PLAYBACK_INTERVAL);
+      loop_tmr = 0;
+    }
+    return;
   }
-  Serial.print(F("PLAYBACK_INTERVAL is : "));
-  Serial.println(PLAYBACK_INTERVAL);
-  int file_num = random(0, NUM_AUDIO_FILES);
-  // file will only play if it has been long enough since last sample playback
-  prior_vocalisation_length = playFile(audio_file_names[file_num], 0.5);
-  // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
-  Serial.println(F("last_playback_tmr is reset now to 0"));
+  // TODO - this needs to be calculated from current temperature and humidity values
+  // along with the current scaled Peak value
+  double _temp = weather_manager.getTemperature(); 
+  double _humid = weather_manager.getHumidity();
+  double _peak = feature_collector.getDominatePeak();
+  double vocalisation_chance = 0.001;
+  Serial.println("current temp/humid/peak levels are");
+  Serial.print(_temp);
+  Serial.print("\t");
+  Serial.print(_humid);
+  Serial.print("\t");
+  Serial.println(_peak);
+  Serial.print("resulting vocalisation chance is: ");
+  if (_peak > 0.0){
+    vocalisation_chance = (_temp + _humid) * _peak;
+  } else {
+    vocalisation_chance = (_temp + _humid) * 0.000001;
+  }
+  Serial.print(vocalisation_chance, 6);
+  long _rand = random();
+  long _v = (long)(vocalisation_chance * 2147483647 * 0.05);
+  Serial.print("\t");
+  Serial.println(_v);
+  if (_rand < _v){
+    int file_num = random(0, NUM_AUDIO_FILES);
+    // file will only play if it has been long enough since last sample playback
+    prior_vocalisation_length = playFile(audio_file_names[file_num], 0.5);
+    // digitalWrite(PWR_KILL_PIN, LOW); // kill the power I think...
+  } else{
+    Serial.print(_rand);
+    Serial.print(" is greater than ");
+    Serial.print(_v);
+    Serial.println(" so not vocalising.");
+  }
 }
 #elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
-void updateBehaviour() {
-    updateLegatusPassiveLEDs2(P_UPDATE_LEGATUS_PASSIVE_LEDS);
-    behaviour_state = legatusLoopEchoChamber(behaviour_state);
+
+int startRecording() {
 }
 
 int legatusLoopEchoChamber(int state){
@@ -346,10 +276,15 @@ int legatusLoopEchoChamber(int state){
     S_CONTINUE_PLAYBACK     
     S_END_PLAYBACK          
   */
+  // Serial.print("state: ");
+  //Serial.println(state);
   switch (state)
   {
   case S_START_RECORDING:
     Serial.println(F("startRecording"));
+          feature_collector.update(fft_manager);
+          fft_manager[0].update();
+          updateLegatusPassiveLEDs2();
     if (SD.exists("RECORD.RAW")) {
       // The SD library writes new data to the end of the
       // file, so to start a new recording, the old file
@@ -357,75 +292,93 @@ int legatusLoopEchoChamber(int state){
       Serial.println(F("Removing existing file before recording"));
       SD.remove("RECORD.RAW");
     }
+          feature_collector.update(fft_manager);
+          fft_manager[0].update();
+          updateLegatusPassiveLEDs2();
     Serial.println(F("opening new file for writing"));
     audio_file = SD.open("RECORD.RAW", FILE_WRITE);
+          feature_collector.update(fft_manager);
+          fft_manager[0].update();
+          updateLegatusPassiveLEDs2();
     if (audio_file) {
-      record_queue.begin();
-      state = S_CONTINUE_RECORDING;
-      last_state_change = 0;
       Serial.println(F("the recording file has been created and the record_queue has started"));
-    }else {
-      Serial.println(F("WARNING, there was a problem initalising the recording file"));
+      record_queue.begin();
+      elapsedMillis loop_t;
+      while(last_state_change <  AUDIO_REC_MAX_LENGTH) {
+        if (record_queue.available() >= 2) {
+          // Fetch 2 blocks from the audio library and copy
+          // into a 512 byte buffer.  The Arduino SD library
+          // is most efficient when full 512 byte sector size
+          // writes are used.
+          AudioNoInterrupts();
+          memcpy(buffer, record_queue.readBuffer(), 256);
+          record_queue.freeBuffer();
+          memcpy(buffer+256, record_queue.readBuffer(), 256);
+          record_queue.freeBuffer();
+          audio_file.write(buffer, 512);
+          AudioInterrupts();
+        }
+        if (loop_t > 25){
+          feature_collector.update(fft_manager);
+          fft_manager[0].update();
+          updateLegatusPassiveLEDs2();
+          loop_t = 0;
+        }
+
+    // AudioInterrupts();
+      // logic to determine when the recording should stop
+      // TODO - add high-level novelty feature to drive this behaviour
     }
-    break;
-  case S_CONTINUE_RECORDING:
-    if (record_queue.available() >= 2) {
-      byte buffer[512];
-      // Fetch 2 blocks from the audio library and copy
-      // into a 512 byte buffer.  The Arduino SD library
-      // is most efficient when full 512 byte sector size
-      // writes are used.
-      memcpy(buffer, record_queue.readBuffer(), 256);
-      record_queue.freeBuffer();
-      memcpy(buffer+256, record_queue.readBuffer(), 256);
-      record_queue.freeBuffer();
-      // write all 512 bytes to the SD card
-      //elapsedMicros usec = 0;
-      audio_file.write(buffer, 512);
-      // Uncomment these lines to see how long SD writes
-      // are taking.  A pair of audio blocks arrives every
-      // 5802 microseconds, so hopefully most of the writes
-      // take well under 5802 us.  Some will take more, as
-      // the SD library also must write to the FAT tables
-      // and the SD card controller manages media erase and
-      // wear leveling.  The record_queue object can buffer
-      // approximately 301700 us of audio, to allow time
-      // for occasional high SD card latency, as long as
-      // the average write time is under 5802 us.
-      // Serial.print("SD write, us=");
-      // Serial.println(usec);
-    }
-    bool stop_recording = false;
-    // logic to determine when the recording should stop
-    // TODO - add high-level novelty feature to drive this behaviour
-    if(last_state_change > AUDIO_REC_MAX_LENGTH){
-      stop_recording = true;
-      Serial.println("recording length has reached AUDIO_REC_MAX_LENGTH, recording will be stopped");
-      record_queue.end();
-      Serial.print("recording has been stopped with a length of ");
-      Serial.println(last_state_change);
-      Serial.println("stopped the Audio queue, writing from queue to file ");
+    Serial.println("recording length has reached AUDIO_REC_MAX_LENGTH");
+    record_queue.end();
       while (record_queue.available() > 0) {
+        AudioNoInterrupts();
         audio_file.write((byte*)record_queue.readBuffer(), 256);
         record_queue.freeBuffer();
+        AudioInterrupts();
         Serial.print(".");
+        feature_collector.update(fft_manager);
+        fft_manager[0].update();
+        updateLegatusPassiveLEDs2();
       }
       Serial.println(" ");
       Serial.println(F("finished writing from queue to buffer"));
+      AudioNoInterrupts();
       audio_file.close();
+      AudioInterrupts();
       Serial.println(F("closed the audio file, and changing state to REFLECTING"));
+      state = S_REFLECTING;
       last_state_change = 0;
-      while (last_state_change < reflection_time) {
+      break;
+    }else {
+      Serial.println(F("WARNING, there was a problem initalising the recording file"));
+      delay(5000);
+    }
+    // there is no break; here so the logic can continue on to the next case
+    case S_STOP_RECORDING:
+      // Serial.println("S_STOP_RECORDING");
+    case S_REFLECTING:
+      if (last_state_change < reflection_time) {
+        feature_collector.update(fft_manager);
+        fft_manager[0].update();
         updateLegatusPassiveLEDs2();
         Serial.print(".");
-        delay(20);
+        break;
       }
       Serial.println(F("finished reflecting...."));
+          feature_collector.update(fft_manager);
+          fft_manager[0].update();
+          updateLegatusPassiveLEDs2();
       if(audio_player.play("RECORD.RAW")) {
         Serial.println(F("startPlaying"));
         last_state_change = 0;
         state = S_CONTINUE_PLAYBACK;
         while(true){
+          uimanager.update();
+          amp2.gain(USER_CONTROL_PLAYBACK_GAIN * starting_gain);
+          feature_collector.update(fft_manager);
+          fft_manager[0].update();
+          updateLegatusPassiveLEDs2();
           if (!audio_player.isPlaying()) {
             audio_player.stop();
             last_state_change = 0;
@@ -435,20 +388,24 @@ int legatusLoopEchoChamber(int state){
           }
         }
       }
-    }
-    break;
+      break;
   case S_CONTINUE_PLAYBACK:
     Serial.println("continue playback");
           if (!audio_player.isPlaying()) {
+            feature_collector.update(fft_manager);
+            fft_manager[0].update();
+            updateLegatusPassiveLEDs2();
             audio_player.stop();
             last_state_change = 0;
             state = S_START_RECORDING;
             break;
           }
-
   break;
   case S_START_LISTENING:
     // nothing currently planned here
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2();
     state = S_START_RECORDING;
     last_state_change = 0;
     break;
@@ -458,6 +415,14 @@ int legatusLoopEchoChamber(int state){
   }
   return state;
 }
+
+void updateBehaviour() {
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2(P_UPDATE_LEGATUS_PASSIVE_LEDS);
+    behaviour_state = legatusLoopEchoChamber(behaviour_state);
+}
+
 
 #elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH
 
@@ -484,11 +449,16 @@ void matchPitchVocalisation(float _pitch, float _amp, int _dur, bool _p) {
     a_gain += 0.001;
     amp3.gain(a_gain);
     delay(5);
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2();
     if (time % 100 == 0){
       dprint(_p, "^");
     }
   }
   while(time < _dur){
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
     updateLegatusPassiveLEDs2();
     if (time % 500 == 0){
       dprint(_p, ".");
@@ -498,6 +468,9 @@ void matchPitchVocalisation(float _pitch, float _amp, int _dur, bool _p) {
     a_gain -= 0.001;
     amp3.gain(a_gain);
     delay(5);
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2();
     if (time % 100 == 0){
       dprint(_p, ",");
     }
@@ -506,11 +479,12 @@ void matchPitchVocalisation(float _pitch, float _amp, int _dur, bool _p) {
   AudioNoInterrupts();
   waveform.amplitude(0.0);
   AudioInterrupts();
-
 }
 
 void updateBehaviour() {
   // TODO
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
   updateLegatusPassiveLEDs2(P_UPDATE_LEGATUS_PASSIVE_LEDS);
   float temp = weather_manager.getTemperature();
   float humid = weather_manager.getHumidity();
@@ -540,8 +514,82 @@ void updateBehaviour() {
   }
 }
 #elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
+void activateFeedback(float amp, float dur)
+{
+  mixer1.gain(0, 0.5);
+  mixer1.gain(1, 0.5);
+  // amp3 is microphone audio after mixer1
+  amp3.gain(1.0); /// derrr, not sure what amp3 is actually doing! TODO
+  amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
+  if (amp < 0.01)
+  {
+    amp = 0.01;
+  }
+  else if (amp > 0.015)
+  {
+    amp = 0.015;
+  }
+  Serial.print(F("activateFeedback(amp, dur) called: "));
+  Serial.print(amp);
+  Serial.print("\t");
+  Serial.println(dur);
+
+  // connect amp to audio output
+  for (float i = 0.0; i < amp; i = i + 0.001)
+  {
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2();
+    Serial.print("gain is : ");
+    Serial.println(i);
+    amp3.gain(i);
+    delay(10);
+  }
+
+  elapsedMillis t;
+  while (t < dur)
+  {
+    /*
+      amp = amp * 0.125 * USER_CONTROL_PLAYBACK_GAIN;
+      if (amp < 0.01){
+      amp = 0.01;
+      } else if (amp > 0.04) {
+      amp = 0.04;
+      }
+      amp3.gain(amp);
+    */
+    uimanager.update();
+    amp1.gain(USER_CONTROL_PLAYBACK_GAIN);
+    amp2.gain(USER_CONTROL_PLAYBACK_GAIN);
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2(P_UPDATE_LEGATUS_PASSIVE_LEDS);
+    delay(10);
+  }
+
+  Serial.print("waiting for : ");
+  Serial.println(dur);
+  delay(dur);
+
+  for (float i = amp; i > 0.0; i = i - 0.001)
+  {
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs2();
+    amp3.gain(i);
+    delay(10);
+    Serial.print("gain is : ");
+    Serial.println(i);
+  }
+  amp3.gain(0.0);
+  mixer1.gain(0, 0.0);
+  mixer1.gain(1, 0.0); 
+}
+
 void updateBehaviour()
 {
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
   updateLegatusPassiveLEDs2(P_UPDATE_LEGATUS_PASSIVE_LEDS);
   int avg_time = 1000 * 60 * 2.0;
   float temp = weather_manager.getTemperature();
@@ -569,6 +617,7 @@ void updateBehaviour()
   }
 }
 #elif BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
+
 void activateFM(int t, float freq, float amp)
 {
   if (amp > 1.0)
@@ -582,16 +631,18 @@ void activateFM(int t, float freq, float amp)
   Serial.print("\t");
   Serial.println(amp);
 
-  amp3.gain(starting_gain * amp * USER_CONTROL_PLAYBACK_GAIN);
+  amp2.gain(amp);
   sine_fm.frequency(freq);
-  for (float i = 0.0; i < 1.0; i = i + 0.0001)
+  for (float i = 0.0; i < 1.0; i = i + 0.001)
   {
     // make sure we dont pass an amp over 1.0
     if (i > 1.0)
     {
       i = 1.0;
     }
-    updateLegatusPassiveLEDs2();
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs();
     #if USER_CONTROLS_ACTIVE
     uimanager.update();
     #endif // USER_CONTROLS_ACTIVE
@@ -600,7 +651,9 @@ void activateFM(int t, float freq, float amp)
   }
   for (float i = 0; i < 20; i++)
   {
-    updateLegatusPassiveLEDs2();
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs();
     freq += random(freq * -0.01, freq * 0.01);
     Serial.print("freq:");
     Serial.println(freq);
@@ -614,32 +667,41 @@ void activateFM(int t, float freq, float amp)
       #endif // USER_CONTROLS_ACTIVE
       sine_fm.amplitude(USER_CONTROL_PLAYBACK_GAIN);
       // amp3.gain(starting_gain * amp * USER_CONTROL_PLAYBACK_GAIN);
-      updateLegatusPassiveLEDs2();
-      delay(20);
+      feature_collector.update(fft_manager);
+      fft_manager[0].update();
+      updateLegatusPassiveLEDs();
+      delay(10);
     }
   }
-  for (float i = 1.0; i > 0.0; i = i - 0.0001)
+  for (float i = 1.0; i > 0.0; i = i - 0.001)
   {
-    updateLegatusPassiveLEDs2();
+    feature_collector.update(fft_manager);
+    fft_manager[0].update();
+    updateLegatusPassiveLEDs();
     #if USER_CONTROLS_ACTIVE
     uimanager.update();
     #endif // USER_CONTROLS_ACTIVE
     sine_fm.amplitude(i * USER_CONTROL_PLAYBACK_GAIN);
-    delay(10);
+    delay(5);
   }
   sine_fm.amplitude(0.0);
-  amp3.gain(starting_gain);
+  amp2.gain(starting_gain);
 }
-#elif BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
+
 int avg_time = 1000 * 60 * 2.0;
-void legatusLoopFM()
+
+void updateBehaviour()
 {
   #if USER_CONTROLS_ACTIVE
   uimanager.update();
   #endif // USER_CONTROLS_ACTIVE
+  feature_collector.update(fft_manager);
+  fft_manager[0].update();
+  updateLegatusPassiveLEDs();
   float temp = weather_manager.getTemperature();
   float humid = weather_manager.getHumidity();
-  PLAYBACK_INTERVAL = avg_time - (temp * (avg_time / 40)) + (humid * (avg_time / 100)); // uint16_t t = random(45, 150);
+  // PLAYBACK_INTERVAL = avg_time - (temp * (avg_time / 40)) + (humid * (avg_time / 100)); // uint16_t t = random(45, 150);
+  PLAYBACK_INTERVAL = 10000;
   if (loop_tmr > loop_print_delay)
   {
     Serial.println(PLAYBACK_INTERVAL - last_playback_tmr);
@@ -652,8 +714,9 @@ void legatusLoopFM()
     Serial.println(PLAYBACK_INTERVAL);
     float factor = random(1, 16);
     float base_freq = factor * ((temp * 2) + (humid * 2));
-    float amp = 0.5 + random(0, 1000) / 1000;
-    activateFM(PLAYBACK_INTERVAL, base_freq, amp);
+    // float amp = 0.5 + random(0, 1000) / 1000;
+    float amp = 0.01;
+    activateFM(PLAYBACK_INTERVAL*0.1, base_freq, amp);
     // turn on oscillator
     // let it run for a period of time
     // turn off oscillator
@@ -731,12 +794,12 @@ void initSD()
 
   Serial.println(F("\nFiles found on the card (name, date and size in bytes): "));
   root.openRoot(volume);
+  delay(500);
 
   // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
 
   // list the length of all audio files
-  delay(4000);
 }
 #endif // SD card related functions
 
@@ -745,10 +808,19 @@ void setupSpeciesAudio()
   // audio_player.setMaxBuffers(16);
   // sgtl5000.setAddress(LOW);
   sgtl5000.enable();
+  delay(10);
   sgtl5000.inputSelect(AUDIO_INPUT_MIC);
+  #if BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
+  sgtl5000.volume(0.01);// this is playback amplitude
+  sgtl5000.micGain(36);
+  #elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
   sgtl5000.volume(0.5);// this is playback amplitude
+  sgtl5000.micGain(56);
+  #else
+  sgtl5000.volume(0.5);// this is playback amplitude
+  sgtl5000.micGain(72);
+  #endif
   // TODO - not sure what this should be....
-  sgtl5000.micGain(54);
   // sgtl5000.micGain(70);
 
 #if SD_PRESENT
@@ -763,13 +835,13 @@ void setupSpeciesAudio()
       delay(500);
     }
   }
-  #else
+#else // SD_PRESENT
   // Serial.println("WARNING SD_PRESENT IS SET TO FALSE!!!!");
   // delay(100);
+#endif // SD_PRESENT
 
-#if BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK || BEHAVIOUR_ROUTINE == B_LEG_SAMPLE_PLAYBACK
   /////////////////////////////////////////////////////////////////////
-  biquad3.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
+  biquad1.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
   // HPF1.setHighpass(1, LBQ1_THRESH, LBQ1_Q);
   // HPF1.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
   // HPF1.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
@@ -780,7 +852,7 @@ void setupSpeciesAudio()
   Serial.print("\t");
   Serial.println(LBQ1_DB);
 
-  biquad4.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
+  biquad2.setLowpass(0, LBQ2_THRESH, LBQ2_Q);
   // LPF1.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
   // LPF1.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
   // LPF1.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
@@ -790,18 +862,17 @@ void setupSpeciesAudio()
   Serial.print(LBQ2_Q);
   Serial.print("\t");
   Serial.println(LBQ2_DB);
-  #endif // biquad 3 and 4
 
-  #if BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
+#if BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
   audio_player.begin();
-  biquad1.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
-  biquad1.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
+  biquad3.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+  biquad3.setLowpass(1, RBQ2_THRESH, RBQ2_Q);
   // HPF1.setHighpass(2, LBQ1_THRESH, LBQ1_Q);
   // HPF1.setLowShelf(3, LBQ1_THRESH, LBQ1_DB);
   Serial.println("playback left filters have been configured");
 
-  biquad2.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
-  biquad2.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
+  biquad4.setHighpass(0, RBQ1_THRESH, RBQ1_Q);
+  biquad4.setLowpass(0, RBQ2_THRESH, RBQ2_Q);
   // LPF1.setLowpass(2, LBQ2_THRESH, LBQ2_Q);
   // LPF1.setHighShelf(3, LBQ2_THRESH, LBQ2_DB);
   Serial.println("playback right Filters have been configured ");
@@ -809,8 +880,8 @@ void setupSpeciesAudio()
   printMinorDivide();
 
   //////////////////////////////////////////////////////////////////////////////////
-  amp1.gain(0.0);
-  amp2.gain(0.0);
+  // amp1.gain(0.0);
+  // amp2.gain(0.0);
   Serial.print("playback gains are set to : ");
   Serial.println(USER_CONTROL_PLAYBACK_GAIN);
 
@@ -818,17 +889,21 @@ void setupSpeciesAudio()
   // TODO - make sure ENC_GAIN_ADJ exists for all bots
   Serial.print("Starting gain is now set to: ");
   Serial.println(starting_gain);
-  mixer1.gain(0, starting_gain * 0.5);
-  mixer1.gain(1, starting_gain * 0.5);
-  amp3.gain(starting_gain);
+  // mixer1 is taking the gain from the two microphones
+  mixer1.gain(0, starting_gain);
+  mixer1.gain(1, starting_gain);
+  // amp3 links the i2s microphones through the biquad filters
+  amp3.gain(1.0);
 
+  // mixer2 allows us to switch between the microphones and 
+  // the sample playback from driving the visual feedback system
   mixer2.gain(0, 0.33);
   mixer2.gain(1, 0.33);
   mixer2.gain(2, 0.5);
   // Serial.println("Setting up the FFTManager to track the first channel");
   // fft_manager.addInput(&patchCord_fft_input1);
   // patchCord_fft_input2.disconnect();
-  #elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH
+#elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH
     // mixer1 provides the first level gain for the microphones
     mixer1.gain(0, starting_gain);
     mixer1.gain(1, starting_gain);
@@ -838,22 +913,25 @@ void setupSpeciesAudio()
     AudioInterrupts();
     // sine_fm.amplitude(0.0);
     // sine_fm.frequency(200);
-  #elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
+#elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
     audio_delay1.delay(0, 0);
     mixer1.gain(0, 0.0);
     mixer1.gain(1, 0.0);
-  #elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
-    // mixer1 provides gain for the i2s input
-    mixer1.gain(0, 1.0);
-    mixer1.gain(1, 1.0);
-    // amp1 is the makeup gain object
-    amp1.gain(0.0);
-    #else
+#elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
+    // audio_player.begin();
+    // amp1 provides gain for the i2s input
+    amp1.gain(starting_gain);
+    // amp2 is the gain for the audio_playback object
+    amp2.gain(starting_gain);
+#elif BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
+    mixer1.gain(0, STARTING_GAIN);
+    mixer1.gain(1, STARTING_GAIN);
+    amp1.gain(MAKEUP_GAIN);
+#else
     Serial.println(F("SORRY THIS BEHAVOUR ROUTINE IS NOT SUPPORTED"));
     delay(10000);
-  #endif// BEHAVIOUR ROUTINE
+#endif// BEHAVIOUR ROUTINE
   }
-#endif
 
 void setupSpecies() {
     ///////////////////////////// SD Card //////////////////////////////////
@@ -867,19 +945,22 @@ void setupSpecies() {
     audio_connections[2] = new AudioConnection(i2s1, 1, mixer1, 1);
     audio_connections[3] = new AudioConnection(audio_player, 0, biquad1, 0);
     audio_connections[4] = new AudioConnection(audio_player, 1, biquad2, 0);
-    audio_connections[6] = new AudioConnection(mixer1, biquad3);
+    //audio_connections[6] = new AudioConnection(mixer1, biquad3);
+    audio_connections[6] = new AudioConnection(mixer1, amp3);
+
     audio_connections[7] = new AudioConnection(biquad1, amp1);
     audio_connections[8] = new AudioConnection(biquad2, amp2);
-    audio_connections[9] = new AudioConnection(biquad3, biquad4);
-    audio_connections[10] = new AudioConnection(amp1, 0, audioOutput, 0);
+    //audio_connections[9] = new AudioConnection(biquad3, biquad4);
+    audio_connections[10] = new AudioConnection(amp1, 0, i2s_output, 0);
     audio_connections[11] = new AudioConnection(amp1, 0, mixer2, 0);
-    audio_connections[12] = new AudioConnection(amp2, 0, audioOutput, 1);
+    audio_connections[12] = new AudioConnection(amp2, 0, i2s_output, 1);
     audio_connections[13] = new AudioConnection(amp2, 0, mixer2, 1);
-    audio_connections[14] = new AudioConnection(biquad4, amp3);
+    //audio_connections[14] = new AudioConnection(biquad4, amp3);
     audio_connections[15] = new AudioConnection(amp3, 0, mixer2, 2);
-    audio_connections[16] = new AudioConnection(mixer2, rms1);
+    // audio_connections[16] = new AudioConnection(mixer2, rms1);
     audio_connections[17] = new AudioConnection(mixer2, fft1);
     audio_connections[18] = new AudioConnection(mixer2, peak1);
+
 
     #if AUDIO_USB
     audio_connections[1] = new AudioConnection(mixer2, 0, output_usb, 0);
@@ -895,8 +976,8 @@ void setupSpecies() {
     audio_connections[6] = new AudioConnection(amp3, rms1);
     audio_connections[7] = new AudioConnection(amp3, fft1);
     audio_connections[8] = new AudioConnection(amp3, peak1);
-    audio_connections[10] = new AudioConnection(audio_delay1, 0, audioOutput, 0);
-    audio_connections[11] = new AudioConnection(audio_delay1, 0, audioOutput, 1);
+    audio_connections[10] = new AudioConnection(audio_delay1, 0, i2s_output, 0);
+    audio_connections[11] = new AudioConnection(audio_delay1, 0, i2s_output, 1);
     audio_connections[12] = new AudioConnection(amp3, 0, audio_delay1, 0);
 
     #if AUDIO_USB
@@ -906,36 +987,44 @@ void setupSpecies() {
     last_playback_tmr = 99999999;
   #elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
     // we are only using one microphone, so only the first channel of i2s1 goes to the mixer1
-    audio_connections[0] = new AudioConnection(i2s1, 0, record_queue, 0);
-    audio_connections[1] = new AudioConnection(i2s1, 0, record_queue, 1);
-    // mixer1 provides input gain for the microphone signal if needed
-    //audio_connections[2] = new AudioConnection(mixer1, 0, record_queue, 0);
-    // audio_connections[3] = new AudioConnection(mixer1, 1, record_queue, 1);
-    audio_connections[4] = new AudioConnection(audio_player, 0, audioOutput, 0);
-    audio_connections[5] = new AudioConnection(audio_player, 1, audioOutput, 1);
+    audio_connections[0] = new AudioConnection(i2s1, 0, amp1, 0);
+    audio_connections[1] = new AudioConnection(i2s1, 0, record_queue, 0);
+    audio_connections[2] = new AudioConnection(i2s1, 1, record_queue, 1);
+    // audio_connections[2] = new AudioConnection(i2s1, 0, record_queue, 1);
+
+    // amp2 is the audio player playback gain
+    audio_connections[3] = new AudioConnection(audio_player, 0, amp2, 0);
+    // audio_connections[4] = new AudioConnection(audio_player, 1, amp2, 0);
+    audio_connections[5] = new AudioConnection(audio_player, 0, amp1, 0);
+    //audio_connections[6] = new AudioConnection(audio_player, 1, amp1, 0);
+
+    audio_connections[7] = new AudioConnection(amp2, 0, i2s_output, 0);
+    audio_connections[8] = new AudioConnection(amp2, 0, i2s_output, 1);
 
     //audio_connections[6] = new AudioConnection(mixer1, biquad1);
     //audio_connections[7] = new AudioConnection(biquad1, biquad2);
     //audio_connections[8] = new AudioConnection(biquad2, amp1);
     //audio_connections[9] = new AudioConnection(amp1, rms1);
-    //audio_connections[10] = new AudioConnection(amp1, fft1);
-    //audio_connections[8] = new AudioConnection(amp1, peak1);
+    audio_connections[9] = new AudioConnection(amp1, fft1);
+    audio_connections[10] = new AudioConnection(amp1, peak1);
     #if AUDIO_USB
-    audio_connections[14] = new AudioConnection(mixer1, 0, output_usb, 0);
-    audio_connections[15] = new AudioConnection(mixer1, 1, output_usb, 1);
+    audio_connections[14] = new AudioConnection(amp1, 0, output_usb, 0);
+    audio_connections[15] = new AudioConnection(amp1, 1, output_usb, 1);
     #endif // AUDIO_USB
   #elif BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
   
     audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
     audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
-    audio_connections[3] = new AudioConnection(mixer1, biquad3);
-    audio_connections[4] = new AudioConnection(biquad3, biquad4);
-    audio_connections[5] = new AudioConnection(biquad4, amp3);
-    audio_connections[6] = new AudioConnection(amp3, rms1);
-    audio_connections[7] = new AudioConnection(amp3, fft1);
-    audio_connections[8] = new AudioConnection(amp3, peak1);
-    audio_connections[10] = new AudioConnection(amp3, sine_fm);
-    audio_connections[11] = new AudioConnection(sine_fm, 0, audioOutput, 0);
+    audio_connections[3] = new AudioConnection(mixer1, biquad1);
+    audio_connections[4] = new AudioConnection(biquad1, biquad2);
+    audio_connections[5] = new AudioConnection(biquad2, amp1);
+    audio_connections[6] = new AudioConnection(amp1, rms1);
+    audio_connections[7] = new AudioConnection(amp1, fft1);
+    audio_connections[8] = new AudioConnection(amp1, peak1);
+    audio_connections[10] = new AudioConnection(amp1, sine_fm);
+    audio_connections[11] = new AudioConnection(sine_fm, 0, amp2, 0);
+    audio_connections[12] = new AudioConnection(amp2, 0, i2s_output, 0);
+    audio_connections[13] = new AudioConnection(amp2, 0, i2s_output, 1);
 
     #if AUDIO_USB
     audio_connections[9] = new AudioConnection(amp3, 0, output_usb, 0);
@@ -981,7 +1070,7 @@ void setupSpecies() {
 
   uimanager.setup(false);
   uimanager.printAll();
-  delay(3000);
+  delay(1000);
   #else
     Serial.println("WARNING - user controls are disabled");
   #endif

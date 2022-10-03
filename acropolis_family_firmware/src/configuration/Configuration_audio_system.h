@@ -40,12 +40,20 @@
 #define NUM_FFT                       1
 #define NUM_CHANNELS                  1
 #elif ARTEFACT_GENUS == LEGATUS
+#if ARTEFACT_BEHAVIOUR == B_LEG_SAMP_PLAYBACK
+#define NUM_AMPLIFIERS                2
+#define NUM_PEAK_ANAS                 1
+#define NUM_RMS_ANAS                  0
+#define NUM_FFT                       1
+#define NUM_CHANNELS                  2
+#else
 #define NUM_AMPLIFIERS                1
 #define NUM_PEAK_ANAS                 1
-#define NUM_RMS_ANAS                  1
+#define NUM_RMS_ANAS                  0
 #define NUM_FFT                       1
 #define NUM_CHANNELS                  1
-#endif
+#endif// legatus
+#endif// other artefacts
 
 /////////////////////////////////////////////////////////////////////////
 //////////////////////// Audio Settings /////////////////////////////////
@@ -87,9 +95,6 @@ bool stereo_audio =                           true;
 // for speculator cicada installations channel 1 is song and channel 2 is click?
 // TODO - the input to the two different sides should be the dominate microphones
 
-// this is dictated by user controls and is multiplied against the STARTING_GAIN to determine runtime gain
-float USER_CONTROL_GAIN_ADJUST               = 1.0;
-
 // TODO - implement this
 #define NON_MIMS                              0
 #define SPH_MICROPHONE                        10
@@ -119,7 +124,7 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
 #define STARTING_GAIN                         20.0
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
-#define STARTING_GAIN                         480.0
+#define STARTING_GAIN                         8.0
 
 #elif ARTEFACT_GENUS == EXPLORATOR
 #define STARTING_GAIN                         240.0
@@ -128,6 +133,10 @@ float USER_CONTROL_GAIN_ADJUST               = 1.0;
 #if BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 #define STARTING_GAIN                         0.5
 #elif BEHAVIOUR_ROUTINE == B_LEG_MATCH_PITCH 
+#define STARTING_GAIN                         1.0
+#elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
+#define STARTING_GAIN                         1.0
+#else
 #define STARTING_GAIN                         1.0
 #endif
 #endif // makeup_gain

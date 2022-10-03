@@ -17,8 +17,10 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 ////////////////////////////////////////////////////////////
 // different enclosures result in varying gain levels
 // ENCLOSURE_GAIN_FACTOR is automatically calculated based on
+
 // the ARTEFACT_GENUS and ENCLOSURE_TYPE
 #if ARTEFACT_GENUS == SPECULATOR
+
 #if ENCLOSURE_TYPE == ORB_ENCLOSURE_WITH_HOLE
 #define ENCLOSURE_GAIN_FACTOR         1.0
 #elif ENCLOSURE_TYPE == ORB_ENCLOSURE_WITHOUT_HOLE
@@ -27,9 +29,18 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 #define ENCLOSURE_GAIN_FACTOR         3.0
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
 #define ENCLOSURE_GAIN_FACTOR         0.5
-#endif // ENCLOSURE_TYPE
+#endif // ENCLOSURE_TYPE for Speculator
+
+// ENCLOSURES FOR LEGATUS
 #elif ARTEFACT_GENUS == EXPLORATOR
+
+#if ENCLOSURE_TYPE == NO_ENCLOSURE
+#define ENCLOSURE_GAIN_FACTOR         0.25
+#else
 #define ENCLOSURE_GAIN_FACTOR         1.0
+#endif // EXPLORATOR ENCLOSURES
+
+// LEGATUS ENCLOSURES
 #elif ARTEFACT_GENUS == LEGATUS
 #define ENCLOSURE_GAIN_FACTOR         1.0
 #endif // ARTEFACT_GENUS

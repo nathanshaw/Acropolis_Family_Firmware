@@ -8,7 +8,14 @@
 
 // prints high-level data from the behaviourUpdateLoop
 #define P_BEHAVIOUR_UPDATE       false
+#define P_AUDIO_MEMORY_MAX       false
 
+#if P_AUDIO_MEMORY_MAX
+////////////////////////////////// RANDOM stuff ///////////////////////////////////
+// this is a high value to force jumper readings in the setup() loop
+elapsedMillis last_audio_use_print = 0;
+#define AUDIO_USE_RESET_RATE         20000
+#endif // P_AUDIO_MEMORY_MAX
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ////////////////////////// Boot Tests ///////////////////////////////////////////////////////
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -56,7 +63,7 @@ int BOOT_DELAY_ACTIVE    =           false;
 
 #define P_SATURATION                    false
 #define P_HUE                           false
-#define P_BRIGHTNESS                    true
+#define P_BRIGHTNESS                    false
 
 #define P_NEO_COLORS                    false
 
@@ -92,6 +99,7 @@ elapsedMillis song_update_timer = 0;
 #endif // P_NUM_SONG_UPDATES
 
 #define P_UPDATE_SONG_LENGTH                      false
+#define P_UPDATE_PASSIVE_LEDS                     false
 
 //////////////////////////// Onset Functionality ///////////////////////
 #define P_ONSET_FEATURES                          false
@@ -105,11 +113,6 @@ elapsedMillis song_update_timer = 0;
 /////////////////////////// Datalogging ////////////////////////////////
 #define P_LOG_WRITE                               true
 #define DLM_PRINT                                 false
-// if LOOP_LENGTH is set to true the program will keep track of how long it takes to go through
-// the main loop, it will also store the min and max loop length values as well as calculate
-// what the average loop length is
-// TODO - this needs to be implemented
-#define P_LOOP_LENGTH                             false
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Audio Analysis///////////////////////////////////////
@@ -128,7 +131,7 @@ elapsedMillis song_update_timer = 0;
 #define P_CALCULATE_PLAYBACK_INTERVAL             false
 
 // prints information within the function of the same name
-#define P_UPDATE_LEGATUS_PASSIVE_LEDS             true
+#define P_UPDATE_LEGATUS_PASSIVE_LEDS             false
 
 //////////////////////////// Audio Memory Usage ///////////////////////////////
 // prints the max audio memory usage (to help calibrate how much is allocated to the system)
@@ -153,11 +156,11 @@ elapsedMillis last_audio_usage_print;
 // activates some printing which will print out how long different functions calls take
 // TODO - this needs implementation to prove real-time operation
 
-#define P_FUNCTION_TIMES                          false
+#define P_FUNCTION_TIMES                          true
 #if P_FUNCTION_TIMES == false
 #define P_SPECULATOR_LED_UPDATE_RATE              false
 #else
-#define P_SPECULATOR_LED_UPDATE_RATE              true
+#define P_SPECULATOR_LED_UPDATE_RATE              false
 #endif // P_FUNCTION_TIMES
 
 //////////////////////////// EEPROM ///////////////////////////////////
@@ -175,5 +178,5 @@ elapsedMillis last_audio_usage_print;
 #define P_SOLENOID_DEBUG                          false
 
 //////////////////////// Printing Legatus-specific operating routines ////////
-#define P_MATCH_PITCH_VOCALISATION                true
+#define P_MATCH_PITCH_VOCALISATION                false
 #endif // _CONFIGURATION_PRINTING_AND_TESTS_H__

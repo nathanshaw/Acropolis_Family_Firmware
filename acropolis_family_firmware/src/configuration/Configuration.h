@@ -11,7 +11,7 @@
 // SPECULATOR, EXPLORATOR, and LEGATUS
 // set ARTEFACT_GENUS to one of these types
 /////////////////// TODO
-#define ARTEFACT_GENUS            LEGATUS
+#define ARTEFACT_GENUS              EXPLORATOR
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Artefact Species //////////////////////////////
@@ -21,7 +21,7 @@
 // Legatus Species include: LEG_MAJOR
 
 #if ARTEFACT_GENUS == EXPLORATOR
-#define ARTEFACT_SPECIES                 EX_WINDER
+#define ARTEFACT_SPECIES                 EX_SPINNER
 #elif ARTEFACT_GENUS == LEGATUS 
 #define ARTEFACT_SPECIES                 LEG_MAJOR
 #elif ARTEFACT_GENUS == SPECULATOR
@@ -54,9 +54,9 @@
 
 // Speculator behaviours
 #if ARTEFACT_GENUS == SPECULATOR
-#define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
+// #define BEHAVIOUR_ROUTINE             B_ADAPTIVE_FEEDBACK
 // WARNING - TARGETED FEEDBACK IS CURRENTLY BROKEN!!!!!
-// #define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
+#define BEHAVIOUR_ROUTINE          B_TARGETED_FEEDBACK
 #if BEHAVIOUR_ROUTINE != B_TARGETED_FEEDBACK && BEHAVIOUR_ROUTINE != B_ADAPTIVE_FEEDBACK
 #error "WRONG BEHAVIOUR_ROUTINE GIVEN, UNABLE TO COMPILE"
 #endif // error for wrong behaviour
@@ -75,14 +75,13 @@
 #endif // EXPLORATOR species behavour routines
 // Legatus behaviours
 #elif ARTEFACT_GENUS == LEGATUS
-
-// TODO - warning this behaviour is currently buggy and needs fixing 
-#define BEHAVIOUR_ROUTINE         B_LEG_MATCH_PITCH
-// #define BEHAVIOUR_ROUTINE           B_LEG_FEEDBACK
+// more or less functions fine, but needs to integrate the pitch matching once more =(
+// #define BEHAVIOUR_ROUTINE         B_LEG_MATCH_PITCH
+// #define BEHAVIOUR_ROUTINE         B_LEG_FEEDBACK
 // #define BEHAVIOUR_ROUTINE         B_LEG_FM_FEEDBACK
 // #define BEHAVIOUR_ROUTINE         B_LEG_SAMP_PLAYBACK
 // still needs a little work
-// #define BEHAVIOUR_ROUTINE            B_LEG_ECHO_CHAMBER 
+#define BEHAVIOUR_ROUTINE            B_LEG_ECHO_CHAMBER 
 // this variable is used to allow Legatus artefact's to switch between behaviour routines
 // after initialisation
 // this needs to be a number which does not correspond to a mode so the audio system connects properly when needed
@@ -412,7 +411,7 @@ double color_feature_max =                                0.0;
 
 elapsedMillis feature_reset_tmr;
 elapsedMillis last_led_update_tmr;
-const unsigned long led_refresh_rate =                    33; // for 30 updates a second
+const unsigned long led_refresh_rate =                    8; // for 30 updates a second
 const unsigned long feature_reset_time =                  (1000 * 2.5);// every 2.5 minute?
 
 double brightness_feature_min =                           1.0;
@@ -605,8 +604,8 @@ uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK;
 #endif // speculator behaviour routines
 #else
 uint8_t HUE_FEATURE         =               FEATURE_CENTROID;
-uint8_t SATURATION_FEATURE  =               (FEATURE_FFT_RELATIVE_ENERGY);
-uint8_t BRIGHTNESS_FEATURE  =               (FEATURE_FFT_ENERGY);
+uint8_t SATURATION_FEATURE  =               FEATURE_FLUX;
+uint8_t BRIGHTNESS_FEATURE  =               FEATURE_PEAK;
 #endif // ARTEFACT_GENUS == SPECULATOR
 
 // saturation should be reversed by default
@@ -630,7 +629,7 @@ int color_map_mode          =             COLOR_MAPPING_HSB;
 // int color_map_mode          =             COLOR_MAPPING_HSB;
 int color_map_mode          =             COLOR_MAPPING_HSB;
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_SPINNER
-int color_map_mode          =             COLOR_MAPPING_HSB;
+int color_map_mode          =             COLOR_MAPPING_EXPLORATOR;
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_WINDER
 int color_map_mode          =             COLOR_MAPPING_HSB;
 #else
@@ -671,15 +670,17 @@ long over_fifteen= 0;
 long max_loop_length = 0;
 long min_loop_length = 1000;
 
+uint64_t total_time = 0;
 // how many times will the test be run before termination
 #define loop_test_period 10000
 
-ValueTrackerLong loop_length_value_tracker = ValueTrackerLong("loop_length", &loop_length, 0, 0, 0.0);
+// ValueTrackerLong loop_length_value_tracker = ValueTrackerLong("loop_length", &loop_length, 0, 0, 0.0);
 
 void updateFunctionTimeStats() {
    if (loop_num != 0) {
       loop_length = function_times;
-      loop_length_value_tracker.update();
+      total_time += loop_length;
+      // loop_length_value_tracker.update();
       if (loop_length < 10) {
          under_ten++;
       }
@@ -699,14 +700,14 @@ void updateFunctionTimeStats() {
          over_fifteen++;
       }
    }
-   else{loop_length_value_tracker.resetMinMax();}
+
    if (loop_length > max_loop_length){
       max_loop_length = loop_length;
    } else if (loop_length < min_loop_length) {
       min_loop_length = loop_length;
    }
     if (loop_num % 100 == 0) {
-      loop_length_value_tracker.printStats();
+      // loop_length_value_tracker.printStats();
       Serial.print("after a total of ");
       Serial.print(loop_num);
       Serial.println(" loops, the firmware identified ");
@@ -724,6 +725,10 @@ void updateFunctionTimeStats() {
       Serial.println(" was the longest identified loop length");
       Serial.print(min_loop_length);
       Serial.println(" was the shortest identified loop length");
+      double avg_time = (double)total_time/(double)loop_num;
+      Serial.print(avg_time);
+      Serial.println(" was the average loop length");
+
       Serial.println("-----------------------------------");
       if (loop_num == loop_test_period){
          Serial.println("------------- TEST COMPLETE -----------------");

@@ -1,12 +1,66 @@
-#ifndef _LEGATUS_BEHAVIOUR_H__
-#define _LEGATUS_BEHAVIOUR_H__
+#ifndef _EXPLORATOR_BEHAVIOUR_H__
+#define _EXPLORATOR_BEHAVIOUR_H__
 
+#include <Macros.h>
 
-void triggerSolenoid(uint8_t num, uint16_t on_time) {
+bool updatePassiveLEDs(bool _p = false) {
+  // only update the LEDs if there is new FFT manager or new feature collector information
+  if (feature_collector.update(fft_manager) == false && fft_manager[dominate_channel].update() == false) {
+    return false;
+  }
+
+    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
+    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
+    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
+    dprint(_p, "HSB after calculate() functions: ");
+    dprint(_p, h, 6);
+    dprint(_p, "\t");
+    dprint(_p, s, 6);
+    dprint(_p, "\t");
+    dprintln(_p, b, 6);
+    printHSB();
+    printRGB();
+
+    // these functions will update the value of the HSB according to weather conditions
+    // variables are passed by reference to allow for their change without the function returning anything
+    if (_p == true) {
+      #if WEATHER_MANAGER_ACTIVE
+      neos[0].applyWeatherOffsets(weather_manager, h, s, b, true); 
+      neos[0].applyWeatherScaling(weather_manager, h, s, b, true);
+      #endif
+      dprint(_p, "HSB after weather scaling and offsets functions: ");
+      dprint(_p, h, 6);
+      dprint(_p, "\t");
+      dprint(_p, s, 6);
+      dprint(_p, "\t");
+      dprintln(_p, b, 6);
+    }
+    else {
+      #if WEATHER_MANAGER_ACTIVE
+      neos[0].applyWeatherOffsets(weather_manager, h, s, b, false); 
+      neos[0].applyWeatherScaling(weather_manager, h, s, b, false);
+      #endif
+    }
+    b = b * user_brightness_scaler;
+    dprint(_p, "brightness after user_brightness_scaler: ");
+    dprintln(_p, b, 6);
+
+    // the specific mapping strategy is handled by the NeoPixelManager
+    double _lux_bs = lux_manager.getBrightnessScaler();
+
+    neos[0].colorWipeHSB(h, s, b, _lux_bs); // now colorWipe the LEDs with the HSB value
+    // neos[0].colorWipe(0, 0, 0, 0.0, 0.0); // now colorWipe the LEDs with the HSB value
+    // neos[0].colorWipe(255, 255, 255, 1.0, 1.0); // now colorWipe the LEDs with the HSB value
+    // make sure we dont update the value tracker until we have our second loop
+    updateFunctionTimeStats();
+    return true;
+}
+
+void triggerSolenoid(uint8_t num, uint16_t on_time, bool _p = false) {
   // if the solenoid in question is not currently active
   if (sol_active[num] == false) {
-    dprint(P_SOLENOID_DEBUG, "WARNING EXITING FROM TIGGER SOLENOID DUE TO INVALID SOLENOID NUMBER OF ");
-    dprintln(P_SOLENOID_DEBUG, num);
+    dprint(P_SOLENOID_DEBUG || _p, "WARNING EXITING FROM TIGGER SOLENOID DUE TO INVALID SOLENOID NUMBER OF ");
+    dprintln(P_SOLENOID_DEBUG || _p, num);
     return;
   }
   if (sol_state[num] == false && last_sol_action[num] > SOL_COOLDOWN) {
@@ -14,21 +68,21 @@ void triggerSolenoid(uint8_t num, uint16_t on_time) {
     last_sol_action[num] = 0;
     sol_timers[num] = on_time;
     sol_state[num] = true;
-    dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
-    dprint(P_SOLENOID_DEBUG, " solenoid ");
-    dprint(P_SOLENOID_DEBUG, num);
-    dprintln(P_SOLENOID_DEBUG, " enguaged");
+    dprint(P_SOLENOID_DEBUG || _p, millis() / 1000.0);
+    dprint(P_SOLENOID_DEBUG || _p, " solenoid ");
+    dprint(P_SOLENOID_DEBUG || _p, num);
+    dprintln(P_SOLENOID_DEBUG || _p, " enguaged");
   } else if (sol_state[num] == true) {
-    dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
-    dprint(P_SOLENOID_DEBUG, " did not trigger solenoid ");
-    dprint(P_SOLENOID_DEBUG, num);
-    dprintln(P_SOLENOID_DEBUG, " as it is already active");
+    dprint(P_SOLENOID_DEBUG || _p, millis() / 1000.0);
+    dprint(P_SOLENOID_DEBUG || _p, " did not trigger solenoid ");
+    dprint(P_SOLENOID_DEBUG || _p, num);
+    dprintln(P_SOLENOID_DEBUG || _p, " as it is already active");
   } else if (last_sol_action[num] < SOL_COOLDOWN) {
-    dprintln(P_SOLENOID_DEBUG, "did not trigger solenoids as last_sol_action is less than SOL_COOLDOWN");
+    dprintln(P_SOLENOID_DEBUG || _p, "did not trigger solenoids as last_sol_action is less than SOL_COOLDOWN");
   }
 }
 
-void updateSolenoids() {
+void updateSolenoids(bool _p = false) {
   // function which should be in the main loop to constantly turn off active solenoids
   for (int i = 0; i < NUM_SOLENOIDS; i++) {
     // if the solenoid is currently enguaged
@@ -39,14 +93,14 @@ void updateSolenoids() {
         digitalWrite(s_pins[i], LOW);
         // set the solenoid as inactive in the code
         sol_state[i] = false;
-        dprint(P_SOLENOID_DEBUG, millis() / 1000.0);
-        dprint(P_SOLENOID_DEBUG, " solenoid ");
-        dprint(P_SOLENOID_DEBUG, i);
-        dprint(P_SOLENOID_DEBUG, " disenguaged after a total of ");
-        dprint(P_SOLENOID_DEBUG, last_sol_action[i]);
-        dprint(P_SOLENOID_DEBUG, " ms with a target of ");
-        dprint(P_SOLENOID_DEBUG, sol_timers[i]);
-        dprintln(P_SOLENOID_DEBUG, " ms");
+        dprint(P_SOLENOID_DEBUG || _p, millis() / 1000.0);
+        dprint(P_SOLENOID_DEBUG || _p, " solenoid ");
+        dprint(P_SOLENOID_DEBUG || _p, i);
+        dprint(P_SOLENOID_DEBUG || _p, " disenguaged after a total of ");
+        dprint(P_SOLENOID_DEBUG || _p, last_sol_action[i]);
+        dprint(P_SOLENOID_DEBUG || _p, " ms with a target of ");
+        dprint(P_SOLENOID_DEBUG || _p, sol_timers[i]);
+        dprintln(P_SOLENOID_DEBUG || _p, " ms");
         // note this as an action
         last_sol_action[i] = 0;
         // turn off the "on" timer
@@ -112,10 +166,7 @@ void testSolenoids(unsigned int len)
 };
 #endif // test_solenoids, ARTEFACT_GENUS explorator
 #if ARTEFACT_SPECIES == EX_CHIRPER
-/* Mechatronic Creatures
-  "Bowl Bot" Genus
-  using the Adafruit Huzzah ESP8266 Microcontroller
-*/
+
 /////////////////////////////// Playback Engine  /////////////////////////////////
 // the playback engine handles the playback of melodies and rhythms through motors
 // and solenoids, as of right now, the only bot which makes use of this is the
@@ -133,27 +184,28 @@ Rhythm rhythm[10] = {
   Rhythm()
 };
 
-RhythmBank rhythm_bank = RhythmBank();
-PlaybackEngine playback_engine = PlaybackEngine();
-
 // actuator pin, dampener pin, frequency, on_time
 BellMechanism bells[3] = {
   BellMechanism(s_pins[0], s_pins[1], 20, 100.0, 40),
   BellMechanism(s_pins[2], s_pins[3], 20, 500.0, 40),
   BellMechanism(s_pins[4], s_pins[5], 20, 1000.0, 40)
-};
+}
 
+RhythmBank rhythm_bank = RhythmBank();
+PlaybackEngine playback_engine = PlaybackEngine();
+
+// chirper loop
 void updateBehaviour()
 {
   ///////////////// Actuator Outputs //////////////////
-  updateSolenoids(); // turns off all solenoids which have
+  updateSolenoids(P_BEHAVIOUR_UPDATE); // turns off all solenoids which have
   playback_engine.update();
   ACTUATION_DELAY = (30000) + ((weather_manager.getTemperature() + weather_manager.getHumidity()) * lux_manager.getGlobalLux());
   if (last_playback_tmr > ACTUATION_DELAY)
   {
-    Serial.print("actuation_delay : ");
-    Serial.println(ACTUATION_DELAY);
-    Serial.println("playing rhythm through playback_engine");
+    dprint(P_BEHAVIOUR_UPDATE, "actuation_delay : ");
+    dprintln(P_BEHAVIOUR_UPDATE, ACTUATION_DELAY);
+    dprintln(P_BEHAVIOUR_UPDATE, "playing rhythm through playback_engine");
     playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
     last_playback_tmr = 0;
   }
@@ -176,102 +228,27 @@ PlaybackEngine playback_engine = PlaybackEngine();
 // actuator pin, reference to motor, motor number, minimum_on_time for the solenoid
 // maximum on time for the solenoid, min_time between actuations for the solenoid
 WoodpeckerMechanism pecking_mechanism[1] = {WoodpeckerMechanism(s_pins[0], &motors, 0, S1_MIN, S1_MAX, S1_BETWEEN)};
-void buildPeckRhythm(int idx, uint32_t quarter)
-{
-  uint32_t t = 0;
-  uint32_t eigth = quarter / 2;
-  uint32_t triplet = quarter / 3;
 
-  // 30% chance to start with a hard strike
-  if (random(0, 100) < 30)
-  {
-    rhythm[idx].addUnpitchedNote(0, 0.5);
-    t = quarter;
-  }
-
-  // then 85% chance for a triplet of 3-4
-  if (random(0, 100) < 85)
-  {
-    for (int i = 0; i < (int)random(3, 4); i++)
-    {
-      rhythm[idx].addUnpitchedNote(t, 0.25);
-      t = triplet;
-    }
-  }
-
-  // then 55% chance for a triplet of 3-4
-  if (random(0, 100) < 55)
-  {
-    for (int i = 0; i < (int)random(3, 4); i++)
-    {
-      rhythm[idx].addUnpitchedNote(t, 0.25);
-      t = triplet;
-    }
-  }
-
-  // chance for a pause
-  if (random(0, 100) < 45)
-  {
-    t += triplet;
-    if (random(0, 100) < 45)
-    {
-      t += triplet;
-    }
-  }
-
-  // then 55% chance for a triplet of 3-4
-  if (random(0, 100) < 55)
-  {
-    for (int i = 0; i < (int)random(3, 4); i++)
-    {
-      rhythm[idx].addUnpitchedNote(t, 0.25);
-      t = triplet;
-    }
-  }
-
-  // chance for a pause
-  if (random(0, 100) < 45)
-  {
-    t += triplet;
-    if (random(0, 100) < 45)
-    {
-      t += eigth;
-    }
-    if (random(0, 100) < 65)
-    {
-      t += eigth;
-    }
-  }
-
-  // 30% chance to start with a hard strike
-  if (random(0, 100) < 30)
-  {
-    rhythm[idx].addUnpitchedNote(t, 0.5);
-    t = quarter;
-  }
-}
 void updateBehaviour()
 {
   /* Behaviour update for Explorator Pecker's standard operating behaviour */
 
   ///////////////// Actuator Outputs //////////////////
   playback_engine.update(); // will also update all linked mechanisms
-
   ///////////////// Passive Visual Feedback ///////////
   updateFeedbackLEDs(&fft_manager[dominate_channel]);
-
   // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
   // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
   // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
   // activity level adds a base of up to five minutes
-  // ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
+  ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
+  bool onset_detected = onset_detector.getOnset(fft_manager[dominate_channel]);
   // uint16_t t = random(45, 150);
-  // TODO
-  ACTUATION_DELAY = 1000;
-  if (last_playback_tmr > ACTUATION_DELAY)
+  // ACTUATION_DELAY = 1000;
+  if (last_playback_tmr > ACTUATION_DELAY || onset_detected)
   {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
+    dprint(P_BEHAVIOUR_UPDATE, "ACTUATION_DELAY is : ");
+    dprintln(P_BEHAVIOUR_UPDATE, ACTUATION_DELAY);
     if (playback_engine.isActive() == false)
     {
       playback_engine.playRhythm(rhythm_bank.getRandomRhythm());
@@ -279,256 +256,21 @@ void updateBehaviour()
     }
     else
     {
-      Serial.println("Skipping rhythm as a rhythm is already playing");
+      dprintln(P_BEHAVIOUR_UPDATE, "Skipping rhythm as a rhythm is already playing");
     }
   }
 }
 
 #elif ARTEFACT_SPECIES == EX_WINDER
 
-void windBack(float rotations, int backward_rate)
-{
-  Serial.println("starting windBack()");
-  motors.enableDrivers();
-  delay(10);
-  enc.write(0);
-  enc_pos = 0;
-  int target = 20;
-  if (M1_POLARITY == false)
-  {
-    Serial.println("M1_POLARITY is set to false, reversing backward_rate and reversing target");
-    backward_rate *= -1;
-    // start winding slowly
-    for (int i = backward_rate * 0.5; i < backward_rate; i++)
-    {
-      motors.setM1Speed(i);
-      enc_pos = enc.read();
-      delay(15);
-      updateFeedbackLEDs(&fft_manager[0]);
-    }
-    motors.setM1Speed(backward_rate);
-  }
-  else
-  {
-    for (int i = backward_rate * 0.5; i > backward_rate; i--)
-    {
-      motors.setM1Speed(i);
-      enc_pos = enc.read();
-      delay(25);
-      updateFeedbackLEDs(&fft_manager[0]);
-    }
-    motors.setM1Speed(backward_rate);
-  }
-
-  // TODO determine how far to wind the box
-  last_enc_change = 0;
-  while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) && enc_pos >= (rotations * -1 * M1_GEAR_RATIO * COUNTS_PER_REV))
-  {
-    enc_pos = enc.read();
-    if (last_pos != enc_pos)
-    {
-      Serial.print(last_enc_change);
-      Serial.print("\tenc pos: ");
-      Serial.print((float)enc_pos / 1500.00);
-      Serial.print(" / ");
-      Serial.println(rotations);
-      last_pos = enc_pos;
-      last_enc_change = 0;
-    }
-    // if 15 seconds pass without being able to get to the target position, then move on to unwinding
-    if (last_enc_change > 600)
-    {
-      Serial.println("Winding taking too, long, breaking from loop");
-      motors.setM1Speed(0);
-      break;
-    }
-    else if (last_enc_change > 150)
-    {
-      motors.setM1Speed(backward_rate * 1.5);
-      Serial.print("1.50 - ");
-    }
-    else if (last_enc_change > 50)
-    {
-      motors.setM1Speed(backward_rate * 1.25);
-      Serial.print("1.25 - ");
-    }
-
-    if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 100) && M1_POLARITY == false)
-    {
-      if (enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV) - 50)
-      {
-        motors.setM1Speed(10);
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("\t Bringing speed down to 10");
-      }
-      else
-      {
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("Bringing speed down to 20");
-        motors.setM1Speed(20);
-      }
-    }
-    else if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 100) && M1_POLARITY == true)
-    {
-      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * -1) + 50)
-      {
-        motors.setM1Speed(-10);
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("Bringing speed down to -10");
-      }
-      else
-      {
-        motors.setM1Speed(-20);
-        Serial.print((float)enc_pos / 1500.00);
-        Serial.println("Bringing speed down to -20");
-      }
-    }
-    updateFeedbackLEDs(&fft_manager[0]);
-  }
-  last_enc_change = 0;
-  Serial.print("enc pos: ");
-  Serial.println(enc_pos);
-  motors.setM1Speed(0);
-  enc.write(0);
-  enc_pos = 0;
-  Serial.println("----- exiting windBack -------");
-}
-
-void windForward(float rotations, int forward_rate)
-{
-  if (M1_POLARITY == false)
-  {
-    motors.setM1Speed(forward_rate);
-  }
-  else
-  {
-    motors.setM1Speed(forward_rate);
-  }
-
-  float EXTRA_REWIND = 0.80;
-
-  while (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) && enc_pos >= (COUNTS_PER_REV * rotations * -1 * M1_GEAR_RATIO * EXTRA_REWIND))
-  {
-    enc_pos = enc.read();
-    if (last_pos != enc_pos)
-    {
-      Serial.print("enc pos: ");
-      Serial.println((float)enc_pos / 1500.00);
-      last_pos = enc_pos;
-      last_enc_change = 0;
-    }
-    updateFeedbackLEDs(&fft_manager[0]);
-    if ((enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 100) && M1_POLARITY == true)
-    {
-      motors.setM1Speed(20);
-      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND) - 50)
-      {
-        motors.setM1Speed(10);
-      }
-    }
-    else if ((enc_pos >= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 100) && M1_POLARITY == false)
-    {
-      motors.setM1Speed(-20);
-      if (enc_pos <= (rotations * M1_GEAR_RATIO * COUNTS_PER_REV * EXTRA_REWIND * -1) + 50)
-      {
-        motors.setM1Speed(-10);
-      }
-    }
-    updateFeedbackLEDs(&fft_manager[0]);
-    if (last_enc_change > 250)
-    {
-      Serial.println("Unwininding taking too, long, breaking from loop");
-      motors.setM1Speed(0);
-      break;
-    }
-  }
-  Serial.print("enc pos: ");
-  Serial.println((float)enc_pos / 1500.00);
-  motors.disableDrivers();
-  // (in terms of the encoder)
-  last_winding = 0;
-}
-
-void windBox(float rotations, int between_delay)
-{
-  if (last_winding > winding_interval)
-  {
-    // slowly wind the motor up
-    rotations *= 1.0;
-    int forward_rate = constrain((float)BASE_FORWARD_RATE * WINDING_RATE, MIN_FORWARD_RATE, MAX_FORWARD_RATE);
-    int backward_rate = constrain((float)BASE_BACKWARD_RATE * WINDING_RATE, MIN_BACKWARD_RATE, MAX_BACKWARD_RATE);
-
-    if (M1_POLARITY == true)
-    {
-      forward_rate *= -1;
-      backward_rate *= -1;
-    }
-    Serial.println("----------------------");
-    Serial.print("windBox(rotations): ");
-    Serial.println(rotations);
-    Serial.print("between_delay: ");
-    Serial.println(between_delay);
-    Serial.print("forward_rate: ");
-    Serial.println(forward_rate);
-    Serial.print("backward_rate: ");
-    Serial.println(backward_rate);
-    Serial.println("----------------------");
-
-    windBack(rotations, backward_rate);
-
-    delay(between_delay);
-    //motors.setM1Speed(2);
-    windForward(rotations, forward_rate);
-  }
-  else
-  {
-    Serial.println("Not winding music box, last winding was too soon");
-  }
-}
-
-void manualWinding()
-{
-  // if the wind button is pressed wind the box up
-  if (WIND_FORWARD == true)
-  {
-    Serial.println("WIND_FORWARD is active, winding motor forward...");
-    motors.enableDrivers();
-    motors.setM1Speed(20);
-    while (WIND_FORWARD == true)
-    {
-      updateFeedbackLEDs(&fft_manager[0]);
-      #if USER_CONTROLS_ACTIVE
-      uimanager.update();
-      #endif // USER_CONTROLS_ACTIVE
-      delay(10);
-    }
-    motors.disableDrivers();
-    Serial.println("WIND_FORWARD is no longer active, turning off the motors...");
-  }
-  // if the unwind button is pressed unwind the box
-  else if (WIND_BACKWARD == true)
-  {
-    Serial.println("WIND_BACKWARD is active, winding motor backward...");
-    motors.enableDrivers();
-    motors.setM1Speed(-20);
-    while (WIND_FORWARD == true)
-    {
-      updateFeedbackLEDs(&fft_manager[0]);
-      #if USER_CONTROLS_ACTIVE
-      uimanager.update();
-      #endif // USER_CONTROLS_ACTIVE
-      delay(10);
-    }
-    motors.disableDrivers();
-    Serial.println("WIND_BACKWARD is no longer active, turning off the motors...");
-  }
-}
+WindingMechanism music_box = WindingMechanism(MIN_FRONT_SPEED, MIN_REAR_SPEED, MAX_FRONT_SPEED, MAX_REAR_SPEED, true);
 
 // for the MB Body
 void updateBehaviour()
 {
-  /*
+  updatePassiveLEDs(P_UPDATE_PASSIVE_LEDS);
   ///////////////// Passive Visual Feedback ///////////
+  /*
   if (color_map_mode == COLOR_MAPPING_HSB)
   {
     double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
@@ -556,192 +298,47 @@ void updateBehaviour()
     neos[0].colorWipeHSB(0, 0, 0); // now colorWipe the LEDs with the HSB value
     Serial.println("ERROR = that color mode is not implemented in update neos");
   }
-  uimanager.update();
-
+  */
   // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
   // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
   // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
   // activity level adds a base of up to five minutes
   ACTUATION_DELAY = ACTIVITY_LEVEL * 1.0 * 250;
   ACTUATION_DELAY += weather_manager.getTemperature() * -250;
-  ACTUATION_DELAY += weather_manager.getHumidity() * 1000;
+  ACTUATION_DELAY += weather_manager.getHumidity() * 500;
   ACTUATION_DELAY += 5000 - lux_manager.getGlobalLux();
-  if (millis() % 30000 == 0)
+  if (millis() % 3000 == 0)
   {
-    Serial.print("ACTUATION_DELAY is : ");
-    Serial.println(ACTUATION_DELAY);
+    dprint(P_BEHAVIOUR_UPDATE, "ACTUATION_DELAY is : ");
+    dprintln(P_BEHAVIOUR_UPDATE, ACTUATION_DELAY);
   }
   if (last_playback_tmr > ACTUATION_DELAY)
   {
-    float wind_amount = 2.0;// how many times will be box be wound?
-    int between_time = 500;
-    windBox(wind_amount, between_time);
+    float wind_amount = 2.0 * (1.0 - (weather_manager.getScaledHumid()));// how many times will be box be wound?
+    int between_time = ACTUATION_DELAY * 0.01;
+    music_box.windBox(wind_amount, between_time);
     last_playback_tmr = 0;
   }
-  manualWinding();
-  */
+  manualWinding(uimanager, false);
 }
 
 #elif ARTEFACT_SPECIES == EX_SPINNER
-
-int motor_speed = 0;
-int target_motor_speed = 0;
-int next_motor_speed = 0;
-int motor_time = 0;
-int next_motor_time = 0;
-const int max_motor_speed = 450;
-const int min_motor_speed = -450;
-
-void rampSpinnerMotor(int16_t start, int16_t target, int ramp_total_time)
-{
-  Serial.print("Ramping Motor (start, target, time) - ");
-  Serial.print(start);
-  Serial.print("\t");
-  Serial.print(target);
-  Serial.print("\t");
-  Serial.println(ramp_total_time);
-
-  int difference = target - start;
-  float step_delay = abs(difference / ramp_total_time) * 1.0;
-
-  Serial.print(" dif: ");
-  Serial.print(difference);
-  Serial.print(" stepd: ");
-  Serial.print(step_delay);
-  motors.enableDrivers(0);
-
-  if (difference > 0)
-  {
-    for (int16_t i = start; i <= target; i++)
-    {
-      motors.setM1Speed(i);
-      // Serial.println(i);
-      delayMicroseconds(step_delay);
-    }
-  }
-  else
-  {
-    for (int16_t i = start; i > target; i--)
-    {
-      motors.setM1Speed(i);
-      delayMicroseconds(step_delay);
-      // Serial.println(i);
-    }
-  }
-
-  if (target == 0)
-  {
-    motors.setM1Speed(0);
-    motors.disableDrivers(0);
-  }
-  Serial.println("Disabled Drivers");
-}
-
-void shake(int on_speed, int on_time, int rev_speed, int rev_time)
-{
-  if (rev_speed > 0)
-  {
-    rev_speed *= -1;
-  }
-  target_motor_speed = on_speed;
-  next_motor_speed = rev_speed;
-  motor_time = on_time;
-  next_motor_time = rev_time;
-
-  Serial.print("shaking (onspeed, ontime, revspeed, revtime): ");
-  Serial.print(on_speed);
-  Serial.print("\t");
-  Serial.print(on_time);
-  Serial.print("\t");
-  Serial.print(rev_speed);
-  Serial.print("\t");
-  Serial.println(rev_time);
-
-  neos[0].colorWipe(0, 40, 125, 1.0);
-
-  // rev the motor up
-  rampSpinnerMotor(0, on_speed, on_time * 0.05);
-
-  // Serial.print("starting / ending pos: ");
-  // enc_pos = enc.read();
-  // Serial.print(enc_pos);
-
-  // let motor spin, with new color
-  neos[0].colorWipe(200, 200, 255, 1.0);
-  delay(on_time * 0.95);
-
-  // ramp up motor to it's reverse speed
-  neos[0].colorWipe(125, 40, 0, 1.0);
-  rampSpinnerMotor(on_speed, rev_speed, rev_time * 0.1);
-
-  neos[0].colorWipe(50, 40, 0, 1.0);
-  // let things rotate for a bit
-  delay(rev_time * 0.75);
-  // rev down to off
-  neos[0].colorWipe(25, 20, 0, 1.0);
-  rampSpinnerMotor(rev_speed, 0, rev_time * 0.15);
-
-  // enc_pos = enc.read();
-  // Serial.print(enc_pos);
-  neos[0].colorWipe(0, 0, 0, 1.0);
-}
-
-void sustainedShake(int on_speed, int ramp_time, int on_time, int deviation) {
-  target_motor_speed = on_speed;
-  motor_time = on_time;
-
-  Serial.print("sustained shake (on_speed, ramp_time, on_time): ");
-  Serial.print(on_speed);
-  Serial.print("\t");
-  Serial.print(ramp_time);
-  Serial.print("\t");
-  Serial.println(on_time);
-
-  // TODO - replace with an update to the visual feedback system
-  neos[0].colorWipe(0, 40, 125, 1.0);
-
-  // rev the motor up
-  rampSpinnerMotor(0, on_speed, ramp_time * 0.05);
-
-  // Serial.print("starting / ending pos: ");
-  // enc_pos = enc.read();
-  // Serial.print(enc_pos);
-
-  // let motor spin, with new color
-  neos[0].colorWipe(200, 200, 255, 1.0);
-  elapsedMillis t;
-  while (t < on_time){
-    target_motor_speed += map(random(0, deviation), 0, deviation, (-0.5 * deviation), (0.5*deviation));
-    motors.setM1Speed(target_motor_speed);
-    Serial.print("set motor speed to: ");
-    Serial.println(target_motor_speed);
-    delay(20 + random(100));
-  }
-
-  // ramp up motor to it's reverse speed
-  neos[0].colorWipe(125, 40, 0, 1.0);
-  rampSpinnerMotor(target_motor_speed, 0, ramp_time * 0.1);
-  neos[0].colorWipe(0, 0, 0, 1.0);
-  Serial.println("------------ finished with sustained spin ------------------");
-}
-
+// TODO -replace these with variables in the configuration.h file
+SpinningMechanism spinner = SpinningMechanism(40, -40, 350, -400, true);
 // for the shaker
 void updateBehaviour()
 {
-
   ///////////////// Passive Visual Feedback ///////////
   updateFeedbackLEDs(&fft_manager[dominate_channel]);
-
   // the warmer the temperature the more it will actuate? (10 second decrease at 40 degrees and no decrease when at 0 degrees
   // the higher the humidity the less it will actuate? (100 second increase when 100% humidity , 0 second when at 0 %)
   // the brighter it is the more it will actuate (take 5000 lux and subtract the current reading)
   // activity level adds a base of up to five minutes
-  ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 5 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
+  ACTUATION_DELAY = (ACTIVITY_LEVEL * ACTIVITY_LEVEL * 1 * 60000) + (weather_manager.getTemperature() * -250) + (weather_manager.getHumidity() * 1000) + (5000 - lux_manager.getGlobalLux());
   // uint16_t t = random(45, 150);
-
   // TODO
   // ACTUATION_DELAY = ACTUATION_DELAY * 0.5;
-  ACTUATION_DELAY = 10000;
+  // ACTUATION_DELAY = 10000;
 
   if (last_playback_tmr > ACTUATION_DELAY)
   {
@@ -749,20 +346,20 @@ void updateBehaviour()
     Serial.println(ACTUATION_DELAY);
 
     // on speed, on time, reverse speed, reverse time
-    int on_speed = 200;// + (weather_manager.getTemperature() * 10);
-    int ramp_time = 200;// + (weather_manager.getTemperature() * 10);
-    int on_time = 5000;// + (weather_manager.getTemperature() * 20);
-    int deviation = 20;// + (weather_manager.getTemperature() * 10);
-    sustainedShake(on_speed, ramp_time, on_time, deviation);
+    unsigned int on_speed = 200;// + (weather_manager.getTemperature() * 10);
+    unsigned int ramp_time = 200;// + (weather_manager.getTemperature() * 10);
+    unsigned int on_time = 5000;// + (weather_manager.getTemperature() * 20);
+    int deviation = 1 + (int)(weather_manager.getScaledHumid() * 10.0);
+    spinner.sustainedShake(on_speed, ramp_time, on_time, deviation);
     last_playback_tmr = 0;
   }
 }
 
 #elif ARTEFACT_SPECIES == EX_CLAPPER
 
-
 void updateBehaviour()
 {
+  updateFeedbackLEDs(&fft_manager[dominate_channel]);
   updateSolenoids(); // turns off all solenoids which need to be turned off
   //  listen for onsets
   if (millis() > 50000 && updateOnset())
@@ -779,33 +376,6 @@ void updateBehaviour()
     triggerSolenoid(2, random(20, 50));
     triggerSolenoid(7, random(20, 50));
     last_playback_tmr = 0;
-  }
-
-  if (color_map_mode == COLOR_MAPPING_HSB)
-  {
-    double s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
-    double b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
-    double h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-    printHSB();
-    printRGB();
-
-    // if (feature_collector.isActive() == true) {
-    b = constrain(b+b, 0, 1.0);
-    neos[0].colorWipeHSB(h, s, b); // now colorWipe the LEDs with the HSB value
-    // } else {
-    // Serial.println("ERROR - not able to updateNeos() as there is no active audio channels");
-    // }
-  }
-  else if (color_map_mode == COLOR_MAPPING_EXPLORATOR)
-  {
-    updateFeedbackLEDs(&fft_manager[dominate_channel]);
-    // Serial.println("Finished running updateFeedbackLEDs()");
-    // delay(2000);
-  }
-  else
-  {
-    neos[0].colorWipeHSB(0, 0, 0); // now colorWipe the LEDs with the HSB value
-    Serial.println("ERROR = that color mode is not implemented in update neos");
   }
 }
 #endif // Clapper Behaviour
@@ -938,11 +508,11 @@ void configurePlaybackEngine()
   for (int i = 0; i < 10; i++)
   {
     uint32_t quarter = random(120, 750);
-    buildPeckRhythm(i, quarter);
+    playback_engine.buildPeckRhythm(rhythm[i], quarter);
     if (random(0, 100) < 30)
     {
       rhythm[i].addUnpitchedNote(quarter * 4, 0.75);
-      buildPeckRhythm(i, quarter);
+      playback_engine.buildPeckRhythm(rhythm[i], quarter);
     }
     rhythm[i].addMotorMove(1, 70, 100);
     rhythm[i].print();
@@ -954,9 +524,46 @@ void configurePlaybackEngine()
 #endif // ARTEFACT_SPECIES == EX_CHIRPER
 }
 void setupSpeciesAudio() {
-  HPF1.setHighpass(0, LBQ1_THRESH, LBQ1_Q);
-  HPF1.setLowpass(1, LBQ2_THRESH, LBQ2_Q);
-  amp1.gain(starting_gain);
+  Serial.println("Entered into setupSpeciesAudio() for Explorator genus");
+  // ||||||||||||||||||||| Audio Routing ||||||||||||||||||||||||||||||
+  audio_connections[0] = new AudioConnection(i2s1, 0, mixer1, 0);
+  audio_connections[1] = new AudioConnection(i2s1, 1, mixer1, 1);
+  // audio_connections[2] = new AudioConnection(mixer1, biquad1);
+  // audio_connections[3] = new AudioConnection(biquad1, biquad2);
+  // audio_connections[4] = new AudioConnection(biquad2, amp1);
+  audio_connections[2] = new AudioConnection(mixer1, fft1);
+  audio_connections[3] = new AudioConnection(mixer1, peak1);
+  ////////////////////// Audio
+  printMinorDivide();
+  Serial.println("Finished setting up audio_connections");
+  delay(1000);
+  // TODO make this proper
+  uint32_t lpf = 14000;
+  uint32_t hpf = 200;
+  double q = 0.8;
+  amp1.gain(MAKEUP_GAIN);
+#if ARTEFACT_SPECIES == EX_WINDER
+  mixer1.gain(0, starting_gain);
+  mixer1.gain(1, starting_gain);
+#endif // ARTEFACT_SPECIES == MB
+  // for all species, set up filtering
+  biquad1.setLowpass(0, lpf, q);
+  biquad1.setLowpass(1, lpf, q);
+  biquad2.setHighpass(0, hpf, q);
+  biquad2.setHighpass(1, hpf, q);
+#if ARTEFACT_SPECIES == EX_CLAPPER
+  biquad1.setLowpass(2, lpf, q);
+  biquad1.setLowpass(3, lpf, q);
+#else  // ARTEFACT_SPECIES != CLAPPER
+  biquad1.setHighpass(2, hpf, q);
+  biquad1.setHighpass(3, hpf, q);
+#endif // ARTEFACT_SPECIES == CLAPPER
+  configurePlaybackEngine();
+  // link the fft manager and feature collector
+  fft_manager[0].linkFFT(&fft1, "All");
+  fft_manager[0].setCalculateCent(true);
+  fft_manager[0].setCalculateFlux(true);
+  feature_collector.linkPeak(&peak1, P_PEAK_VALS);
 }
 
 void setupSpecies() {
@@ -997,42 +604,11 @@ void setupSpecies() {
 #endif // UI controls for the woodpecker and bellbot
 #endif // USER_CONTROLS_ACTIVE
 
-  ////////////////////// Audio
-  printMinorDivide();
-  Serial.println("Starting the Audio system");
-  // TODO make this proper
-  uint32_t lpf = 14000;
-  uint32_t hpf = 200;
-  double q = 0.8;
-  amp1.gain(starting_gain);
-#if ARTEFACT_SPECIES == EX_WINDER
-  mixer1.gain(0, starting_gain);
-  mixer1.gain(1, starting_gain);
-#endif // ARTEFACT_SPECIES == MB
-
-  HPF1.setLowpass(0, lpf, q);
-  HPF1.setLowpass(1, lpf, q);
-#if ARTEFACT_SPECIES == EX_CLAPPER
-  HPF1.setLowpass(2, lpf, q);
-  HPF1.setLowpass(3, lpf, q);
-#else  // ARTEFACT_SPECIES != CLAPPER
-  HPF1.setHighpass(2, hpf, q);
-  HPF1.setHighpass(3, hpf, q);
-#endif // ARTEFACT_SPECIES == CLAPPER
-
-  configurePlaybackEngine();
-
-  fft_manager[0].linkFFT(&fft1, "All");
-  fft_manager[0].setCalculateCent(true);
-  fft_manager[0].setCalculateFlux(false);
-
-  feature_collector.linkPeak(&peak1, P_PEAK_VALS);
-  // feature_collector.linkRMS(&rms1, P_PEAK_VALS);
+  // setupSpeciesAudio();
 
   printMinorDivide();
   Serial.println("Finished setup Loop");
   colorWipeAll(0, 120, 30, 0.25);
   printMinorDivide();
-
 }
 #endif // Explorator genus only 

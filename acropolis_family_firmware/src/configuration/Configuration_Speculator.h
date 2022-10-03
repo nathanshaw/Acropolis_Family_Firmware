@@ -145,10 +145,6 @@ int SONG_COLOR_FEATURE =                      SPECTRAL_CENTROID;
 // "rms_delta" will use that feature along with ONSET_RMS_DELTA_THRESH
 // "peak_delta" will use that feature along with ONSET_PEAK_DELTA_THRESH
 // "all" will use all available features with their corresponding thresholds
-#define CALCULATE_FLUX                        true
-#define CALCULATE_CENTROID                    true
-#define CALCULATE_ROFF                        false
-
 int ONSET_FEATURE =                           PEAK_DELTA;
 #define ONSET_RMS_DELTA_THRESH                0.05
 #define ONSET_PEAK_DELTA_THRESH               0.17
@@ -177,10 +173,6 @@ int ONSET_FEATURE =                           PEAK_DELTA;
 */
 
 
-////////////////////////////////// RANDOM stuff ///////////////////////////////////
-// this is a high value to force jumper readings in the setup() loop
-elapsedMillis last_audio_use_print = 0;
-#define AUDIO_USE_RESET_RATE         20000
 
 
 

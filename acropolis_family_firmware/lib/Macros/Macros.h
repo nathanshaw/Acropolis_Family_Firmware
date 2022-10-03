@@ -22,6 +22,12 @@
 #ifndef MACROS_H
 #define MACROS_H
 
+// min and max values for the H-bridge motors
+#define MIN_FRONT_SPEED 40
+#define MAX_FRONT_SPEED 450
+#define MIN_REAR_SPEED -40
+#define MAX_REAR_SPEED -450
+
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Scaling Modes ////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -152,33 +158,7 @@
 #define LUX_ADJUSTS_MIN_MAX 0
 #define LUX_ADJUSTS_BS      1
 #define LUX_ADJUSTS_BS_AND_MIN_MAX      2
-/*
-  //updateLoopLength();
-  #if P_LOOP_LENGTH == true
-  elapsedMicros loop_length = 0;
-  unsigned long num_loops = 0;
-  unsigned long loop_totals = 0;
-  unsigned long longest_loop = 0;
-  unsigned long shortest_loop = 0;
 
-  void updateLoopLength() {
-  if (num_loops > 0) {
-    if (loop_length > longest_loop) {
-      longest_loop = loop_length;
-      Serial.print("new longest loop (in  micros)   : ");
-      Serial.println(longest_loop);
-    }
-    loop_totals += loop_length;
-    if (loop_totals % 1000 == 1) {
-      Serial.print("average loop length (in micros) : ");
-      Serial.println((double)loop_totals / (double) num_loops);
-    }
-  }
-  num_loops++;
-  loop_length = 0;
-  }
-  #endif//print loop length
-*/
 double maxf(double v1, double v2){
   if (v1 < v2) {
     return v2;

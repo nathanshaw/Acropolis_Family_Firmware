@@ -107,7 +107,8 @@ AudioConnection          patchCordUSB1(amp1, 0, output_usb, 0);
 AudioInputI2S i2s1;        //xy=1203.3333854675293,1356.3334693908691
 AudioMixer4 mixer1;        //xy=1373.3333549499512,1335.0000076293945
 AudioAmplifier amp1;       //xy=1519.3333206176758,1330.0000114440918
-AudioFilterBiquad HPF1;    //xy=1651.6667022705078,1330.6666841506958
+AudioFilterBiquad biquad1;    //xy=1651.6667022705078,1330.6666841506958
+AudioFilterBiquad biquad2;    //xy=1651.6667022705078,1330.6666841506958
 AudioAnalyzeFFT1024 fft1;  //xy=1846.3333740234375,1254.9999675750732
 AudioAnalyzePeak peak1;    //xy=1851.3332901000977,1288.6667175292969
 
@@ -116,14 +117,6 @@ AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
 AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
 AudioConnection patchCordUSB1(HPF1, 0, output_usb, 0);
 #endif
-
-// TODO - these should instead be dynamically created using the audio_connections[] array
-AudioConnection patchCord1(i2s1, 0, mixer1, 0);
-AudioConnection patchCord2(i2s1, 1, mixer1, 1);
-AudioConnection patchCord3(mixer1, amp1);
-AudioConnection patchCord5(amp1, HPF1);
-AudioConnection patchCord6(HPF1, peak1);
-AudioConnection patchCord8(HPF1, fft1);
 
 //////////////////////////////////////////////////////////////////////
 #elif ARTEFACT_GENUS == LEGATUS 
@@ -165,7 +158,7 @@ AudioPlaySdWav audio_player; //xy=767.0000267028809,648.750018119812
 #endif
 
 // this should only be created if using the FM mode??
-#if BEHAVOUR_ROUTINE == B_LEG_FM_FEEDBACK
+#if BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
 AudioSynthWaveformSineModulated sine_fm; //xy=1054.285743713379,2268.5713901519775
 #elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 AudioEffectDelay audio_delay1;
@@ -453,6 +446,7 @@ double calculateFeedbackBrightness(FFTManager1024 *_fft_manager)
 
 void updateFeedbackLEDs(FFTManager1024 * _fft_manager)
 {
+  _fft_manager->update();
   // the brightness of the LEDs should mirror the peak gathered from the environment
   // a local min/max which scales periodically should be implemented just like with the Speculator
   // a MAX_RMS brightness should be used to determine what the max brightness of the feedback is
@@ -520,10 +514,11 @@ void updateFeedbackLEDs(FFTManager1024 * _fft_manager)
     {
       neos[i].colorWipe(red, green, blue, current_brightness);
     }
+    // dprint(P_FUNCTION_TIMES,"period since last_led_update_tmr is ");
+    // dprintln(P_FUNCTION_TIMES, last_led_update_tmr);
     last_led_update_tmr = 0;
+    updateFunctionTimeStats();
     // TODO track this value to provide diagnostic data =)
-    dprint(P_FUNCTION_TIMES,"period since last_led_update_tmr is ");
-    dprintln(P_FUNCTION_TIMES, last_led_update_tmr);
   }
 }
 
@@ -554,7 +549,7 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
       break;
     case (FEATURE_PEAK):
       dprintln(P_BRIGHTNESS, "feature is PEAK");
-      f->printPeakVals();
+      // f->printPeakVals();
       b = f->getDominatePeak();
       break;
     case (FEATURE_RMS_AVG):
@@ -711,7 +706,7 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
     case (FEATURE_FLUX):
       // sat = (_fft->getFlux() - 20) / 60;
       dprint(P_SATURATION, "Feature is FEATURE_FLUX: ");
-      sat = _fft->getScaledFlux();
+      sat = _fft->getFlux();
       break;
     default:
       Serial.print("ERROR - calculateSaturation() does not accept that  SATURATION_FEATURE");
@@ -720,7 +715,7 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
   saturation = sat;
   saturation_tracker.update();
   dprint(P_SATURATION, "saturation before/after scaling: ");
-  dprint(P_SATURATION, sat);
+  dprint(P_SATURATION, saturation);
   saturation = saturation_tracker.getRAvg();
   // saturation = (9.9 * log10((double)saturation + 1.0)) - (2.0 * (double)saturation);
   if (REVERSE_SATURATION == true)
@@ -730,7 +725,7 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
   saturation += ADDED_SATURATION; // just add some base saturation to make the feedback more colourful
   saturation = constrainf(saturation, 0.0, 1.0);
   dprint(P_SATURATION, " / ");
-  dprint(P_SATURATION, sat, 4);
+  dprint(P_SATURATION, saturation, 4);
   dprint(P_SATURATION, "\tsat min/max: ");
   dprint(P_SATURATION, saturation_tracker.getMin(), 4);
   dprint(P_SATURATION, " / ");
@@ -1512,6 +1507,9 @@ void setup()
   printMajorDivide("Now starting main() loop");
   neos[0].colorWipe(10, 15, 10, 0.5);
   delay(1000);
+  #if P_FUNCTION_TIMES
+    // loop_length_value_tracker.reset();
+  #endif
 }
 
   ////////////////////////////////////////////////////////////

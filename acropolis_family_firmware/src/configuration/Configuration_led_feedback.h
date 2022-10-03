@@ -32,7 +32,11 @@ float user_brightness_scaler               = 1.0;
 When the code is within the HSB colour space, there is an option to 
 offset the saturation level according to this value
 */
+#if ARTEFACT_GENUS == LEGATUS
+float ADDED_SATURATION  = 0.0;
+#else
 float ADDED_SATURATION  = 0.4;
+#endif
 
 // for some circumstances, it is useful to always provide feedback
 #define ADD_B_OFFSET true
