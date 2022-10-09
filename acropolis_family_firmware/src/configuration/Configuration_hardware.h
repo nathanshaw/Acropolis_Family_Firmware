@@ -17,8 +17,10 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 ////////////////////////////////////////////////////////////
 // different enclosures result in varying gain levels
 // ENCLOSURE_GAIN_FACTOR is automatically calculated based on
+
 // the ARTEFACT_GENUS and ENCLOSURE_TYPE
 #if ARTEFACT_GENUS == SPECULATOR
+
 #if ENCLOSURE_TYPE == ORB_ENCLOSURE_WITH_HOLE
 #define ENCLOSURE_GAIN_FACTOR         1.0
 #elif ENCLOSURE_TYPE == ORB_ENCLOSURE_WITHOUT_HOLE
@@ -27,9 +29,18 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 #define ENCLOSURE_GAIN_FACTOR         3.0
 #elif ENCLOSURE_TYPE == NO_ENCLOSURE
 #define ENCLOSURE_GAIN_FACTOR         0.5
-#endif // ENCLOSURE_TYPE
+#endif // ENCLOSURE_TYPE for Speculator
+
+// ENCLOSURES FOR LEGATUS
 #elif ARTEFACT_GENUS == EXPLORATOR
+
+#if ENCLOSURE_TYPE == NO_ENCLOSURE
+#define ENCLOSURE_GAIN_FACTOR         0.25
+#else
 #define ENCLOSURE_GAIN_FACTOR         1.0
+#endif // EXPLORATOR ENCLOSURES
+
+// LEGATUS ENCLOSURES
 #elif ARTEFACT_GENUS == LEGATUS
 #define ENCLOSURE_GAIN_FACTOR         1.0
 #endif // ARTEFACT_GENUS
@@ -728,7 +739,7 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 
 #elif ARTEFACT_GENUS == EXPLORATOR && ARTEFACT_SPECIES == EX_CHIPPER
 // Which pin on the Arduino is connected to the NeoPixels? 8 for old board
-#define LED1_PIN 10
+#define LED1_PIN 5
 // note that if the second LED channel is used the teensy needs to be overclocked to 120 MHz
 #define LED2_PIN 8
 #define LED3_PIN 10
@@ -798,7 +809,7 @@ uint8_t ENCLOSURE_TYPE =          NO_ENCLOSURE;
 #define LED3_COUNT 10
 #elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CLAPPER)
 #define LED1_COUNT 20
-#define LED2_COUNT 0
+#define LED2_COUNT 10
 #define LED3_COUNT 0
 #elif (ARTEFACT_GENUS == EXPLORATOR) && (ARTEFACT_SPECIES == EX_CHIPPER)
 #define LED1_COUNT 10

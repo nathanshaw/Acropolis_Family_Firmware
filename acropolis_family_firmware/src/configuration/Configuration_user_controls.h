@@ -8,6 +8,11 @@
 //////////////////// Will the artefact read the user controls? ////////
 #if ARTEFACT_SPECIES == SPEC_MINOR
 #define USER_CONTROLS_ACTIVE     false
+#elif ARTEFACT_SPECIES == EX_WINDER
+#define USER_CONTROLS_ACTIVE     false
+#elif ARTEFACT_SPECIES == EX_CHIPPER
+#define USER_CONTROLS_ACTIVE     false
+
 #else
 #define USER_CONTROLS_ACTIVE     true
 #endif // species

@@ -107,7 +107,8 @@ AudioConnection          patchCordUSB1(amp1, 0, output_usb, 0);
 AudioInputI2S i2s1;        //xy=1203.3333854675293,1356.3334693908691
 AudioMixer4 mixer1;        //xy=1373.3333549499512,1335.0000076293945
 AudioAmplifier amp1;       //xy=1519.3333206176758,1330.0000114440918
-AudioFilterBiquad HPF1;    //xy=1651.6667022705078,1330.6666841506958
+AudioFilterBiquad biquad1;    //xy=1651.6667022705078,1330.6666841506958
+AudioFilterBiquad biquad2;    //xy=1651.6667022705078,1330.6666841506958
 AudioAnalyzeFFT1024 fft1;  //xy=1846.3333740234375,1254.9999675750732
 AudioAnalyzePeak peak1;    //xy=1851.3332901000977,1288.6667175292969
 
@@ -116,14 +117,6 @@ AudioOutputUSB output_usb; //xy=1857.0000457763672,1368.666639328003
 AudioConnection patchCordUSB2(mixer1, 0, output_usb, 1);
 AudioConnection patchCordUSB1(HPF1, 0, output_usb, 0);
 #endif
-
-// TODO - these should instead be dynamically created using the audio_connections[] array
-AudioConnection patchCord1(i2s1, 0, mixer1, 0);
-AudioConnection patchCord2(i2s1, 1, mixer1, 1);
-AudioConnection patchCord3(mixer1, amp1);
-AudioConnection patchCord5(amp1, HPF1);
-AudioConnection patchCord6(HPF1, peak1);
-AudioConnection patchCord8(HPF1, fft1);
 
 //////////////////////////////////////////////////////////////////////
 #elif ARTEFACT_GENUS == LEGATUS 
@@ -165,7 +158,7 @@ AudioPlaySdWav audio_player; //xy=767.0000267028809,648.750018119812
 #endif
 
 // this should only be created if using the FM mode??
-#if BEHAVOUR_ROUTINE == B_LEG_FM_FEEDBACK
+#if BEHAVIOUR_ROUTINE == B_LEG_FM_FEEDBACK
 AudioSynthWaveformSineModulated sine_fm; //xy=1054.285743713379,2268.5713901519775
 #elif BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 AudioEffectDelay audio_delay1;
@@ -363,169 +356,8 @@ UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 #endif
 
 
-// #if ARTEFACT_GENUS == EXPLORATOR
-double calculateColorFromCentroid(FFTManager1024 *_fft_manager)
-{
-  // Should return a number between 0.0 and 1.0
-  // right now we are only polling the first FC for its centroid to use to color both sides
-  double cent = _fft_manager->getCentroid();
-  if (cent < color_feature_min)
-  {
-    color_feature_min = (color_feature_min * 0.9) + (cent * 0.1);
-    cent = color_feature_min;
-  }
-  else if (cent > color_feature_max)
-  {
-    color_feature_max = (color_feature_max * 0.9) + (cent * 0.1);
-    cent = color_feature_max;
-  }
-  cent = (cent - color_feature_min) / (color_feature_max - color_feature_min);
-  return cent;
-}
 
-double calculateFeedbackBrightness(FFTManager1024 *_fft_manager)
-{
-  // how much energy is stored in the range of 4000 - 16000 compared to  the entire spectrum?
-  double target_brightness = _fft_manager->getFFTRangeByFreq(100, 16000) * user_brightness_scaler;
-  if (target_brightness < 0.01)
-  {
-    target_brightness = 0.0;
-  }
-  else if (target_brightness > 1.0)
-  {
-    target_brightness = 1.0;
-  }
-  if (target_brightness < brightness_feature_min)
-  {
-    if (P_BRIGHTNESS)
-    {
-      Serial.print("target_B is less than feature_min: ");
-      Serial.print(target_brightness, 5);
-      Serial.print(" < ");
-      Serial.print(brightness_feature_min, 5);
-    }
-    brightness_feature_min = (target_brightness * 0.15) + (brightness_feature_min * 0.85);
-    if (P_BRIGHTNESS)
-    {
-      Serial.print(" updated brightness_min and target_brightness to: ");
-      Serial.println(brightness_feature_min, 5);
-    }
-    target_brightness = brightness_feature_min;
-  }
-  if (target_brightness > brightness_feature_max)
-  {
 
-    if (P_BRIGHTNESS)
-    {
-      Serial.print("target_B is more than feature_max: ");
-      Serial.print(target_brightness, 5);
-      Serial.print(" > ");
-      Serial.print(brightness_feature_max, 5);
-    }
-    brightness_feature_max = (target_brightness * 0.15) + (brightness_feature_max * 0.85);
-    // to ensure that loud clipping events do not skew things too much
-    if (brightness_feature_max > 1.0)
-    {
-      brightness_feature_max = 1.0;
-    }
-    if (P_BRIGHTNESS)
-    {
-      Serial.print(" updated brightness_max and target_brightness to: ");
-      Serial.println(brightness_feature_max, 5);
-    }
-    target_brightness = brightness_feature_max;
-  }
-  dprintln(P_BRIGHTNESS);
-  dprint(P_BRIGHTNESS, " target - min/max ");
-  dprint(P_BRIGHTNESS, target_brightness);
-  dprint(P_BRIGHTNESS, " - ");
-  dprint(P_BRIGHTNESS, brightness_feature_min);
-  dprint(P_BRIGHTNESS, " / ");
-  dprintln(P_BRIGHTNESS, brightness_feature_max);
-
-  target_brightness = (target_brightness - brightness_feature_min) / (brightness_feature_max - brightness_feature_min);
-  dprint(P_BRIGHTNESS, "target_brightness(2): ");
-  dprint(P_BRIGHTNESS, target_brightness);
-  dprint(P_BRIGHTNESS, " ");
-
-  return target_brightness;
-}
-
-void updateFeedbackLEDs(FFTManager1024 * _fft_manager)
-{
-  // the brightness of the LEDs should mirror the peak gathered from the environment
-  // a local min/max which scales periodically should be implemented just like with the Speculator
-  // a MAX_RMS brightness should be used to determine what the max brightness of the feedback is
-  // the LEDs should be updated 30x a second
-
-  // calculate the target color ///////////////////////////////////////
-  if (last_led_update_tmr > led_refresh_rate)
-  {
-    double target_color = 0.0;
-    double target_brightness = 0.0;
-    uint8_t red, green, blue;
-
-    if (COLOR_FEATURE == SPECTRAL_CENTROID)
-    {
-      target_color = calculateColorFromCentroid(_fft_manager);
-      dprint(P_COLOR, "target color: ");
-      dprintln(P_COLOR, target_color);
-      last_color = current_color;
-      current_color = (target_color * 0.2) + (last_color * 0.8); // * COLOR_LP_LEVEL);
-
-      // calculate the preliminary rgb values /////////////////////////////
-      red = ((1.0 - current_color) * RED_LOW) + (current_color * RED_HIGH);
-      green = ((1.0 - current_color) * GREEN_LOW) + (current_color * GREEN_HIGH);
-      blue = ((1.0 - current_color) * BLUE_LOW) + (current_color * BLUE_HIGH);
-    }
-    else if (COLOR_FEATURE == SPLIT_BAND)
-    {
-      /* Should return a number between 0.0 and 1.0 */
-      // Serial.println("about to calculate color based off split-band approach : ");
-      // delay(4000);
-      double green_d = _fft_manager->getFFTRangeByFreq(50, 400); // 3 octaves in each band
-      double blue_d = _fft_manager->getFFTRangeByFreq(400, 3200);
-      double red_d = _fft_manager->getFFTRangeByFreq(3200, 12800);
-      // Serial.println("finished getting the energy amount from the fft manager : ");
-      // delay(4000);
-      red = (uint8_t)((double)MAX_BRIGHTNESS * (red_d / (red_d + green_d + blue_d)));
-      green = (uint8_t)((double)MAX_BRIGHTNESS * (green_d / (red_d + green_d + blue_d)));
-      blue = (uint8_t)((double)MAX_BRIGHTNESS * (blue_d / (red_d + green_d + blue_d)));
-    }
-
-    // calculate the target brightness ///////////////////////////////////
-    target_brightness = calculateFeedbackBrightness(_fft_manager);
-    /////////////////////////// Apply user brightness scaler ////////////////////////
-    if (USER_BS_ACTIVE > 0)
-    {
-      target_brightness = target_brightness * user_brightness_scaler;
-    }
-
-    last_brightness = current_brightness;
-    current_brightness = (target_brightness * 0.5) + (current_brightness * 0.5);
-    // calculate the actual values to be sent to the strips
-    // red = (uint8_t)((double)red);
-    // green = (uint8_t)((double)green);
-    // blue = (uint8_t)((double)blue);
-    if (P_COLOR == true)
-    {
-      Serial.print("rgb:\t");
-      Serial.print(red);
-      Serial.print("\t");
-      Serial.print(green);
-      Serial.print("\t");
-      Serial.println(blue);
-    }
-    for (int i = 0; i < NUM_NEOP_MANAGERS; i++)
-    {
-      neos[i].colorWipe(red, green, blue, current_brightness);
-    }
-    last_led_update_tmr = 0;
-    // TODO track this value to provide diagnostic data =)
-    dprint(P_FUNCTION_TIMES,"period since last_led_update_tmr is ");
-    dprintln(P_FUNCTION_TIMES, last_led_update_tmr);
-  }
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////// Start of PITCH functions ////////////////////////
@@ -554,7 +386,7 @@ double calculateBrightness(FeatureCollector * f, FFTManager1024 * _fft)
       break;
     case (FEATURE_PEAK):
       dprintln(P_BRIGHTNESS, "feature is PEAK");
-      f->printPeakVals();
+      // f->printPeakVals();
       b = f->getDominatePeak();
       break;
     case (FEATURE_RMS_AVG):
@@ -711,7 +543,7 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
     case (FEATURE_FLUX):
       // sat = (_fft->getFlux() - 20) / 60;
       dprint(P_SATURATION, "Feature is FEATURE_FLUX: ");
-      sat = _fft->getScaledFlux();
+      sat = _fft->getFlux();
       break;
     default:
       Serial.print("ERROR - calculateSaturation() does not accept that  SATURATION_FEATURE");
@@ -720,7 +552,7 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
   saturation = sat;
   saturation_tracker.update();
   dprint(P_SATURATION, "saturation before/after scaling: ");
-  dprint(P_SATURATION, sat);
+  dprint(P_SATURATION, saturation);
   saturation = saturation_tracker.getRAvg();
   // saturation = (9.9 * log10((double)saturation + 1.0)) - (2.0 * (double)saturation);
   if (REVERSE_SATURATION == true)
@@ -730,7 +562,7 @@ double calculateSaturation(FeatureCollector * f, FFTManager1024 * _fft)
   saturation += ADDED_SATURATION; // just add some base saturation to make the feedback more colourful
   saturation = constrainf(saturation, 0.0, 1.0);
   dprint(P_SATURATION, " / ");
-  dprint(P_SATURATION, sat, 4);
+  dprint(P_SATURATION, saturation, 4);
   dprint(P_SATURATION, "\tsat min/max: ");
   dprint(P_SATURATION, saturation_tracker.getMin(), 4);
   dprint(P_SATURATION, " / ");
@@ -1159,7 +991,7 @@ void setupLuxManager()
   lux_manager.add6030Sensors(2, 25);
   Serial.println("Finished starting LuxManager");
 #endif // HV_MAJOR
-  delay(2000);
+  delay(1000);
 
   if (lux_manager.getSensorActive(0) || lux_manager.getSensorActive(1))
   {
@@ -1512,6 +1344,9 @@ void setup()
   printMajorDivide("Now starting main() loop");
   neos[0].colorWipe(10, 15, 10, 0.5);
   delay(1000);
+  #if P_FUNCTION_TIMES
+    // loop_length_value_tracker.reset();
+  #endif
 }
 
   ////////////////////////////////////////////////////////////

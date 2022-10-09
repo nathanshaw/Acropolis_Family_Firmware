@@ -13,14 +13,16 @@ float USER_CONTROL_PLAYBACK_GAIN             = 1.0;
 #if BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 #define AUDIO_MEMORY              45
 #elif BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
-#define AUDIO_MEMORY              60
+#define AUDIO_MEMORY              55
+#elif BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
+#define AUDIO_MEMORY              32
 #else // BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 #define AUDIO_MEMORY              50
 #endif // BEHAVIOUR_ROUTINE == B_LEG_FEEDBACK
 ////////////////////////////////////////
 
 // TODO - this should be dynamically calculated
-#if BEHAVIOUR_ROUTINE == B_LEG_SAMPLE_PLAYBACK
+#if BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
 #define NUM_AUDIO_FILES           19
 #else
 #define NUM_AUDIO_FILES           1
@@ -28,8 +30,10 @@ float USER_CONTROL_PLAYBACK_GAIN             = 1.0;
 
 #if BEHAVIOUR_ROUTINE == B_LEG_ECHO_CHAMBER
 #define USE_RAW_AUDIO_PLAYER      true
-#elif BEHAVIOUR_ROUTINE == B_LEG_SAMPLE_PLAYBACK
-#define USE_RAW_AUDIO_PLAYER      true
+#elif BEHAVIOUR_ROUTINE == B_LEG_SAMP_PLAYBACK
+// as we are not playing back recordings we have captured ourselves
+// we use the .WAV file playback
+#define USE_RAW_AUDIO_PLAYER      false
 #else
 #define USE_RAW_AUDIO_PLAYER      false
 #endif // determine if RAW_AUDIO_PLAYER is used
@@ -119,10 +123,10 @@ elapsedMillis last_playback_tmr;
 #define PWR_KILL_PIN              8
 
 ////////////////////// Audio Recording Settings //////////////////////////////
-#define AUDIO_REC_MAX_LENGTH      (1000 * 1)
+#define AUDIO_REC_MAX_LENGTH      (1000 * 60)
 elapsedMillis last_state_change;
 // how long does legatus pause before playing back recordings or vocalising
 // TODO - this variable should be determined by the current env. conditions.
-long reflection_time = 1000;
+long reflection_time = AUDIO_REC_MAX_LENGTH * 0.5;
 
 #endif // __CONFIGURATION_LEGATUS_H__

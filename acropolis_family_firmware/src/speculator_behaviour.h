@@ -9,7 +9,10 @@
 uint32_t getSongColor(FeatureCollector *_feature_collector, FFTManager1024 *_fft_manager)
 {
   // TODO - WARNING NOT IMPLEMENTED
-  Serial.print("WARNING getSongColor() in speculator_behaviour.h is not implemented");
+  hue = (double)_fft_manager->getCentroid();
+  hue_tracker.update();
+  hue = hue_tracker.getScaled();
+  Serial.println(hue);
   uint32_t _value = 0;
   return _value;
 }
@@ -51,15 +54,16 @@ void updateAugmentations(FeatureCollector *feature_collector, FFTManager1024 *_f
   // rgb = scaleRGB(rgb, brightness);
 
   // update neopixels with the expected color information
-  Serial.println("WARNING UPDATEAUGMENTIONS FUNCTINO IS SPECULATOR BEHAVIOUR IS BROKEN");
   // neos.updateFeedback(rgb[0], rgb[1], rgb[2]);
+  Serial.println("WARNING UPDATEAUGMENTIONS FUNCTINO IS SPECULATOR BEHAVIOUR IS BROKEN");
 }
 
 void updateBehaviour()
 {
-  updateAugmentations(&feature_collector, &fft_manager[0]);
-  Serial.println("WARNING LOOP NOT IMPLEMENTED");
-  delay(200);
+  // updateAugmentations(&feature_collector, &fft_manager[0]);
+  updateFeedbackLEDs(&fft_manager[0]);
+  // Serial.println("WARNING LOOP NOT IMPLEMENTED");
+  // delay(200);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,38 +78,38 @@ void updateBehaviour()
   {
     // TODO - erm, look into this code, what does it do again, should it be a part of the
     dominate_channel = feature_collector.getDominateChannel();
-    dprint(P_BEHAVIOUR_UPDATE, "dominate channel is : ");
-    dprintln(P_BEHAVIOUR_UPDATE, dominate_channel);
+    dprint(_p, "dominate channel is : ");
+    dprintln(_p, dominate_channel);
   }
   // Serial.print("color map mode: ");
   if (color_map_mode == COLOR_MAPPING_HSB) {
-    dprint(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_HSB - ");
+    dprint(_p, "COLOR_MAPPING_HSB - ");
 
     s = calculateSaturation(&feature_collector, &fft_manager[dominate_channel]);
     b = calculateBrightness(&feature_collector, &fft_manager[dominate_channel]); // user brightness scaler is applied in this function
     h = calculateHue(&feature_collector, &fft_manager[dominate_channel]);
-    dprint(P_BEHAVIOUR_UPDATE, "HSB after calculate() functions: ");
-    dprint(P_BEHAVIOUR_UPDATE, h, 6);
-    dprint(P_BEHAVIOUR_UPDATE, "\t");
-    dprint(P_BEHAVIOUR_UPDATE, s, 6);
-    dprint(P_BEHAVIOUR_UPDATE, "\t");
-    dprintln(P_BEHAVIOUR_UPDATE, b, 6);
+    dprint(_p, "HSB after calculate() functions: ");
+    dprint(_p, h, 6);
+    dprint(_p, "\t");
+    dprint(_p, s, 6);
+    dprint(_p, "\t");
+    dprintln(_p, b, 6);
     printHSB();
     printRGB();
 
     // these functions will update the value of the HSB according to weather conditions
     // variables are passed by reference to allow for their change without the function returning anything
-    if (P_BEHAVIOUR_UPDATE == true) {
+    if (_p == true) {
       #if WEATHER_MANAGER_ACTIVE
       neos[0].applyWeatherOffsets(weather_manager, h, s, b, true); 
       neos[0].applyWeatherScaling(weather_manager, h, s, b, true);
       #endif
-      dprint(P_BEHAVIOUR_UPDATE, "HSB after weather scaling and offsets functions: ");
-      dprint(P_BEHAVIOUR_UPDATE, h, 6);
-      dprint(P_BEHAVIOUR_UPDATE, "\t");
-      dprint(P_BEHAVIOUR_UPDATE, s, 6);
-      dprint(P_BEHAVIOUR_UPDATE, "\t");
-      dprintln(P_BEHAVIOUR_UPDATE, b, 6);
+      dprint(_p, "HSB after weather scaling and offsets functions: ");
+      dprint(_p, h, 6);
+      dprint(_p, "\t");
+      dprint(_p, s, 6);
+      dprint(_p, "\t");
+      dprintln(_p, b, 6);
     }
     else {
       #if WEATHER_MANAGER_ACTIVE
@@ -132,13 +136,13 @@ void updateBehaviour()
     }
   }
   else if (color_map_mode == COLOR_MAPPING_EXPLORATOR) {
-    dprintln(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_EXPLORATOR");
+    dprintln(_p, "COLOR_MAPPING_EXPLORATOR");
     updateFeedbackLEDs(&fft_manager[dominate_channel]);
     // Serial.println("Finished running updateFeedbackLEDs()");
     // delay(2000);
   }
   else if (color_map_mode == COLOR_MAPPING_FFT) {
-    dprint(P_BEHAVIOUR_UPDATE, "COLOR_MAPPING_FFT - ");
+    dprint(_p, "COLOR_MAPPING_FFT - ");
     // determine the amount of energy contained in each of the three bands
     float total_energy = fft_manager[0].getFFTTotalEnergy() * 0.16;
     #if ARTEFACT_SPECIES == SPEC_MINOR
@@ -150,11 +154,11 @@ void updateBehaviour()
     int front_inside_out_order[5] = {0, 1, 2, 3, 4};
     int rear_inside_out_order[5] = {5, 6, 7, 8, 9};
     #endif
-    dprint(P_BEHAVIOUR_UPDATE, "total energy : ");
-    dprint(P_BEHAVIOUR_UPDATE, total_energy, 6);
+    dprint(_p, "total energy : ");
+    dprint(_p, total_energy, 6);
     total_energy = constrainf(total_energy, 0.0, 1.0);
-    dprint(P_BEHAVIOUR_UPDATE, "\t");
-    dprintln(P_BEHAVIOUR_UPDATE, total_energy, 6);
+    dprint(_p, "\t");
+    dprintln(_p, total_energy, 6);
 
     // map each individual LED to a range of four bins
     for (int i = 0; i < array_size; i++)
@@ -178,7 +182,7 @@ void updateBehaviour()
       r = constrainf(r, 0.0, 0.75);
       Serial.print(r);
       Serial.print("\t");
-      dprintln(P_BEHAVIOUR_UPDATE, user_brightness_cuttoff);
+      dprintln(_p, user_brightness_cuttoff);
 
       g = constrainf(g / 3, 0.0, 0.75);
       g = g - user_brightness_cuttoff;
@@ -207,12 +211,12 @@ void updateBehaviour()
 
       if (i == 10)
       {
-        dprint(P_BEHAVIOUR_UPDATE, " h,s,b : ");
-        dprint(P_BEHAVIOUR_UPDATE, h);
-        dprint(P_BEHAVIOUR_UPDATE, "\t");
-        dprint(P_BEHAVIOUR_UPDATE, s);
-        dprint(P_BEHAVIOUR_UPDATE, "\t");
-        dprintln(P_BEHAVIOUR_UPDATE, br);
+        dprint(_p, " h,s,b : ");
+        dprint(_p, h);
+        dprint(_p, "\t");
+        dprint(_p, s);
+        dprint(_p, "\t");
+        dprintln(_p, br);
       }
       #if USER_CONTROLS_ACTIVE
       neos[0].colorWipeHSB(h, s, br, user_brightness_scaler, front_inside_out_order[i], front_inside_out_order[i]);

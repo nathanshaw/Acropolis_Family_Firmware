@@ -34,9 +34,15 @@
 #define MOT3_FAULT_PIN        22
 
 // the direction of the motors, if one is spinning in the wrong way then change this value
+#if ARTEFACT_SPECIES == EX_WINDER
+#define M1_POLARITY           true
+#define M2_POLARITY           false
+#define M3_POLARITY           false
+#else
 #define M1_POLARITY           false
 #define M2_POLARITY           false
 #define M3_POLARITY           false
+#endif
 
 // this value can be used to determine how long and how fast to spin each motor...
 #define M1_GEAR_RATIO         1
@@ -363,7 +369,12 @@ double last_peak = 0.0;
 //////////////////////////////////// Rhythm detection stuff ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // the maximum number of rhythms to store
+#if ARTEFACT_SPECIES == EX_CHIPPER
+#define MAX_RHYTHMS 5
+#else
 #define MAX_RHYTHMS 10
+#endif
+
 // the maximum number of notes which can be stored in a single rhythm
 #define MAX_NOTES 16
 
@@ -396,21 +407,17 @@ float WINDING_RATE =              1.0;
 int WIND_FORWARD = 0;
 int WIND_BACKWARD = 0;
 
-void detectOnset() {
-  // given the current audio features determine if an onset has occured
-}
-
-#define AUDIO_MEMORY 18
+#define AUDIO_MEMORY 50
 
 // int but_test[4];
 // float pot_test[4];
 
 
-#define MIN_ACTIVITY_LEVEL    0.25
+#define MIN_ACTIVITY_LEVEL    3.0
 #define MID_ACTIVITY_LEVEL    1.0
-#define MAX_ACTIVITY_LEVEL    3.0
+#define MAX_ACTIVITY_LEVEL    0.1
 // the user control scaler to determine how often the artefact with actuate
-float ACTIVITY_LEVEL        = MID_ACTIVITY_LEVEL;
+float ACTIVITY_LEVEL        = MAX_ACTIVITY_LEVEL;
 
 float MOTOR_MOVEMENT = 0.0;
 float STRIKE_LENGTH  = 30.0;
@@ -418,16 +425,9 @@ float STRIKE_LENGTH  = 30.0;
 #define PWR_KILL_PIN              25
 
 #if ARTEFACT_SPECIES == EX_WINDER
-int motor_speed = 0;
-int target_motor_speed = 0;
-int next_motor_speed = 0;
-int motor_time = 0;
-int next_motor_time = 0;
 const int max_motor_speed = 150;
 const int min_motor_speed = 0;
 
-elapsedMillis last_winding;
-elapsedMillis last_enc_change;
 const long winding_interval = 15000;
 int last_pos = 0;
 #endif
