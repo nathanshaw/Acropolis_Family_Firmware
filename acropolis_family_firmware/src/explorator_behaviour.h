@@ -192,10 +192,9 @@ BellMechanism bells[3] = {
   BellMechanism(s_pins[0], s_pins[1], 20, 100.0, 40),
   BellMechanism(s_pins[2], s_pins[3], 20, 500.0, 40),
   BellMechanism(s_pins[4], s_pins[5], 20, 1000.0, 40)
-};
+}
 
 RhythmBank rhythm_bank = RhythmBank();
-
 PlaybackEngine playback_engine = PlaybackEngine();
 
 // chirper loop

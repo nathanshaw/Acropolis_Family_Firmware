@@ -729,6 +729,10 @@ void updateFunctionTimeStats() {
       Serial.print(avg_time);
       Serial.println(" was the average loop length");
 
+      double avg_time = (double)total_time/(double)loop_num;
+      Serial.print(avg_time);
+      Serial.println(" was the average loop length");
+
       Serial.println("-----------------------------------");
       if (loop_num == loop_test_period){
          Serial.println("------------- TEST COMPLETE -----------------");

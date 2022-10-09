@@ -356,6 +356,25 @@ UIManager uimanager = UIManager(UI_POLLING_RATE, P_USER_CONTROLS);
 #endif
 
 
+// #if ARTEFACT_GENUS == EXPLORATOR
+double calculateColorFromCentroid(FFTManager1024 *_fft_manager)
+{
+  // Should return a number between 0.0 and 1.0
+  // right now we are only polling the first FC for its centroid to use to color both sides
+  double cent = _fft_manager->getCentroid();
+  if (cent < color_feature_min)
+  {
+    color_feature_min = (color_feature_min * 0.9) + (cent * 0.1);
+    cent = color_feature_min;
+  }
+  else if (cent > color_feature_max)
+  {
+    color_feature_max = (color_feature_max * 0.9) + (cent * 0.1);
+    cent = color_feature_max;
+  }
+  cent = (cent - color_feature_min) / (color_feature_max - color_feature_min);
+  return cent;
+}
 
 
 

@@ -30,6 +30,12 @@
 elapsedMillis last_audio_use_print = 0;
 #define AUDIO_USE_RESET_RATE         20000
 #endif // P_AUDIO_MEMORY_MAX
+#if P_AUDIO_MEMORY_MAX
+////////////////////////////////// RANDOM stuff ///////////////////////////////////
+// this is a high value to force jumper readings in the setup() loop
+elapsedMillis last_audio_use_print = 0;
+#define AUDIO_USE_RESET_RATE         20000
+#endif // P_AUDIO_MEMORY_MAX
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // ////////////////////////// Boot Tests ///////////////////////////////////////////////////////
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
