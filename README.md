@@ -1,1 +1,1 @@
-# unified_hss_firmware
+# Welcome to the repo housing the Acropolis family firmware. This code is intended to aid in controlling Teensy 3.2-based soundscape augmentation artefacts. This repo provides the code to control a number of already created soundscape augmentation artefacts including the Speculator, Exploration, and Legatus genera and their numerious variants (species). For more information regarding the Hyper-Soundwalk Series research project this code supports please see this repo https://www.github.com/nathanshaw/hyper_soundwalk_series
